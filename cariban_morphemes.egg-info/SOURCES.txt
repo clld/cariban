@@ -1,5 +1,6 @@
 MANIFEST.in
 development.ini
+requirements.txt
 setup.cfg
 setup.py
 tox.ini
@@ -23,6 +24,7 @@ cariban_morphemes/scripts/initializedb.py
 cariban_morphemes/static/project.css
 cariban_morphemes/static/project.js
 cariban_morphemes/templates/cariban_morphemes.mako
+cariban_morphemes/templates/dutil.mako
 cariban_morphemes/templates/dataset/detail_html.mako
 cariban_morphemes/templates/sentence/detail_html.mako
 cariban_morphemes/templates/unitvalue/detail_html.mako
