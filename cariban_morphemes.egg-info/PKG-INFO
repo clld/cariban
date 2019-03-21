@@ -13,5 +13,5 @@ Classifier: Programming Language :: Python
 Classifier: Framework :: Pyramid
 Classifier: Topic :: Internet :: WWW/HTTP
 Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
-Provides-Extra: test
 Provides-Extra: dev
+Provides-Extra: test
