@@ -18,105 +18,124 @@ cariban_data = Wordlist.from_metadata("../cariban_data.json")
 def main(args):
     data = Data()
 
-    dataset = common.Dataset(id=cariban_morphemes.__name__, domain='cariban_morphemes.clld.org')
+    dataset = common.Dataset(id=cariban_morphemes.__name__, domain="cariban_morphemes.clld.org")
     DBSession.add(dataset)
     
     # add languages in the sample to data["Language"]
-    for row in cariban_data['LanguageTable']:
+    for row in cariban_data["LanguageTable"]:
         data.add(
             common.Language,
-            row['ID'],
-            id=row['ID'],
-            name=row['Name'],
-            latitude=float(row['Latitude']) if row['Latitude'] is not None else None,
-            longitude=float(row['Longitude']) if row['Longitude'] is not None else None,
-            # glottocode=row['ID'],
+            row["ID"],
+            id=row["ID"],
+            name=row["Name"],
+            latitude=float(row["Latitude"]) if row["Latitude"] is not None else None,
+            longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
         )
     
     #add sources to data["Sources"]
     for src in cariban_data.sources.items():
-            for invalid in ['isbn', 'part', 'institution']:
+            for invalid in ["isbn", "part", "institution"]:
                 if invalid in src:
                     del src[invalid]
             data.add(
                 common.Source,
                 src.id,
                 id=src.id,
-                name=src.get('author', src.get('editor')),
-                description=src.get('title', src.get('booktitle')),
+                name=src.get("author", src.get("editor")),
+                description=src.get("title", src.get("booktitle")),
                 bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
     
     # #trying to add morphemes as units instead of values of parameters
-    # for row in cariban_data['FormTable']:
-    #     # print("Adding unit {0} with ID {1} for language {2}".format(row['Form'],row['ID'],row['Language_ID']))
-    #     data.add(common.Unit,
-    #     row['ID'],
-    #     language=data['Language'][row['Language_ID']],
-    #     name=row['Form'],
-    #     id=row['ID']
-    #     )
-    #     # print("Adding unitparameter {0} with ID {1}".format(row['Parameter_ID'],row['ID']))
-    #     data.add(common.UnitParameter,
-    #     row['ID'],
-    #     id=row['ID'],
-    #     name=row['Parameter_ID']
-    #     )
-    #     # print("Adding unitvalue {0} with ID {1} for unitparameter {2}, unit {3}".format(row['Form'], row['ID'], data['UnitParameter'][row['ID']], data['Unit'][row['ID']]))
-    #     data.add(common.UnitValue,
-    #     row['ID'],
-    #     id=row['ID'],
-    #     name=row['Form'],
-    #     unit=data['Unit'][row['ID']],
-    #     unitparameter=data['UnitParameter'][row['ID']]
-    #     )
-    #     # print("\n")
-        
-    
+    for row in cariban_data["FormTable"]:
+        # print("Adding morpheme {0} with ID {1} for language {2}".format(row["Form"],row["ID"],row["Language_ID"]))
+        data.add(common.Unit,
+            row["ID"],
+            language=data["Language"][row["Language_ID"]],
+            name=row["Form"],
+            description=row["Parameter_ID"],
+            id=row["ID"]
+        )
+        for morpheme_function in row["Parameter_ID"].split("; "):
+            my_key = morpheme_function.replace(".","-")
+            if morpheme_function not in data["UnitParameter"].keys():
+                # print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
+                data.add(common.UnitParameter,
+                    morpheme_function,
+                    id=my_key,
+                    name=morpheme_function
+                )
+            # print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
+            data.add(common.UnitValue,
+                row["ID"]+my_key,
+                id=row["ID"]+my_key,
+                # name="%s: %s" % (row["Form"], my_key),
+                unit=data["Unit"][row["ID"]],
+                unitparameter=data["UnitParameter"][morpheme_function]
+            )
+            # print(data["UnitParameter"][morpheme_function].unitvalues)
+            
     #adding morphemes as valuesets (with single values) and cognacy sets as parameters; not ideal
-    for row in cariban_data['FormTable']:
-        if row['Language_ID'] == "cari1283":
-            data.add(common.Parameter,row['Cognateset_ID'],name=row['Form'],id=row['Cognateset_ID'])
+    for row in cariban_data["FormTable"]:
+        if row["Language_ID"] == "cari1283":
+            data.add(common.Parameter,row["Cognateset_ID"],name=row["Form"],id=row["Cognateset_ID"])
     
-    for row in cariban_data['FormTable']:
-        if row['Language_ID'] != "cari1283":
+    for row in cariban_data["FormTable"]:
+        if row["Language_ID"] != "cari1283":
             data.add(common.ValueSet,
-                row['ID'],
-                id=row['ID'],
-                language=data['Language'][row['Language_ID']],
-                parameter=data['Parameter'][row['Cognateset_ID']],
+                row["ID"],
+                id=row["ID"],
+                language=data["Language"][row["Language_ID"]],
+                parameter=data["Parameter"][row["Cognateset_ID"]],
             )
             data.add(common.Value,
-                row['ID'],
-                valueset=data['ValueSet'][row['ID']],
-                name=row['Form']
+                row["ID"],
+                valueset=data["ValueSet"][row["ID"]],
+                name=row["Form"]
             )
-                
-    for row in cariban_data['ExampleTable']:
-        data.add(common.Sentence,
-        row['ID'],
-        id=row['ID'],
-        name=row['Name'],
-        description=row['Translated_Text'],
-        analyzed=" ".join(row['Analyzed_Word']),
-        gloss=" ".join(row['Gloss']),
-        language=data['Language'][row['Language_ID']],
-        source=row['Source']
+    
+    for row in cariban_data["ExampleTable"]:
+        new_ex = data.add(common.Sentence,
+        row["ID"],
+        id=row["ID"],
+        name=row["Name"],
+        description=row["Translated_Text"],
+        analyzed=" ".join(row["Analyzed_Word"]),
+        gloss=" ".join(row["Gloss"]),
+        language=data["Language"][row["Language_ID"]],
+        comment=row["Comment"]
+        # source=data["Source"][row["Source"].split("[")[0]]
+        # source=row["Source"]
         )
+        if row["Source"]:
+            bib_key = row["Source"].split("[")[0]
+            if len(row["Source"].split("[")) > 1:
+                pages = row["Source"].split("[")[1].split("]")[0]
+            else:
+                pages = " "    
+            if bib_key in data["Source"]:
+                source = data["Source"][bib_key]
+                DBSession.add(common.SentenceReference(
+                    sentence=new_ex,
+                    source=source,
+                    key=source.id,
+                    description=pages)
+                    )
+    
         #see what morphemes this example illustrates; separated by "; "
-        if row['Illustrates_Morpheme'].split("; ") != ['']:
-            for illustrated in row['Illustrates_Morpheme'].split("; "):
+        if row["Illustrates_Morpheme"].split("; ") != [""]:
+            for illustrated in row["Illustrates_Morpheme"].split("; "):
                 data.add(common.ValueSentence,
-                '{0}-{1}'.format(illustrated,row['ID']),
-                sentence=data['Sentence'][row['ID']],
-                value=data['Value'][illustrated],
+                "{0}-{1}".format(illustrated,row["ID"]),
+                sentence=data["Sentence"][row["ID"]],
+                value=data["Value"][illustrated],
                 )
-        # if row['Illustrates_Morpheme_Parameter'].split(";") != ['']:
-        #     for illustrated in row['Illustrates_Morpheme_Parameter'].split(";"):
+        # if row["Illustrates_Morpheme_Parameter"].split(";") != [""]:
+        #     for illustrated in row["Illustrates_Morpheme_Parameter"].split(";"):
         #         data.add(models.UnitValueSentence,
-        #         '{0}-{1}'.format(illustrated,row['ID']),
-        #         sentence=data['Sentence'][row['ID']],
-        #         unitvalue=data['UnitValue'][illustrated],
+        #         "{0}-{1}".format(illustrated,row["ID"]),
+        #         sentence=data["Sentence"][row["ID"]],
+        #         unitvalue=data["UnitValue"][illustrated],
         #         )
         
                     
@@ -127,6 +146,6 @@ def prime_cache(args):
     """
 
 # main("hihi")
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     initializedb(create=main, prime_cache=prime_cache)
     sys.exit(0)
