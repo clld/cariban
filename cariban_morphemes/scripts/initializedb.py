@@ -69,12 +69,12 @@ def main(args):
             data.add(common.UnitValue,
                 row["ID"]+":"+my_key,
                 id=row["ID"]+":"+my_key,
-                # name="%s: %s" % (row["Form"], my_key),
+                name="%s: %s" % (row["Form"], my_key),
                 unit=data["Unit"][row["ID"]],
                 unitparameter=data["UnitParameter"][morpheme_function]
             )
             # print(data["UnitParameter"][morpheme_function].unitvalues)
-    print(data["UnitValue"])        
+
     #adding morphemes as valuesets (with single values) and cognacy sets as parameters; not ideal
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] == "cari1283":
