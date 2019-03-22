@@ -67,14 +67,14 @@ def main(args):
                 )
             # print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
             data.add(common.UnitValue,
-                row["ID"]+my_key,
-                id=row["ID"]+my_key,
+                row["ID"]+":"+my_key,
+                id=row["ID"]+":"+my_key,
                 # name="%s: %s" % (row["Form"], my_key),
                 unit=data["Unit"][row["ID"]],
                 unitparameter=data["UnitParameter"][morpheme_function]
             )
             # print(data["UnitParameter"][morpheme_function].unitvalues)
-            
+    print(data["UnitValue"])        
     #adding morphemes as valuesets (with single values) and cognacy sets as parameters; not ideal
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] == "cari1283":
@@ -121,22 +121,21 @@ def main(args):
                     key=source.id,
                     description=pages)
                     )
-    
+        
         #see what morphemes this example illustrates; separated by "; "
         if row["Illustrates_Morpheme"].split("; ") != [""]:
-            for illustrated in row["Illustrates_Morpheme"].split("; "):
+            for unit_value in row["Illustrates_Morpheme"].split("; "):
+                unit = unit_value.split(":")[0]
                 data.add(common.ValueSentence,
-                "{0}-{1}".format(illustrated,row["ID"]),
+                "{0}-{1}".format(unit,row["ID"]),
                 sentence=data["Sentence"][row["ID"]],
-                value=data["Value"][illustrated],
+                value=data["Value"][unit],
                 )
-        # if row["Illustrates_Morpheme_Parameter"].split(";") != [""]:
-        #     for illustrated in row["Illustrates_Morpheme_Parameter"].split(";"):
-        #         data.add(models.UnitValueSentence,
-        #         "{0}-{1}".format(illustrated,row["ID"]),
-        #         sentence=data["Sentence"][row["ID"]],
-        #         unitvalue=data["UnitValue"][illustrated],
-        #         )
+                data.add(models.UnitValueSentence,
+                "{0}-{1}".format(unit_value.replace(".","-"),row["ID"]),
+                sentence=data["Sentence"][row["ID"]],
+                unitvalue=data["UnitValue"][unit_value.replace(".","-")],
+                )
         
                     
 def prime_cache(args):
