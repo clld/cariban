@@ -1,0 +1,7 @@
+[0] Config.pm:304> INFO - This is Biber 2.12 running in TOOL mode
+[0] Config.pm:306> INFO - Config file is '/Users/florianm/Dropbox/Stuff/development/biblatex2bibtex.conf'
+[0] Config.pm:307> INFO - Logfile is 'latex.blg'
+[43] biber-darwin:315> INFO - === Sat Mar 23, 2019, 13:53:18
+[65] Biber.pm:4250> INFO - Looking for bibtex format file 'latex'
+[265] Utils.pm:209> ERROR - Cannot find 'latex'!
+[265] Biber.pm:114> INFO - ERRORS: 1
