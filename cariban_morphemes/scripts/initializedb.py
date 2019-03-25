@@ -82,17 +82,18 @@ def main(args):
     
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] != "cari1283":
-            data.add(common.ValueSet,
-                row["ID"],
-                id=row["ID"],
-                language=data["Language"][row["Language_ID"]],
-                parameter=data["Parameter"][row["Cognateset_ID"]],
-            )
-            data.add(common.Value,
-                row["ID"],
-                valueset=data["ValueSet"][row["ID"]],
-                name=row["Form"]
-            )
+            for cognate_ID in row["Cognateset_ID"].split("; "):
+                data.add(common.ValueSet,
+                    "%s:%s" % (row["ID"], cognate_ID),
+                    id="%s:%s" % (row["ID"], cognate_ID),
+                    language=data["Language"][row["Language_ID"]],
+                    parameter=data["Parameter"][cognate_ID],
+                )
+                data.add(common.Value,
+                    row["ID"],
+                    valueset=data["ValueSet"]["%s:%s" % (row["ID"], cognate_ID)],
+                    name=row["Form"]
+                )
     
     for row in cariban_data["ExampleTable"]:
         new_ex = data.add(common.Sentence,
