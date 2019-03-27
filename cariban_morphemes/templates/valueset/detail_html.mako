@@ -2,8 +2,7 @@
 <%namespace name="util" file="../util.mako"/>
 <%! active_menu_item = "contributions" %>
 
-
-<h2>${_('Value Set')} ${h.link(request, ctx.language)}/${h.link(request, ctx.parameter)}</h2>
+<h2>${h.link(request, ctx.language)} ${_('reflexes of')} ${h.link(request, ctx.parameter)}</h2>
 
 % if ctx.description:
 ${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}

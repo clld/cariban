@@ -21,8 +21,11 @@ def main(args):
     dataset = common.Dataset(id=cariban_morphemes.__name__, domain="cariban_morphemes.clld.org")
     DBSession.add(dataset)
     
+    lang_dic = {}
     # add languages in the sample to data["Language"]
     for row in cariban_data["LanguageTable"]:
+        lang_dic[row["ID"]] = row["abbrev"]
+        # print(row)
         data.add(
             common.Language,
             row["ID"],
@@ -79,19 +82,21 @@ def main(args):
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] == "cari1283":
             data.add(common.Parameter,row["Cognateset_ID"],name=row["Form"],id=row["Cognateset_ID"])
-    
+          
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] != "cari1283":
             for cognate_ID in row["Cognateset_ID"].split("; "):
-                data.add(common.ValueSet,
-                    "%s:%s" % (row["ID"], cognate_ID),
-                    id="%s:%s" % (row["ID"], cognate_ID),
-                    language=data["Language"][row["Language_ID"]],
-                    parameter=data["Parameter"][cognate_ID],
-                )
+                lang_valueset = "%s:%s" % (lang_dic[row["Language_ID"]], cognate_ID)
+                if lang_valueset not in data["ValueSet"].keys():
+                    data.add(common.ValueSet,
+                        lang_valueset,
+                        id=lang_valueset,
+                        language=data["Language"][row["Language_ID"]],
+                        parameter=data["Parameter"][cognate_ID],
+                    )
                 data.add(common.Value,
                     row["ID"],
-                    valueset=data["ValueSet"]["%s:%s" % (row["ID"], cognate_ID)],
+                    valueset=data["ValueSet"][lang_valueset],
                     name=row["Form"]
                 )
     
