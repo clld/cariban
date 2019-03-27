@@ -16,7 +16,7 @@ ${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ct
     </ul>
     <h4>
         ${h.map_marker_img(request, value)}
-        ${value.__unicode__()}
+        ${value.__unicode__()}: ${value.description}
         ${h.format_frequency(request, value)}
     </h4>
     <div id="s${i}" class="collapse in">
@@ -35,7 +35,7 @@ ${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ct
 <dl>
     <dt class="language">${_('Language')}:</dt>
     <dd class="language">${h.link(request, ctx.language)}</dd>
-    <dt class="parameter">${_('Parameter')}:</dt>
+    <dt class="parameter">${_('Cognate set')}:</dt>
     <dd class="parameter">${h.link(request, ctx.parameter)}</dd>
     % if ctx.references or ctx.source:
     <dt class="source">${_('Source')}:</dt>

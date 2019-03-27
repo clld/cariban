@@ -94,11 +94,15 @@ def main(args):
                         language=data["Language"][row["Language_ID"]],
                         parameter=data["Parameter"][cognate_ID],
                     )
-                data.add(common.Value,
-                    row["ID"],
-                    valueset=data["ValueSet"][lang_valueset],
-                    name=row["Form"]
-                )
+                for morpheme_function in row["Parameter_ID"].split("; "):
+                    my_key = morpheme_function.replace(".","-")
+                    data.add(common.Value,
+                        row["ID"]+":"+my_key,
+                        valueset=data["ValueSet"][lang_valueset],
+                        name=row["Form"],
+                        description=morpheme_function
+                    )
+                
     
     for row in cariban_data["ExampleTable"]:
         new_ex = data.add(common.Sentence,
@@ -135,7 +139,7 @@ def main(args):
                 data.add(common.ValueSentence,
                 "{0}-{1}".format(unit,row["ID"]),
                 sentence=data["Sentence"][row["ID"]],
-                value=data["Value"][unit],
+                value=data["Value"][unit_value.replace(".","-")],
                 )
                 data.add(models.UnitValueSentence,
                 "{0}-{1}".format(unit_value.replace(".","-"),row["ID"]),

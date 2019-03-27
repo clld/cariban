@@ -2,7 +2,7 @@
 <%namespace name="util" file="../util.mako"/>
 <%! active_menu_item = "unitparameters" %>
 
-<h2>${_('Unit Parameter')} ${ctx.name}</h2>
+<h2>${_('Function')} ${ctx.name}</h2>
 
 <div>
     <% dt = request.registry.getUtility(h.interfaces.IDataTable, 'unitvalues'); dt = dt(request, h.models.UnitValue, unitparameter=ctx) %>
