@@ -82,7 +82,7 @@ def main(args):
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] == "cari1283":
             data.add(common.Parameter,row["Cognateset_ID"],name=row["Form"],id=row["Cognateset_ID"])
-          
+    print(dir(common.Value))      
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] != "cari1283":
             for cognate_ID in row["Cognateset_ID"].split("; "):
@@ -99,8 +99,9 @@ def main(args):
                     data.add(common.Value,
                         row["ID"]+":"+my_key,
                         valueset=data["ValueSet"][lang_valueset],
-                        name=row["Form"],
-                        description=morpheme_function
+                        name=row["Form"]+": "+morpheme_function,
+                        description=morpheme_function,
+                        markup_description="GIRL YOU CRAY"
                     )
                 
     
