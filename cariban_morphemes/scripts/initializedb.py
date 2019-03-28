@@ -101,12 +101,26 @@ def main(args):
                     data.add(common.Value,
                         row["ID"]+":"+my_key,
                         valueset=data["ValueSet"][lang_valueset],
-                        name=row["Form"]+": "+morpheme_function,
+                        name=row["Form"].split("; ")[0]+": "+morpheme_function,
                         description=morpheme_function,
                         markup_description=row["Form"]
                     )
-                
-    
+                    
+    gloss_replacements = {
+        "1S": "1.S",
+        "2S": "2.S",
+        "3S": "3.S",
+        "3P": "3.P",
+        "1P": "1.P",
+        "S_A_": "SA",
+        "S_P_": "SP"
+    }            
+    def clldify_glosses(gloss_line):
+        output = gloss_line
+        for orig, new in gloss_replacements.items():
+            output = output.replace(orig,new)
+        return output
+        
     for row in cariban_data["ExampleTable"]:
         new_ex = data.add(common.Sentence,
         row["ID"],
@@ -114,7 +128,7 @@ def main(args):
         name=row["Name"],
         description=row["Translated_Text"],
         analyzed=" ".join(row["Analyzed_Word"]),
-        gloss=" ".join(row["Gloss"]),
+        gloss=clldify_glosses(" ".join(row["Gloss"])),
         language=data["Language"][row["Language_ID"]],
         comment=row["Comment"]
         # source=data["Source"][row["Source"].split("[")[0]]
