@@ -105,7 +105,7 @@ def main(args):
                 lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
                 # print(lang_valueset)
                 if lang_valueset not in data["ValueSet"].keys():
-                    data.add(common.ValueSet,
+                    my_valueset = data.add(common.ValueSet,
                         lang_valueset,
                         id=lang_valueset,
                         language=data["Language"][row["Language_ID"]],
@@ -113,14 +113,14 @@ def main(args):
                     )
                 for morpheme_function in row["Parameter_ID"].split("; "):
                     my_key = morpheme_function.replace(".","-")
-                    data.add(common.Value,
+                    my_value = data.add(common.Value,
                         row["ID"]+":"+my_key,
-                        valueset=data["ValueSet"][lang_valueset],
+                        valueset=my_valueset,
                         name=row["Form"].split("; ")[0]+": "+morpheme_function,
                         description=morpheme_function,
                         markup_description=row["Form"]
                     )
-    
+       
     print("Adding examples…")            
     gloss_replacements = {
         "1S": "1.S",

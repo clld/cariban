@@ -24,6 +24,7 @@ from clld.db.models.common import (
     Unit,
     UnitValue,
     UnitParameter,
+    HasSourceMixin,
     Sentence,
     UnitDomainElement,
     IdNameDescriptionMixin,
@@ -52,6 +53,12 @@ class UnitValueSentence(Base, PolymorphicBaseMixin):
     unitvalue = relationship(UnitValue, innerjoin=True, backref='sentence_assocs')
     sentence = relationship(Sentence, innerjoin=True, backref='unitvalue_assocs', order_by=Sentence.id)
 
+class ValueReference(Base, HasSourceMixin):
+    """
+    """
+    value_pk = Column(Integer, ForeignKey('value.pk'))
+    value = relationship(Value, backref="references")
+    
 # @implementer(interfaces.IMorpheme)
 # class Morpheme(Unit, IdNameDescriptionMixin):
 #     pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)
