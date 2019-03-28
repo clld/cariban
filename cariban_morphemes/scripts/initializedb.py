@@ -24,7 +24,7 @@ def main(args):
     lang_dic = {}
     # add languages in the sample to data["Language"]
     for row in cariban_data["LanguageTable"]:
-        lang_dic[row["ID"]] = row["abbrev"]
+        lang_dic[row["ID"]] = {"abbrev": row["abbrev"], "name": row["Name"]}
         # print(row)
         data.add(
             common.Language,
@@ -48,7 +48,7 @@ def main(args):
                 description=src.get("title", src.get("booktitle")),
                 bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
-    
+    print(dir(common.Unit))
     # #trying to add morphemes as units instead of values of parameters
     for row in cariban_data["FormTable"]:
         # print("Adding morpheme {0} with ID {1} for language {2}".format(row["Form"],row["ID"],row["Language_ID"]))
@@ -57,7 +57,8 @@ def main(args):
             language=data["Language"][row["Language_ID"]],
             name=row["Form"],
             description=row["Parameter_ID"],
-            id=row["ID"]
+            id=row["ID"],
+            markup_description=row["Cognateset_ID"]
         )
         for morpheme_function in row["Parameter_ID"].split("; "):
             my_key = morpheme_function.replace(".","-")
@@ -72,7 +73,7 @@ def main(args):
             data.add(common.UnitValue,
                 row["ID"]+":"+my_key,
                 id=row["ID"]+":"+my_key,
-                name="%s: %s" % (row["Form"], my_key),
+                name=lang_dic[row["Language_ID"]]["name"]+": "+my_key,
                 unit=data["Unit"][row["ID"]],
                 unitparameter=data["UnitParameter"][morpheme_function]
             )
@@ -82,11 +83,12 @@ def main(args):
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] == "cari1283":
             data.add(common.Parameter,row["Cognateset_ID"],name=row["Form"],id=row["Cognateset_ID"])
-    print(dir(common.Value))      
+    # print(dir(common.Unit))      
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] != "cari1283":
             for cognate_ID in row["Cognateset_ID"].split("; "):
-                lang_valueset = "%s:%s" % (lang_dic[row["Language_ID"]], cognate_ID)
+                lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
+                # print(lang_valueset)
                 if lang_valueset not in data["ValueSet"].keys():
                     data.add(common.ValueSet,
                         lang_valueset,
@@ -101,7 +103,7 @@ def main(args):
                         valueset=data["ValueSet"][lang_valueset],
                         name=row["Form"]+": "+morpheme_function,
                         description=morpheme_function,
-                        markup_description="GIRL YOU CRAY"
+                        markup_description=row["Form"]
                     )
                 
     
