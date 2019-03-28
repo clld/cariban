@@ -18,11 +18,23 @@ cariban_data = Wordlist.from_metadata("../cariban_data.json")
 def main(args):
     data = Data()
 
-    dataset = common.Dataset(id=cariban_morphemes.__name__, domain="cariban_morphemes.clld.org")
+    dataset = common.Dataset(id=cariban_morphemes.__name__,
+        domain="cariban-morphology.herokuapp.com/",
+        name="Cariban Morphology Database",
+        description="Cariban Morphology Database",
+        publisher_name="Florian Matter",
+        publisher_url="http://www.isw.unibe.ch/ueber_uns/personen/ma_matter_florian/index_ger.html",
+        publisher_place="Bern",
+        license="http://creativecommons.org/licenses/by/4.0/",
+        contact="florian.matter@isw.unibe.ch"
+        )
     DBSession.add(dataset)
-    
+    c = common.Contributor(id="fm",name="Florian Matter")
+    dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
+    print(dir(common.Parameter))
     lang_dic = {}
     # add languages in the sample to data["Language"]
+    print("Adding languages…")
     for row in cariban_data["LanguageTable"]:
         lang_dic[row["ID"]] = {"abbrev": row["abbrev"], "name": row["Name"]}
         # print(row)
@@ -36,6 +48,7 @@ def main(args):
         )
     
     #add sources to data["Sources"]
+    print("Adding sources…")
     for src in cariban_data.sources.items():
             for invalid in ["isbn", "part", "institution"]:
                 if invalid in src:
@@ -48,8 +61,9 @@ def main(args):
                 description=src.get("title", src.get("booktitle")),
                 bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
-    print(dir(common.Unit))
+
     # #trying to add morphemes as units instead of values of parameters
+    print("Adding morphemes…")
     for row in cariban_data["FormTable"]:
         # print("Adding morpheme {0} with ID {1} for language {2}".format(row["Form"],row["ID"],row["Language_ID"]))
         data.add(common.Unit,
@@ -80,6 +94,7 @@ def main(args):
             # print(data["UnitParameter"][morpheme_function].unitvalues)
 
     #adding morphemes as valuesets (with single values) and cognacy sets as parameters; not ideal
+    print("Adding cognate sets…")
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] == "cari1283":
             data.add(common.Parameter,row["Cognateset_ID"],name=row["Form"],id=row["Cognateset_ID"])
@@ -105,7 +120,8 @@ def main(args):
                         description=morpheme_function,
                         markup_description=row["Form"]
                     )
-                    
+    
+    print("Adding examples…")            
     gloss_replacements = {
         "1S": "1.S",
         "2S": "2.S",
