@@ -65,7 +65,7 @@ def main(args):
     # #trying to add morphemes as units instead of values of parameters
     print("Adding morphemes…")
     for row in cariban_data["FormTable"]:
-        # print("Adding morpheme {0} with ID {1} for language {2}".format(row["Form"],row["ID"],row["Language_ID"]))
+        # print("Adding morpheme. Form: {0}, ID: {1}, language: {2}".format(row["Form"],row["ID"],row["Language_ID"]))
         data.add(common.Unit,
             row["ID"],
             language=data["Language"][row["Language_ID"]],
@@ -77,13 +77,13 @@ def main(args):
         for morpheme_function in row["Parameter_ID"].split("; "):
             my_key = morpheme_function.replace(".","-")
             if morpheme_function not in data["UnitParameter"].keys():
-                # print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
+                print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
                 data.add(common.UnitParameter,
                     morpheme_function,
                     id=my_key,
                     name=morpheme_function
                 )
-            # print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
+            print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
             data.add(common.UnitValue,
                 row["ID"]+":"+my_key,
                 id=row["ID"]+":"+my_key,
@@ -91,7 +91,6 @@ def main(args):
                 unit=data["Unit"][row["ID"]],
                 unitparameter=data["UnitParameter"][morpheme_function]
             )
-            # print(data["UnitParameter"][morpheme_function].unitvalues)
 
     #adding morphemes as valuesets (with single values) and cognacy sets as parameters; not ideal
     print("Adding cognate sets…")
@@ -105,14 +104,18 @@ def main(args):
                 lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
                 # print(lang_valueset)
                 if lang_valueset not in data["ValueSet"].keys():
+                    print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
                     my_valueset = data.add(common.ValueSet,
                         lang_valueset,
                         id=lang_valueset,
                         language=data["Language"][row["Language_ID"]],
                         parameter=data["Parameter"][cognate_ID],
                     )
+                else:
+                    my_valueset = data["ValueSet"][lang_valueset]
                 for morpheme_function in row["Parameter_ID"].split("; "):
                     my_key = morpheme_function.replace(".","-")
+                    print("Adding Value of form %s for language %s to ValueSet %s" % (row["Form"], row["Language_ID"], lang_valueset))
                     my_value = data.add(common.Value,
                         row["ID"]+":"+my_key,
                         valueset=my_valueset,
