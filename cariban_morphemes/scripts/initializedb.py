@@ -24,7 +24,7 @@ def main(args):
         description="Cariban Morphology Database",
         publisher_name="Florian Matter",
         publisher_url="http://www.isw.unibe.ch/ueber_uns/personen/ma_matter_florian/index_ger.html",
-        publisher_place="Bern",
+        publisher_place="",
         license="http://creativecommons.org/licenses/by/4.0/",
         contact="florian.matter@isw.unibe.ch"
         )
@@ -77,13 +77,13 @@ def main(args):
         for morpheme_function in row["Parameter_ID"].split("; "):
             my_key = morpheme_function.replace(".","-")
             if morpheme_function not in data["UnitParameter"].keys():
-                print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
+                # print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
                 data.add(common.UnitParameter,
                     morpheme_function,
                     id=my_key,
                     name=morpheme_function
                 )
-            print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
+            # print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
             data.add(common.UnitValue,
                 row["ID"]+":"+my_key,
                 id=row["ID"]+":"+my_key,
@@ -104,7 +104,7 @@ def main(args):
                 lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
                 # print(lang_valueset)
                 if lang_valueset not in data["ValueSet"].keys():
-                    print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
+                    # print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
                     my_valueset = data.add(common.ValueSet,
                         lang_valueset,
                         id=lang_valueset,
@@ -115,7 +115,7 @@ def main(args):
                     my_valueset = data["ValueSet"][lang_valueset]
                 for morpheme_function in row["Parameter_ID"].split("; "):
                     my_key = morpheme_function.replace(".","-")
-                    print("Adding Value of form %s for language %s to ValueSet %s" % (row["Form"], row["Language_ID"], lang_valueset))
+                    # print("Adding Value of form %s for language %s to ValueSet %s" % (row["Form"], row["Language_ID"], lang_valueset))
                     my_value = data.add(common.Value,
                         row["ID"]+":"+my_key,
                         valueset=my_valueset,
@@ -123,7 +123,11 @@ def main(args):
                         description=morpheme_function,
                         markup_description=row["Form"]
                     )
-       
+                    
+    is_illustrated = {}
+    for row in data["Value"]:
+        is_illustrated[row] = False
+        
     print("Adding examples…")            
     gloss_replacements = {
         "1S": "1.S",
@@ -139,7 +143,7 @@ def main(args):
         for orig, new in gloss_replacements.items():
             output = output.replace(orig,new)
         return output
-        
+            
     for row in cariban_data["ExampleTable"]:
         new_ex = data.add(common.Sentence,
         row["ID"],
@@ -172,6 +176,7 @@ def main(args):
         if row["Illustrates_Morpheme"].split("; ") != [""]:
             for unit_value in row["Illustrates_Morpheme"].split("; "):
                 unit = unit_value.split(":")[0]
+                is_illustrated[unit_value.replace(".","-")] = True
                 data.add(common.ValueSentence,
                 "{0}-{1}".format(unit,row["ID"]),
                 sentence=data["Sentence"][row["ID"]],
@@ -182,7 +187,18 @@ def main(args):
                 sentence=data["Sentence"][row["ID"]],
                 unitvalue=data["UnitValue"][unit_value.replace(".","-")],
                 )
-        
+    
+    #see how many morpheme functions are illustrated with example sentences
+    good_ill = [key for key, value in is_illustrated.items() if value]
+    not_ill = [key for key, value in is_illustrated.items() if not value]
+    not_ill.sort()
+    cov = len(good_ill)/len(is_illustrated)*100
+    print("Morpheme exemplification coverage is at %s%%. List of unillustrated morphemes saved to unillustrated_morphemes.txt" % str(round(cov, 2)))
+    f = open("../unillustrated_morphemes.txt", "w")
+    for morph in not_ill:
+        f.write(morph+"\n")
+    f.close()
+    
                     
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
