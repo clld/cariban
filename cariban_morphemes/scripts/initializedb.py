@@ -150,8 +150,8 @@ def main(args):
         id=row["ID"],
         name=row["Name"],
         description=row["Translated_Text"],
-        analyzed=" ".join(row["Analyzed_Word"]),
-        gloss=clldify_glosses(" ".join(row["Gloss"])),
+        analyzed="\t".join(row["Analyzed_Word"]),
+        gloss=clldify_glosses("\t".join(row["Gloss"])),
         language=data["Language"][row["Language_ID"]],
         comment=row["Comment"]
         # source=data["Source"][row["Source"].split("[")[0]]
