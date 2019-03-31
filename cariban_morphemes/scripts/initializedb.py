@@ -127,7 +127,15 @@ def main(args):
     is_illustrated = {}
     for row in data["Value"]:
         is_illustrated[row] = False
-        
+    
+    print("Adding glossing abbreviations…")
+    import urllib3
+    target_url = "https://gitlab.com/florianmatter/interlinear_text_tools/raw/master/glossing.txt"
+    http = urllib3.PoolManager()
+    gloss_txt = http.request('GET', target_url).data.decode('utf-8')
+    for glossline in str(gloss_txt).split("\n"):
+        DBSession.add(common.GlossAbbreviation(id=glossline.split("\t")[0], name=glossline.split("\t")[1]))
+    
     print("Adding examples…")            
     gloss_replacements = {
         "1S": "1.S",
