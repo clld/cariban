@@ -11,35 +11,33 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-# import cariban_morphemes
-# from cariban_morphemes import interfaces
-import clld
+
+from clld import interfaces
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
-from clld.db.models.common import (
-    Language,
-    Parameter,
-    Value,
-    ValueSet,
-    Contribution,
-    Unit,
-    UnitValue,
-    UnitParameter,
-    HasSourceMixin,
-    Sentence,
-    UnitDomainElement,
-    IdNameDescriptionMixin,
-)
+from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence
 
-#from clld.db.models.common import Language
+@implementer(interfaces.IUnitParameter)
+class Meaning(CustomModelMixin, UnitParameter):
+    pk = Column(Integer, ForeignKey('unitparameter.pk'), primary_key=True)
+    form = Column(String)
 
+@implementer(interfaces.IUnit)
+class Morpheme(CustomModelMixin, Unit):
+    pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)
+    
+@implementer(interfaces.IParameter)
+class CognateSet(CustomModelMixin, Parameter):
+    pk = Column(Integer, ForeignKey('parameter.pk'), primary_key=True)
+
+@implementer(interfaces.IValue)
+class Counterpart(CustomModelMixin, Value):
+    pk = Column(Integer, ForeignKey('value.pk'), primary_key=True)
+    morpheme_pk = Column(Integer, ForeignKey('morpheme.pk'))
+    morpheme = relationship(Morpheme, backref='counterparts')
 
 # -----------------------------------------------------------------------------
 # specialized common mapper classes
 # -----------------------------------------------------------------------------
-@implementer(clld.interfaces.ILanguage)
-class cariban_morphemesLanguage(CustomModelMixin, Language):
-   pk = Column(Integer, ForeignKey('language.pk'), primary_key=True)
-
 class UnitValueSentence(Base, PolymorphicBaseMixin):
 
     """Association between values and sentences given as explanation of a value."""
@@ -52,19 +50,3 @@ class UnitValueSentence(Base, PolymorphicBaseMixin):
 
     unitvalue = relationship(UnitValue, innerjoin=True, backref='sentence_assocs')
     sentence = relationship(Sentence, innerjoin=True, backref='unitvalue_assocs', order_by=Sentence.id)
-
-class ValueReference(Base, HasSourceMixin):
-    """
-    """
-    value_pk = Column(Integer, ForeignKey('value.pk'))
-    value = relationship(Value, backref="references")
-    
-# @implementer(interfaces.IMorpheme)
-# class Morpheme(Unit, IdNameDescriptionMixin):
-#     pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)
-#     pass
-    # pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)
-    
-# @implementer(clld.interfaces.IUnitParameter)
-# class Meaning(CustomModelMixin, UnitParameter):
-#     pk = Column(Integer, ForeignKey('unitparameter.pk'), primary_key=True)

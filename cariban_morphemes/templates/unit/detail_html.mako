@@ -10,10 +10,14 @@
 ##</p>
 
 <p>
-Part of cognate sets: 
-% for id in ctx.markup_description.split("; "):
-	<a href="/parameters/${id}">${id}</a>, 
-% endfor
+Part of the following cognate set(s):
+% if ctx.counterparts:
+	<ul class="inline">
+		% for c in ctx.counterparts:
+			<li>${h.link(request, c.valueset.parameter)}</li>
+		% endfor
+	</ul>
+% endif
 <p>
 	
 <dl>

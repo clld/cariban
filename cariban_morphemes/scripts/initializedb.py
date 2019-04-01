@@ -11,7 +11,6 @@ import cariban_morphemes
 from cariban_morphemes import models
 
 from clld_glottologfamily_plugin.util import load_families
-import clld_cognacy_plugin
 
 cariban_data = Wordlist.from_metadata("../cariban_data.json")
 
@@ -28,12 +27,12 @@ def main(args):
         license="http://creativecommons.org/licenses/by/4.0/",
         contact="florian.matter@isw.unibe.ch"
         )
+        
     DBSession.add(dataset)
     c = common.Contributor(id="fm",name="Florian Matter")
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
-    print(dir(common.Parameter))
+    
     lang_dic = {}
-    # add languages in the sample to data["Language"]
     print("Adding languages…")
     for row in cariban_data["LanguageTable"]:
         lang_dic[row["ID"]] = {"abbrev": row["abbrev"], "name": row["Name"]}
@@ -47,7 +46,6 @@ def main(args):
             longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
         )
     
-    #add sources to data["Sources"]
     print("Adding sources…")
     for src in cariban_data.sources.items():
             for invalid in ["isbn", "part", "institution"]:
@@ -61,43 +59,45 @@ def main(args):
                 description=src.get("title", src.get("booktitle")),
                 bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
-
-    # #trying to add morphemes as units instead of values of parameters
+    
     print("Adding morphemes…")
+
     for row in cariban_data["FormTable"]:
-        # print("Adding morpheme. Form: {0}, ID: {1}, language: {2}".format(row["Form"],row["ID"],row["Language_ID"]))
-        data.add(common.Unit,
+        data.add(models.Morpheme,
             row["ID"],
             language=data["Language"][row["Language_ID"]],
             name=row["Form"],
             description=row["Parameter_ID"],
             id=row["ID"],
-            markup_description=row["Cognateset_ID"]
         )
         for morpheme_function in row["Parameter_ID"].split("; "):
-            my_key = morpheme_function.replace(".","-")
-            if morpheme_function not in data["UnitParameter"].keys():
+            my_key = morpheme_function.replace(".","_")
+            #Check if there is already such a function (meaning) defined
+            if morpheme_function not in data["Meaning"].keys():
                 # print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
-                data.add(common.UnitParameter,
+                data.add(models.Meaning,
                     morpheme_function,
                     id=my_key,
                     name=morpheme_function
                 )
             # print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
+            #This is the "MorphemeFunction" linking a Morpheme (Unit) with a Meaning (UnitParameter)
             data.add(common.UnitValue,
                 row["ID"]+":"+my_key,
                 id=row["ID"]+":"+my_key,
                 name=lang_dic[row["Language_ID"]]["name"]+": "+my_key,
-                unit=data["Unit"][row["ID"]],
-                unitparameter=data["UnitParameter"][morpheme_function]
+                unit=data["Morpheme"][row["ID"]],
+                unitparameter=data["Meaning"][morpheme_function]
             )
 
-    #adding morphemes as valuesets (with single values) and cognacy sets as parameters; not ideal
     print("Adding cognate sets…")
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] == "cari1283":
-            data.add(common.Parameter,row["Cognateset_ID"],name=row["Form"],id=row["Cognateset_ID"])
-    # print(dir(common.Unit))      
+            data.add(models.CognateSet,
+                    row["Cognateset_ID"],
+                    name=row["Form"],
+                    id=row["Cognateset_ID"]
+            )
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] != "cari1283":
             for cognate_ID in row["Cognateset_ID"].split("; "):
@@ -109,35 +109,35 @@ def main(args):
                         lang_valueset,
                         id=lang_valueset,
                         language=data["Language"][row["Language_ID"]],
-                        parameter=data["Parameter"][cognate_ID],
+                        parameter=data["CognateSet"][cognate_ID],
                     )
                 else:
                     my_valueset = data["ValueSet"][lang_valueset]
                 for morpheme_function in row["Parameter_ID"].split("; "):
                     my_key = morpheme_function.replace(".","-")
                     # print("Adding Value of form %s for language %s to ValueSet %s" % (row["Form"], row["Language_ID"], lang_valueset))
-                    my_value = data.add(common.Value,
+                    my_value = data.add(models.Counterpart,
                         row["ID"]+":"+my_key,
                         valueset=my_valueset,
                         name=row["Form"].split("; ")[0]+": "+morpheme_function,
                         description=morpheme_function,
-                        markup_description=row["Form"]
+                        markup_description=row["Form"],
+                        morpheme=data["Morpheme"][row["ID"]]
                     )
                     
     is_illustrated = {}
-    for row in data["Value"]:
+    for row in data["Counterpart"]:
         is_illustrated[row] = False
     
-    #TODO add back
-    # print("Adding glossing abbreviations…")
- #    import urllib3
- #    target_url = "https://gitlab.com/florianmatter/interlinear_text_tools/raw/master/glossing.txt"
- #    http = urllib3.PoolManager()
- #    gloss_txt = http.request('GET', target_url).data.decode('utf-8')
- #    for glossline in gloss_txt.split("\n"):
- #        key = glossline.split("\t")[0].upper()
- #        name = glossline.split("\t")[1]
- #        DBSession.add(common.GlossAbbreviation(id=key, name=name))
+    print("Adding glossing abbreviations…")
+    import urllib3
+    target_url = "https://gitlab.com/florianmatter/interlinear_text_tools/raw/master/glossing.txt"
+    http = urllib3.PoolManager()
+    gloss_txt = http.request('GET', target_url).data.decode('utf-8')
+    for glossline in gloss_txt.split("\n"):
+        key = glossline.split("\t")[0].upper()
+        name = glossline.split("\t")[1]
+        DBSession.add(common.GlossAbbreviation(id=key, name=name))
         
     print("Adding examples…")            
     gloss_replacements = {
@@ -184,7 +184,7 @@ def main(args):
                     description=pages)
                     )
         
-        #see what morphemes this example illustrates; separated by "; "
+        # see what morphemes this example illustrates; separated by "; "
         if row["Illustrates_Morpheme"].split("; ") != [""]:
             for unit_value in row["Illustrates_Morpheme"].split("; "):
                 unit = unit_value.split(":")[0]
@@ -192,7 +192,7 @@ def main(args):
                 data.add(common.ValueSentence,
                 "{0}-{1}".format(unit,row["ID"]),
                 sentence=data["Sentence"][row["ID"]],
-                value=data["Value"][unit_value.replace(".","-")],
+                value=data["Counterpart"][unit_value.replace(".","-")],
                 )
                 data.add(models.UnitValueSentence,
                 "{0}-{1}".format(unit_value.replace(".","-"),row["ID"]),
@@ -200,7 +200,7 @@ def main(args):
                 unitvalue=data["UnitValue"][unit_value.replace(".","-")],
                 )
     
-    #see how many morpheme functions are illustrated with example sentences
+    # see how many morpheme functions are illustrated with example sentences
     good_ill = [key for key, value in is_illustrated.items() if value]
     not_ill = [key for key, value in is_illustrated.items() if not value]
     not_ill.sort()
