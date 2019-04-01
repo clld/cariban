@@ -5,7 +5,7 @@
 
 <%def name="sidebar()">
     % if ctx.value_assocs:
-    <%util:well title="${_('Datapoints')}">
+    <%util:well title="${_('Cognate sets')}">
         <ul>
         % for va in ctx.value_assocs:
             % if va.value:
