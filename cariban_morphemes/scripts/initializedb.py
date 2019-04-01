@@ -163,7 +163,8 @@ def main(args):
         analyzed="\t".join(row["Analyzed_Word"]),
         gloss=clldify_glosses("\t".join(row["Gloss"])),
         language=data["Language"][row["Language_ID"]],
-        comment=row["Comment"]
+        comment=row["Comment"],
+        markup_gloss=row["Morpheme_IDs"].replace(" ","\t")
         # source=data["Source"][row["Source"].split("[")[0]]
         # source=row["Source"]
         )

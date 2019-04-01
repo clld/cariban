@@ -1,4 +1,5 @@
 <%inherit file="../${context.get('request').registry.settings.get('clld.app_template', 'app.mako')}"/>
+<%import cariban_morphemes.render_sentence as rs%>
 <%namespace name="util" file="../util.mako"/>
 <%! active_menu_item = "sentences" %>
 
@@ -22,7 +23,7 @@
     <dd>${h.link(request, ctx.language)}</dd>
 </dl>
 
-${h.rendered_sentence(ctx)|n}
+${rs.rendered_sentence(ctx)|n}
 
 <dl>
 % if ctx.comment:
