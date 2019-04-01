@@ -17,12 +17,15 @@
     % endif
 </%def>
 
-<h2>${_('Sentence')} ${ctx.id}</h2>
-<dl>
-    <dt>${_('Language')}:</dt>
-    <dd>${h.link(request, ctx.language)}</dd>
-</dl>
+<h3>${_('Sentence')} ${ctx.id}</h3>
 
+${h.link(request, ctx.language)}
+% if ctx.source:
+<dd>${ctx.source.split("[")[0]}: ${ctx.source.split("[")[1].split("]")[0]}</dd>
+% endif
+% if ctx.references:
+(${h.linked_references(request, ctx)|n})
+% endif
 ${cmutil.rendered_sentence(ctx)|n}
 
 <dl>
@@ -33,14 +36,5 @@ ${cmutil.rendered_sentence(ctx)|n}
 % if ctx.type:
 <dt>${_('Type')}:</dt>
 <dd>${ctx.type}</dd>
-% endif
-% if ctx.references or ctx.source:
-<dt>${_('Source')}:</dt>
-% if ctx.source:
-<dd>${ctx.source.split("[")[0]}: ${ctx.source.split("[")[1].split("]")[0]}</dd>
-% endif
-% if ctx.references:
-<dd>${h.linked_references(request, ctx)|n}</dd>
-% endif
 % endif
 </dl>

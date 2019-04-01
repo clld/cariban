@@ -6,13 +6,13 @@
         % for a in obj.sentence_assocs:
             <li>
                 <blockquote style="margin-top: 5px;">
-                    ${h.link(request, a.sentence, label='%s %s:' % (_('Sentence'), a.sentence.id))}<br>
+                    ${h.link(request, a.sentence, label='(%s)' % (a.sentence.id))}
                     % if a.description and fmt == 'long':
                         <p>${a.description}</p>
                     % endif
                     ${cmutil.rendered_sentence(a.sentence, fmt=fmt)}
                     % if (a.sentence.references or a.sentence.source) and fmt == 'long':
-                        Source: ${h.linked_references(request, a.sentence)|n} <span class="muted"></span>
+                        (${h.linked_references(request, a.sentence)|n}) <span class="muted"></span>
                     % endif
                 </blockquote>
             </li>

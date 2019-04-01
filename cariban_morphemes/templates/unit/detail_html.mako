@@ -4,23 +4,37 @@
 <%! active_menu_item = "units" %>
 
 
-<h2>${_('Morpheme')} ${ctx.name}</h2>
+<h3>${_('Morpheme')} ${ctx.name}</h3>
 
-##<p>
-##    ${ctx.description}
-##</p>
+## <p>
+##     ${ctx.description}
+## </p>
 
-<p>
-Part of the following cognate set(s):
-% if ctx.counterparts:
-	<ul class="inline">
-		% for c in ctx.counterparts:
-			<li>${h.link(request, c.valueset.parameter)}</li>
-		% endfor
-	</ul>
-% endif
-<p>
-	
+<table class="table table-nonfluid">
+    <tbody>
+	<tr>
+	<td>Form:</td>
+	<td>${ctx.name}</td>
+	</tr>
+	<tr>
+	<td>Language:</td>
+	<td>${h.link(request, ctx.language)}</td>
+	</tr>
+	<tr>
+	<td>Cognate set(s):</td>
+	<td>
+	% if ctx.counterparts:
+		<ul class="inline">
+			% for c in ctx.counterparts:
+				<li>${h.link(request, c.valueset.parameter)}</li>
+			% endfor
+		</ul>
+	% endif
+	</td>
+	</tr>
+    </tbody>
+</table>
+
 <dl>
 % for key, objs in h.groupby(ctx.data, lambda o: o.key):
 <dt>${key}</dt>
@@ -30,7 +44,7 @@ Part of the following cognate set(s):
 % endfor
 </dl>
 
-<h3>${_('Functions')}</h3>
+<h4>${_('Functions:')}</h4>
 <dl>
     % for i, value in enumerate(ctx.unitvalues):
 		<div style="clear: right;">
