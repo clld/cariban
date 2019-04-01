@@ -18,6 +18,13 @@ from clld.lib.coins import ContextObject
 from clld.lib import bibtex
 from clld.lib import rdf
 
+
+def xify(text):
+    ids = []
+    for word in text.split(" "):
+        ids.append(re.sub(r'([X])\1+', r'\1', re.sub("[^(\-|\=)|]", "X", word)))
+    return " ".join(ids)
+    
 # # regex to match standard abbreviations in gloss units:
 # # We look for sequences of uppercase letters which are not followed by a lowercase letter.
 GLOSS_ABBR_PATTERN = re.compile(

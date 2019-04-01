@@ -4,7 +4,7 @@ import sys
 from clld.scripts.util import initializedb, Data
 from clld.db.meta import DBSession
 from clld.db.models import common
-
+from cariban_morphemes import util
 from pycldf import Wordlist
 from clld.lib.bibtex import EntryType, unescape
 from nameparser import HumanName
@@ -181,7 +181,7 @@ def main(args):
         for orig, new in gloss_replacements.items():
             output = output.replace(orig,new)
         return output
-            
+    
     for row in cariban_data["ExampleTable"]:
         new_ex = data.add(common.Sentence,
         row["ID"],
@@ -210,13 +210,20 @@ def main(args):
                     key=source.id,
                     description=pages)
                     )
-        
+
         # see what morphemes this example illustrates; separated by "; "
-        if row["Illustrates_Morpheme"].split("; ") != [""]:
-            for unit_value in row["Illustrates_Morpheme"].split("; "):
+        for word in row["Morpheme_IDs"].split(" "):
+            morph_ids = util.split_word(word)
+            for unit_value in morph_ids:
+                if unit_value in ["X","-","="]:
+                    continue
+                unitvaluesentence_key = "{0}-{1}".format(unit_value.replace(".","-"),row["ID"])
+                if unitvaluesentence_key in data["UnitValueSentence"].keys():
+                    continue
                 is_illustrated[unit_value] = True
+                print("new value: %s" % unit_value)
                 data.add(models.UnitValueSentence,
-                "{0}-{1}".format(unit_value.replace(".","-"),row["ID"]),
+                unitvaluesentence_key,
                 sentence=data["Sentence"][row["ID"]],
                 unitvalue=data["UnitValue"][unit_value.replace(".","-")],
                 )
