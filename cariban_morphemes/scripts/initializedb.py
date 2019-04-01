@@ -221,7 +221,6 @@ def main(args):
                 if unitvaluesentence_key in data["UnitValueSentence"].keys():
                     continue
                 is_illustrated[unit_value] = True
-                print("new value: %s" % unit_value)
                 data.add(models.UnitValueSentence,
                 unitvaluesentence_key,
                 sentence=data["Sentence"][row["ID"]],

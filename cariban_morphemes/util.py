@@ -118,7 +118,7 @@ def rendered_sentence(sentence, abbrs=None, fmt='long'):
                 gloss_morphs = split_word(morph_id)
                 for i, morph in enumerate(gloss_morphs):
                     if morph not in ["X","-","="]:
-                        obj_morphs[i] = HTML.a(obj_morphs[i], href="/units/%s" % morph.split(":")[0])
+                        obj_morphs[i] = HTML.a(obj_morphs[i], href="/morpheme/%s" % morph.split(":")[0])
             parsed_word = HTML.text(*obj_morphs)
             gloss_morphs = re.split("[-|=]", gloss)
             units.append(HTML.div(
