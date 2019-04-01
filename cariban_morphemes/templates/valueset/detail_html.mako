@@ -1,35 +1,35 @@
 <%inherit file="../${context.get('request').registry.settings.get('clld.app_template', 'app.mako')}"/>
 <%namespace name="util" file="../util.mako"/>
+<%namespace name="cmutil" file="../cmutil.mako"/>
 <%! active_menu_item = "contributions" %>
 
-<h2>${h.link(request, ctx.language)} ${_('reflexes of')} ${h.link(request, ctx.parameter)}</h2>
+<h3>${h.link(request, ctx.language)} ${_('reflexes of')} ${h.link(request, ctx.parameter)}</h3>
 
 % if ctx.description:
 ${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}
 % endif
 
-<h3>${_('Values')} ${h.map_marker_img(request, ctx, height='25', width='25')|n}</h3>
 % for i, value in enumerate(ctx.values):
-<div style="clear: right;">
-    <ul class="nav nav-pills pull-right">
-        <li><a data-toggle="collapse" data-target="#s${i}">Show/hide details</a></li>
-    </ul>
-    <h4>
-        ${h.map_marker_img(request, value)}
-        ${value.markup_description}: <a href="/unitparameters/${value.description}">${value.description}</a>
-        ${h.format_frequency(request, value)}
-    </h4>
-    <div id="s${i}" class="collapse in">
-        ${util.sentences(value)}
-        % if value.confidence:
-        <dl>
-            <dt>${_('Confidence')}:</dt>
-            <dd>${value.confidence}</dd>
-        </dl>
-        % endif
-    </div>
-</div>
+<%unit = value.morpheme%>
+<dl>
+<h4>${h.link(request, unit)}</h4>
+    % for j, unitvalue in enumerate(unit.unitvalues):
+		<div style="clear: right;">
+		    <ul class="nav nav-pills pull-right">
+		        <li><a data-toggle="collapse" data-target="#s${j}">Show/hide details</a></li>
+		    </ul>
+			<h4>
+				<dt>${h.link(request, unitvalue.unitparameter)}</dt>
+			</h4>
+		    <div id="s${j}" class="collapse in">
+				${cmutil.sentences(unitvalue)}
+		    </div>
+		</div>
+    ##<dd>${h.link(request, unitvalue)}</dd>
+    % endfor
+</dl>
 % endfor
+
 <%def name="sidebar()">
 <div class="well well-small">
 <dl>

@@ -102,10 +102,8 @@ def rendered_sentence(sentence, abbrs=None, fmt='long'):
         analyzed = sentence.analyzed
         glossed = sentence.gloss
         if sentence.markup_gloss:
-            print("Yes!")
             analyzed_words = sentence.markup_gloss
         else:
-            print("No!")
             analyzed_words = glossed
         for word, gloss, morph_id in zip(analyzed.split('\t'), glossed.split('\t'), analyzed_words.split("\t")):
             obj_morphs = split_word(word)
@@ -115,7 +113,6 @@ def rendered_sentence(sentence, abbrs=None, fmt='long'):
                     if morph not in ["X","-","="]:
                         obj_morphs[i] = HTML.a(obj_morphs[i], href="/units/%s" % morph.split(":")[0])
             parsed_word = HTML.text(*obj_morphs)
-            print(parsed_word)
             gloss_morphs = re.split("[-|=]", gloss)
             units.append(HTML.div(
                 HTML.div(parsed_word, class_='word'),

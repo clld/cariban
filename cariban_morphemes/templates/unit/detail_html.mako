@@ -1,5 +1,6 @@
 <%inherit file="../${context.get('request').registry.settings.get('clld.app_template', 'app.mako')}"/>
 <%namespace name="util" file="../util.mako"/>
+<%namespace name="cmutil" file="../cmutil.mako"/>
 <%! active_menu_item = "units" %>
 
 
@@ -31,8 +32,18 @@ Part of the following cognate set(s):
 
 <h3>${_('Functions')}</h3>
 <dl>
-    % for value in ctx.unitvalues:
-    <dt>${h.link(request, value.unitparameter)}</dt>
+    % for i, value in enumerate(ctx.unitvalues):
+		<div style="clear: right;">
+		    <ul class="nav nav-pills pull-right">
+		        <li><a data-toggle="collapse" data-target="#s${i}">Show/hide details</a></li>
+		    </ul>
+			<h4>
+				<dt>${h.link(request, value.unitparameter)}</dt>
+			</h4>
+		    <div id="s${i}" class="collapse in">
+				${cmutil.sentences(value)}
+		    </div>
+		</div>
     ##<dd>${h.link(request, value)}</dd>
     % endfor
 </dl>

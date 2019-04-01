@@ -16,7 +16,8 @@ cariban_data = Wordlist.from_metadata("../cariban_data.json")
 
 def main(args):
     data = Data()
-
+    
+    print("Setting up dataset…")
     dataset = common.Dataset(id=cariban_morphemes.__name__,
         domain="cariban-morphology.herokuapp.com/",
         name="Cariban Morphology Database",
@@ -29,14 +30,15 @@ def main(args):
         )
         
     DBSession.add(dataset)
+    
+    print("Adding contributors (me)…")
     c = common.Contributor(id="fm",name="Florian Matter")
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
     
-    lang_dic = {}
     print("Adding languages…")
+    lang_dic = {}
     for row in cariban_data["LanguageTable"]:
         lang_dic[row["ID"]] = {"abbrev": row["abbrev"], "name": row["Name"]}
-        # print(row)
         data.add(
             common.Language,
             row["ID"],
@@ -61,7 +63,7 @@ def main(args):
     **src)
     
     print("Adding morphemes…")
-
+    
     for row in cariban_data["FormTable"]:
         data.add(models.Morpheme,
             row["ID"],
@@ -91,44 +93,40 @@ def main(args):
             )
 
     print("Adding cognate sets…")
+    proto_languages = ["cari1283"]
     for row in cariban_data["FormTable"]:
-        if row["Language_ID"] == "cari1283":
+        if row["Language_ID"] in proto_languages:
             data.add(models.CognateSet,
                     row["Cognateset_ID"],
                     name=row["Form"],
                     id=row["Cognateset_ID"]
             )
+    shortcut_cognates = {}
     for row in cariban_data["FormTable"]:
-        if row["Language_ID"] != "cari1283":
-            for cognate_ID in row["Cognateset_ID"].split("; "):
-                lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
-                # print(lang_valueset)
-                if lang_valueset not in data["ValueSet"].keys():
-                    # print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
-                    my_valueset = data.add(common.ValueSet,
-                        lang_valueset,
-                        id=lang_valueset,
-                        language=data["Language"][row["Language_ID"]],
-                        parameter=data["CognateSet"][cognate_ID],
-                    )
-                else:
-                    my_valueset = data["ValueSet"][lang_valueset]
-                for morpheme_function in row["Parameter_ID"].split("; "):
-                    my_key = morpheme_function.replace(".","-")
-                    # print("Adding Value of form %s for language %s to ValueSet %s" % (row["Form"], row["Language_ID"], lang_valueset))
-                    my_value = data.add(models.Counterpart,
-                        row["ID"]+":"+my_key,
-                        valueset=my_valueset,
-                        name=row["Form"].split("; ")[0]+": "+morpheme_function,
-                        description=morpheme_function,
-                        markup_description=row["Form"],
-                        morpheme=data["Morpheme"][row["ID"]]
-                    )
-                    
-    is_illustrated = {}
-    for row in data["Counterpart"]:
-        is_illustrated[row] = False
-    
+        shortcut_cognates[row["ID"]] = row["Cognateset_ID"].split("; ")
+        #Go through all cognatesets of which this morpheme is a part
+        for cognate_ID in row["Cognateset_ID"].split("; "):
+            lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
+            # print(lang_valueset)
+            if lang_valueset not in data["ValueSet"].keys():
+                # print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
+                my_valueset = data.add(common.ValueSet,
+                    lang_valueset,
+                    id=lang_valueset,
+                    language=data["Language"][row["Language_ID"]],
+                    parameter=data["CognateSet"][cognate_ID],
+                )
+            else:
+                my_valueset = data["ValueSet"][lang_valueset]
+            my_value = data.add(models.Counterpart,
+                cognate_ID+":"+row["ID"],
+                valueset=my_valueset,
+                name=row["Form"].split("; ")[0]+": "+row["Parameter_ID"],
+                description=row["Form"].split("; ")[0],
+                markup_description=row["Form"],
+                morpheme=data["Morpheme"][row["ID"]]
+            )
+
     print("Adding glossing abbreviations…")
     import urllib3
     target_url = "https://gitlab.com/florianmatter/interlinear_text_tools/raw/master/glossing.txt"
@@ -139,7 +137,14 @@ def main(args):
         name = glossline.split("\t")[1]
         DBSession.add(common.GlossAbbreviation(id=key, name=name))
         
-    print("Adding examples…")            
+    print("Adding examples…")
+ 
+    is_illustrated = {}
+    for key, row in data["UnitValue"].items():
+        if row.unit.language.id in proto_languages:
+            continue
+        is_illustrated["%s:%s" % (row.unit.id, row.unitparameter.id)] = False
+        
     gloss_replacements = {
         "1S": "1.S",
         "2S": "2.S",
@@ -187,13 +192,7 @@ def main(args):
         # see what morphemes this example illustrates; separated by "; "
         if row["Illustrates_Morpheme"].split("; ") != [""]:
             for unit_value in row["Illustrates_Morpheme"].split("; "):
-                unit = unit_value.split(":")[0]
-                is_illustrated[unit_value.replace(".","-")] = True
-                data.add(common.ValueSentence,
-                "{0}-{1}".format(unit,row["ID"]),
-                sentence=data["Sentence"][row["ID"]],
-                value=data["Counterpart"][unit_value.replace(".","-")],
-                )
+                is_illustrated[unit_value] = True
                 data.add(models.UnitValueSentence,
                 "{0}-{1}".format(unit_value.replace(".","-"),row["ID"]),
                 sentence=data["Sentence"][row["ID"]],
