@@ -6,13 +6,35 @@ from clld.db.meta import DBSession
 from clld.db.models import common
 
 from pycldf import Wordlist
-from clld.lib.bibtex import EntryType
+from clld.lib.bibtex import EntryType, unescape
+from nameparser import HumanName
 import cariban_morphemes
 from cariban_morphemes import models
 
 from clld_glottologfamily_plugin.util import load_families
 
 cariban_data = Wordlist.from_metadata("../cariban_data.json")
+
+def get_source_name(source):
+    year = source.get('year', 'nd')
+    fields = {}
+    jsondata = {}
+    eds = ''
+    authors = source.get('author')
+    if not authors:
+        authors = source.get('editor', '')
+        if authors:
+            eds = ' (eds.)'
+    if authors:
+        authors = unescape(authors).split(' and ')
+        if len(authors) > 2:
+            authors = authors[:1]
+
+        authors = [HumanName(a) for a in authors]
+        authors = [n.last or n.first for n in authors]
+        authors = '%s%s' % (' and '.join(authors), eds)
+
+        return ('%s %s' % (authors, year)).strip()
 
 def main(args):
     data = Data()
@@ -57,7 +79,7 @@ def main(args):
                 common.Source,
                 src.id,
                 id=src.id,
-                name=src.get("author", src.get("editor")),
+                name=get_source_name(src),
                 description=src.get("title", src.get("booktitle")),
                 bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)

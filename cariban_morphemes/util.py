@@ -118,14 +118,14 @@ def rendered_sentence(sentence, abbrs=None, fmt='long'):
                 HTML.div(parsed_word, class_='word'),
                 HTML.div(*gloss_with_tooltip(gloss), **{'class': 'gloss'}),
                 class_='gloss-unit'))
-
+                
     return HTML.div(
         HTML.div(
             HTML.div(
                 HTML.div(sentence.original_script, class_='original-script')
                 if sentence.original_script else '',
-                HTML.div(literal(sentence.markup_text or sentence.name),
-                         class_='object-language'),
+                HTML.div(literal(sentence.markup_text or sentence.name), class_='object-language')
+                if sentence.name != sentence.analyzed.replace("\t", " ") else '',
                 HTML.div(*units, **{'class': 'gloss-box'}) if units else '',
                 HTML.div(sentence.description, class_='translation')
                 if sentence.description else '',

@@ -13,6 +13,7 @@ ${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ct
 <%unit = value.morpheme%>
 <dl>
 <h4>${h.link(request, unit)}</h4>
+Functions:
     % for j, unitvalue in enumerate(unit.unitvalues):
 		<div style="clear: right;">
 		    <ul class="nav nav-pills pull-right">
