@@ -1,18 +1,19 @@
-# Translations template for cariban_morphemes.
+# English translations for cariban_morphemes.
 # Copyright (C) 2019 ORGANIZATION
 # This file is distributed under the same license as the cariban_morphemes
 # project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: cariban_morphemes 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-04-02 11:08+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2019-04-02 11:00+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -20,25 +21,25 @@ msgstr ""
 
 #: cariban_morphemes/__init__.py:11
 msgid "Parameter"
-msgstr ""
+msgstr "Cognate set"
 
 #: cariban_morphemes/__init__.py:12
 msgid "Parameters"
-msgstr ""
+msgstr "Cognate sets"
 
 #: cariban_morphemes/__init__.py:13
 msgid "Unit"
-msgstr ""
+msgstr "Morpheme"
 
 #: cariban_morphemes/__init__.py:14
 msgid "Units"
-msgstr ""
+msgstr "Morphemes"
 
 #: cariban_morphemes/__init__.py:15
 msgid "Unitparameter"
-msgstr ""
+msgstr "Function"
 
 #: cariban_morphemes/__init__.py:16
 msgid "Unitparameters"
-msgstr ""
+msgstr "Functions"
 
