@@ -11,33 +11,36 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-
 from clld import interfaces
+from cariban_morphemes.interfaces import IConstruction
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
-from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence
+from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin
 
 @implementer(interfaces.IUnitParameter)
 class Meaning(CustomModelMixin, UnitParameter):
     pk = Column(Integer, ForeignKey('unitparameter.pk'), primary_key=True)
     form = Column(String)
-
-@implementer(interfaces.IUnit)
-class Morpheme(CustomModelMixin, Unit):
-    pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)
     
 @implementer(interfaces.IParameter)
 class CognateSet(CustomModelMixin, Parameter):
     pk = Column(Integer, ForeignKey('parameter.pk'), primary_key=True)
+
+@implementer(IConstruction)
+class Construction(Base, PolymorphicBaseMixin, IdNameDescriptionMixin):
+    pk = Column(Integer, ForeignKey('contribution.pk'), primary_key=True)
+
+@implementer(interfaces.IUnit)
+class Morpheme(CustomModelMixin, Unit):
+    pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)
+    construction_pk = Column(Integer, ForeignKey("construction.pk"))
+    construction = relationship(Construction, backref='morphemes')
 
 @implementer(interfaces.IValue)
 class Counterpart(CustomModelMixin, Value):
     pk = Column(Integer, ForeignKey('value.pk'), primary_key=True)
     morpheme_pk = Column(Integer, ForeignKey('morpheme.pk'))
     morpheme = relationship(Morpheme, backref='counterparts')
-
-# -----------------------------------------------------------------------------
-# specialized common mapper classes
-# -----------------------------------------------------------------------------
+    
 class UnitValueSentence(Base, PolymorphicBaseMixin):
 
     """Association between values and sentences given as explanation of a value."""
