@@ -5,6 +5,7 @@
 
 <h2>${_('Cognate set')} ${ctx.name}</h2>
 
+<p>Source: (${h.linked_references(request, ctx)|n})</p>
 % if ctx.description:
 <p>${ctx.description}</p>
 % endif

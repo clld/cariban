@@ -14,7 +14,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from clld import interfaces
 from cariban_morphemes.interfaces import IConstruction
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
-from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin
+from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin, HasSourceMixin
 
 @implementer(interfaces.IUnitParameter)
 class Meaning(CustomModelMixin, UnitParameter):
@@ -22,7 +22,7 @@ class Meaning(CustomModelMixin, UnitParameter):
     form = Column(String)
     
 @implementer(interfaces.IParameter)
-class CognateSet(CustomModelMixin, Parameter):
+class CognateSet(CustomModelMixin, Parameter, HasSourceMixin):
     pk = Column(Integer, ForeignKey('parameter.pk'), primary_key=True)
 
 @implementer(IConstruction)

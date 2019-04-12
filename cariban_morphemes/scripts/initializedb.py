@@ -91,11 +91,11 @@ def main(args):
         data.add(models.Morpheme,
             row["ID"],
             language=data["Language"][row["Language_ID"]],
-            name=row["Form"],
-            description=row["Parameter_ID"],
+            name=", ".join(row["Form"]),
+            description=", ".join(row["Parameter_ID"]),
             id=row["ID"],
         )
-        for morpheme_function in row["Parameter_ID"].split("; "):
+        for morpheme_function in row["Parameter_ID"]:
             my_key = morpheme_function.replace(".","_")
             #Check if there is already such a function (meaning) defined
             if morpheme_function not in data["Meaning"].keys():
@@ -119,11 +119,21 @@ def main(args):
     proto_languages = ["cari1283"]
     for row in cariban_data["FormTable"]:
         if row["Language_ID"] in proto_languages:
-            data.add(models.CognateSet,
+            new_cset = data.add(models.CognateSet,
                     row["Cognateset_ID"],
-                    name=row["Form"],
+                    name=", ".join(row["Form"]),
                     id=row["Cognateset_ID"]
             )
+            if row["Source"]:
+                for source in row["Source"]:
+                    bib_key = source.split("[")[0]
+                    if len(source.split("[")) > 1:
+                        pages = source.split("[")[1].split("]")[0]
+                    else:
+                        pages = " "    
+                    if bib_key in data["Source"]:
+                        new_cset.source = data["Source"][bib_key]
+            # print(dir(new_cset))
     shortcut_cognates = {}
     for row in cariban_data["FormTable"]:
         shortcut_cognates[row["ID"]] = row["Cognateset_ID"].split("; ")
@@ -144,9 +154,9 @@ def main(args):
             my_value = data.add(models.Counterpart,
                 cognate_ID+":"+row["ID"],
                 valueset=my_valueset,
-                name=row["Form"].split("; ")[0]+": "+row["Parameter_ID"],
-                description=row["Form"].split("; ")[0],
-                markup_description=row["Form"],
+                name=row["Form"][0]+": "+", ".join(row["Parameter_ID"]),
+                description=row["Form"][0],
+                markup_description=", ".join(row["Form"]),
                 morpheme=data["Morpheme"][row["ID"]]
             )
 
