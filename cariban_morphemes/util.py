@@ -45,7 +45,7 @@ def split_word(word):
 # #
 # # TODO: enumerate exceptions: 1SG, 2SG, 3SG, ?PL, ?DU
 # #
-def rendered_sentence(sentence, abbrs=None, fmt='long'):
+def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False):
     """Format a sentence as HTML."""
     if sentence.xhtml:
         return HTML.div(
@@ -125,7 +125,7 @@ def rendered_sentence(sentence, abbrs=None, fmt='long'):
                 HTML.div(parsed_word, class_='word'),
                 HTML.div(*gloss_with_tooltip(gloss), **{'class': 'gloss'}),
                 class_='gloss-unit'))
-                
+                    
     return HTML.div(
         HTML.div(
             HTML.div(

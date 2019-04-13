@@ -10,11 +10,13 @@ from clld.lib.bibtex import EntryType, unescape
 from nameparser import HumanName
 import cariban_morphemes
 from cariban_morphemes import models
+import re
+from clld.web.util import helpers as h
 
 from clld_glottologfamily_plugin.util import load_families
 
 cariban_data = Wordlist.from_metadata("../cariban_data.json")
-
+        
 def get_source_name(source):
     year = source.get('year', 'nd')
     fields = {}
@@ -36,7 +38,6 @@ def get_source_name(source):
 
         return ('%s %s' % (authors, year)).strip()
 
-    
 def main(args):
     data = Data()
     
@@ -54,14 +55,21 @@ def main(args):
         
     DBSession.add(dataset)
     
+    
     print("Adding contributors (me)…")
     c = common.Contributor(id="fm",name="Florian Matter")
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
     
     print("Adding languages…")
     lang_dic = {}
+    lang_abbrev_dic = {}
+    lg_count = 0
     for row in cariban_data["LanguageTable"]:
+        lg_count+=1
+    for i, row in enumerate(cariban_data["LanguageTable"]):
+        print("%s/%s" % (i+1, lg_count), end="\r")
         lang_dic[row["ID"]] = {"abbrev": row["abbrev"], "name": row["Name"]}
+        lang_abbrev_dic[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
         data.add(
             common.Language,
             row["ID"],
@@ -70,114 +78,38 @@ def main(args):
             latitude=float(row["Latitude"]) if row["Latitude"] is not None else None,
             longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
         )
-    
+    print("")
+
+       
     print("Adding sources…")
-    for src in cariban_data.sources.items():
-            for invalid in ["isbn", "part", "institution"]:
-                if invalid in src:
-                    del src[invalid]
-            data.add(
-                common.Source,
-                src.id,
-                id=src.id,
-                name=get_source_name(src),
-                description=src.get("title", src.get("booktitle")),
-                bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
+    length = len(cariban_data.sources)
+    for i, src in enumerate(cariban_data.sources.items()):
+        print("%s/%s" % (i+1, length), end="\r")
+        for invalid in ["isbn", "part", "institution"]:
+            if invalid in src:
+                del src[invalid]
+        data.add(
+            common.Source,
+            src.id,
+            id=src.id,
+            name=get_source_name(src),
+            description=src.get("title", src.get("booktitle")),
+            bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
-    
-    print("Adding morphemes…")
-    
-    for row in cariban_data["FormTable"]:
-        data.add(models.Morpheme,
-            row["ID"],
-            language=data["Language"][row["Language_ID"]],
-            name=", ".join(row["Form"]),
-            description=", ".join(row["Parameter_ID"]),
-            id=row["ID"],
-        )
-        for morpheme_function in row["Parameter_ID"]:
-            my_key = morpheme_function.replace(".","_")
-            #Check if there is already such a function (meaning) defined
-            if morpheme_function not in data["Meaning"].keys():
-                # print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
-                data.add(models.Meaning,
-                    morpheme_function,
-                    id=my_key,
-                    name=morpheme_function
-                )
-            # print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
-            #This is the "MorphemeFunction" linking a Morpheme (Unit) with a Meaning (UnitParameter)
-            data.add(common.UnitValue,
-                row["ID"]+":"+my_key,
-                id=row["ID"]+":"+my_key,
-                name=lang_dic[row["Language_ID"]]["name"]+": "+my_key,
-                unit=data["Morpheme"][row["ID"]],
-                unitparameter=data["Meaning"][morpheme_function]
-            )
+    print("")
 
-    print("Adding cognate sets…")
-    proto_languages = ["cari1283"]
-    for row in cariban_data["FormTable"]:
-        if row["Language_ID"] in proto_languages:
-            new_cset = data.add(models.CognateSet,
-                    row["Cognateset_ID"],
-                    name=", ".join(row["Form"]),
-                    id=row["Cognateset_ID"]
-            )
-            if row["Source"]:
-                for source in row["Source"]:
-                    bib_key = source.split("[")[0]
-                    if len(source.split("[")) > 1:
-                        pages = source.split("[")[1].split("]")[0]
-                    else:
-                        pages = " "    
-                    if bib_key in data["Source"]:
-                        new_cset.source = data["Source"][bib_key]
-            # print(dir(new_cset))
-    shortcut_cognates = {}
-    for row in cariban_data["FormTable"]:
-        shortcut_cognates[row["ID"]] = row["Cognateset_ID"].split("; ")
-        #Go through all cognatesets of which this morpheme is a part
-        for cognate_ID in row["Cognateset_ID"].split("; "):
-            lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
-            # print(lang_valueset)
-            if lang_valueset not in data["ValueSet"].keys():
-                # print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
-                my_valueset = data.add(common.ValueSet,
-                    lang_valueset,
-                    id=lang_valueset,
-                    language=data["Language"][row["Language_ID"]],
-                    parameter=data["CognateSet"][cognate_ID],
-                )
-            else:
-                my_valueset = data["ValueSet"][lang_valueset]
-            my_value = data.add(models.Counterpart,
-                cognate_ID+":"+row["ID"],
-                valueset=my_valueset,
-                name=row["Form"][0]+": "+", ".join(row["Parameter_ID"]),
-                description=row["Form"][0],
-                markup_description=", ".join(row["Form"]),
-                morpheme=data["Morpheme"][row["ID"]]
-            )
-
+        
     print("Adding glossing abbreviations…")
-    import urllib3
-    target_url = "https://gitlab.com/florianmatter/interlinear_text_tools/raw/master/glossing.txt"
-    http = urllib3.PoolManager()
-    gloss_txt = http.request('GET', target_url).data.decode('utf-8')
-    for glossline in gloss_txt.split("\n"):
+    gloss_txt = open("/Users/florianm/Dropbox/Stuff/development/interlinear_text_tools/glossing.txt", "r").read()
+    length = len(gloss_txt.split("\n"))
+    for i, glossline in enumerate(gloss_txt.split("\n")):
+        print("%s/%s" % (i+1, length), end="\r")
         key = glossline.split("\t")[0].upper()
         name = glossline.split("\t")[1]
         DBSession.add(common.GlossAbbreviation(id=key, name=name))
-        
+    print("")    
+    
     print("Adding examples…")
- 
-    is_illustrated = {}
-    for key, row in data["UnitValue"].items():
-        if row.unit.language.id in proto_languages:
-            continue
-        is_illustrated["%s:%s" % (row.unit.id, row.unitparameter.id)] = False
-        
     gloss_replacements = {
         "1S": "1.S",
         "2S": "2.S",
@@ -193,7 +125,12 @@ def main(args):
             output = output.replace(orig,new)
         return output
     
+    ex_cnt = 0
     for row in cariban_data["ExampleTable"]:
+        ex_cnt+=1
+        
+    for i, row in enumerate(cariban_data["ExampleTable"]):
+        print("%s/%s" % (i+1, ex_cnt), end="\r")
         new_ex = data.add(common.Sentence,
         row["ID"],
         id=row["ID"],
@@ -221,7 +158,108 @@ def main(args):
                     key=source.id,
                     description=pages)
                     )
+    print("")
+    
+    cognate_sets = {}
+    cogset_cnt = 0
+    for row in cariban_data["CognatesetTable"]:
+        cognate_sets[row["ID"]] = name=row["Name"]
+        cogset_cnt+=1
+        
+    def generate_markup(non_f_str: str):
+        if non_f_str is None:
+            return ""
+            
+        substitutions = {
+            "morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)": r"{morph_lk('\1','\2')}",
+            "lg:([a-z]*)": r"{lang_lk('\1')}",
+            "cogset:([a-z\_0-9]*)": r"{cogset_lk('\1')}",
+            "src:([a-z\_0-9\[\]\-]*)": r"{src_lk('\1')}",
+            "ex:([a-z\_0-9\-]*)": r"{render_ex('\1')}",
+        }
+        for orig, sub in substitutions.items():
+            non_f_str = re.sub(orig, sub, non_f_str)
+                
+        def lang_lk(shorthand):
+            if shorthand in lang_abbrev_dic.keys():
+                return "<a href='/languages/%s' >%s</a>" % (lang_abbrev_dic[shorthand]["ID"], lang_abbrev_dic[shorthand]["name"])
+            else:
+                return "<a href='/languages/%s' >%s</a>" % (shorthand, data["Language"][shorthand].name)            
+                
+        def cogset_lk(cogset_id, text=""):
+            if text == "":
+                return "<a href='/cognateset/%s' >%s</a>" % (cogset_id, cognate_sets[cogset_id])
+            else:
+                return "<a href='/cognateset/%s' >%s</a>" % (cogset_id, text)
+    
+        def src_lk(source):
+            bib_key = source.split("[")[0]
+            if len(source.split("[")) > 1:
+                pages = source.split("[")[1].split("]")[0]
+                return "<a href='/sources/%s' >%s: %s</a>" % (bib_key, get_source_name(cariban_data.sources[bib_key]), pages)
+            else:
+                return "<a href='/sources/%s' >%s</a>" % (bib_key, get_source_name(cariban_data.sources[bib_key]))
 
+        def morph_lk(morph_id, form=""):
+            if form == "":
+                form = data["Morpheme"][morph_id].name
+            return "<i><a href='/morpheme/%s' >%s</a></i>" % (morph_id, form)
+            
+        def render_ex(ex_id):
+            
+            print(data["Sentence"][ex_id].references[0].source.id)
+            return """
+                <blockquote style='margin-top: 5px;'>
+                %s (%s)
+                    %s
+                </blockquote>""" % (lang_lk(data["Sentence"][ex_id].language.id), src_lk("%s[%s]" % (data["Sentence"][ex_id].references[0].source.id, data["Sentence"][ex_id].references[0].description)), util.rendered_sentence(data["Sentence"][ex_id]))
+                
+        return eval(f'f"""{non_f_str}"""')
+    
+    print("Adding morphemes…")
+    morph_cnt=0
+    for row in cariban_data["FormTable"]:
+        morph_cnt+=1
+    for i, row in enumerate(cariban_data["FormTable"]):
+        print("%s/%s" % (i+1, morph_cnt), end="\r")    
+        data.add(models.Morpheme,
+            row["ID"],
+            language=data["Language"][row["Language_ID"]],
+            name=", ".join(row["Form"]),
+            description=", ".join(row["Parameter_ID"]),
+            markup_description=generate_markup(row["Description"]),
+            id=row["ID"],
+        )
+        for morpheme_function in row["Parameter_ID"]:
+            my_key = morpheme_function.replace(".","_")
+            #Check if there is already such a function (meaning) defined
+            if morpheme_function not in data["Meaning"].keys():
+                # print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
+                data.add(models.Meaning,
+                    morpheme_function,
+                    id=my_key,
+                    name=morpheme_function
+                )
+            # print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
+            #This is the "MorphemeFunction" linking a Morpheme (Unit) with a Meaning (UnitParameter)
+            data.add(common.UnitValue,
+                row["ID"]+":"+my_key,
+                id=row["ID"]+":"+my_key,
+                name=lang_dic[row["Language_ID"]]["name"]+": "+my_key,
+                unit=data["Morpheme"][row["ID"]],
+                unitparameter=data["Meaning"][morpheme_function]
+            )
+    print("")
+    
+    print("Checking examples for illustrated morphemes…")
+    proto_languages = ["cari1283"]
+    is_illustrated = {}
+    for key, row in data["UnitValue"].items():
+        if row.unit.language.id in proto_languages:
+            continue
+        is_illustrated["%s:%s" % (row.unit.id, row.unitparameter.id)] = False
+    for i, row in enumerate(cariban_data["ExampleTable"]):
+        print("%s/%s" % (i+1, ex_cnt), end="\r")
         # see what morphemes this example illustrates; separated by "; "
         for word in row["Morpheme_IDs"].split(" "):
             morph_ids = util.split_word(word)
@@ -237,7 +275,8 @@ def main(args):
                 sentence=data["Sentence"][row["ID"]],
                 unitvalue=data["UnitValue"][unit_value.replace(".","-")],
                 )
-    
+    print("")
+                
     # see how many morpheme functions are illustrated with example sentences
     good_ill = [key for key, value in is_illustrated.items() if value]
     not_ill = [key for key, value in is_illustrated.items() if not value]
@@ -248,8 +287,56 @@ def main(args):
     for morph in not_ill:
         f.write(morph+"\n")
     f.close()
+                
+    print("Adding cognate sets…")
+    for i, row in enumerate(cariban_data["CognatesetTable"]):
+        print("%s/%s" % (i+1, cogset_cnt), end="\r")
+        new_cset = data.add(models.CognateSet,
+                row["ID"],
+                id=row["ID"],
+                name=row["Name"],
+                markup_description=generate_markup(row["Description"])
+        )
+        if row["Source"]:
+            for source in row["Source"]:
+                bib_key = source.split("[")[0]
+                if len(source.split("[")) > 1:
+                    pages = source.split("[")[1].split("]")[0]
+                else:
+                    pages = " "    
+                if bib_key in data["Source"]:
+                    new_cset.source = data["Source"][bib_key]
+    print("")
     
-                    
+    print("Adding cognates…")
+    shortcut_cognates = {}
+    for i, row in enumerate(cariban_data["FormTable"]):
+        print("%s/%s" % (i+1, morph_cnt), end="\r")
+        shortcut_cognates[row["ID"]] = row["Cognateset_ID"].split("; ")
+        #Go through all cognatesets of which this morpheme is a part
+        for cognate_ID in row["Cognateset_ID"].split("; "):
+            lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
+            # print(lang_valueset)
+            if lang_valueset not in data["ValueSet"].keys():
+                # print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
+                my_valueset = data.add(common.ValueSet,
+                    lang_valueset,
+                    id=lang_valueset,
+                    language=data["Language"][row["Language_ID"]],
+                    parameter=data["CognateSet"][cognate_ID],
+                )
+            else:
+                my_valueset = data["ValueSet"][lang_valueset]
+            my_value = data.add(models.Counterpart,
+                cognate_ID+":"+row["ID"],
+                valueset=my_valueset,
+                name=row["Form"][0]+": "+", ".join(row["Parameter_ID"]),
+                description=row["Form"][0],
+                markup_description=", ".join(row["Form"]),
+                morpheme=data["Morpheme"][row["ID"]]
+            )
+    print("")              
+    
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
     This procedure should be separate from the db initialization, because

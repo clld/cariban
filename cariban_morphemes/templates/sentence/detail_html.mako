@@ -20,9 +20,6 @@
 <h3>${_('Sentence')} ${ctx.id}</h3>
 
 ${h.link(request, ctx.language)}
-% if ctx.source:
-<dd>${ctx.source.split("[")[0]}: ${ctx.source.split("[")[1].split("]")[0]}</dd>
-% endif
 % if ctx.references:
 (${h.linked_references(request, ctx)|n})
 % endif
