@@ -270,6 +270,9 @@ def main(args):
                 if unitvaluesentence_key in data["UnitValueSentence"].keys():
                     continue
                 is_illustrated[unit_value] = True
+                if unit_value.replace(".","-") not in data["UnitValue"].keys():
+                    print("Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
+                    continue
                 data.add(models.UnitValueSentence,
                 unitvaluesentence_key,
                 sentence=data["Sentence"][row["ID"]],
