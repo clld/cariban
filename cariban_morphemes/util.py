@@ -22,7 +22,7 @@ from clld.lib import rdf
 def xify(text):
     ids = []
     for word in text.split(" "):
-        ids.append(re.sub(r'([X])\1+', r'\1', re.sub("[^(\-|\=)|]", "X", word)))
+        ids.append(re.sub(r'([X])\1+', r'\1', re.sub("[^(\-|\=|\~)|]", "X", word)))
     return " ".join(ids)
     
 # # regex to match standard abbreviations in gloss units:
@@ -35,7 +35,7 @@ def split_word(word):
     output = []
     char_list = list(word)
     for i, char in enumerate(char_list):
-        if len(output) == 0 or (char in ["-","="] or output[-1] in ["-","="]):
+        if len(output) == 0 or (char in ["-", "=", "~"] or output[-1] in ["-", "=", "~"]):
             output.append(char)
         else:
             output[-1]+=char
