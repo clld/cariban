@@ -68,7 +68,9 @@ def main(args):
         lg_count+=1
     for i, row in enumerate(cariban_data["LanguageTable"]):
         print("%s/%s" % (i+1, lg_count), end="\r")
-        lang_dic[row["ID"]] = {"abbrev": row["abbrev"], "name": row["Name"]}
+        if row["sampled"] != "y":
+            continue
+        lang_dic[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
         lang_abbrev_dic[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
         data.add(
             common.Language,
@@ -79,6 +81,7 @@ def main(args):
             longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
         )
     print("")
+    print(lang_dic)
 
        
     print("Adding sources…")
@@ -131,6 +134,7 @@ def main(args):
         
     for i, row in enumerate(cariban_data["ExampleTable"]):
         print("%s/%s" % (i+1, ex_cnt), end="\r")
+        # print(lang_dic[row["Language_ID"]]["ID"])
         new_ex = data.add(common.Sentence,
         row["ID"],
         id=row["ID"],
@@ -138,7 +142,7 @@ def main(args):
         description=row["Translated_Text"],
         analyzed="\t".join(row["Analyzed_Word"]),
         gloss=clldify_glosses("\t".join(row["Gloss"])),
-        language=data["Language"][row["Language_ID"]],
+        language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
         comment=row["Comment"],
         markup_gloss=row["Morpheme_IDs"].replace(" ","\t")
         # source=data["Source"][row["Source"].split("[")[0]]
@@ -224,7 +228,7 @@ def main(args):
         print("%s/%s" % (i+1, morph_cnt), end="\r")    
         data.add(models.Morpheme,
             row["ID"],
-            language=data["Language"][row["Language_ID"]],
+            language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
             name=", ".join(row["Form"]),
             description=", ".join(row["Parameter_ID"]),
             markup_description=generate_markup(row["Description"]),
@@ -252,7 +256,7 @@ def main(args):
     print("")
     
     print("Checking examples for illustrated morphemes…")
-    proto_languages = ["cari1283"]
+    proto_languages = ["pc"]
     is_illustrated = {}
     for key, row in data["UnitValue"].items():
         if row.unit.language.id in proto_languages:
@@ -318,14 +322,14 @@ def main(args):
         shortcut_cognates[row["ID"]] = row["Cognateset_ID"].split("; ")
         #Go through all cognatesets of which this morpheme is a part
         for cognate_ID in row["Cognateset_ID"].split("; "):
-            lang_valueset = "%s_%s" % (lang_dic[row["Language_ID"]]["abbrev"], cognate_ID)
+            lang_valueset = "%s_%s" % (row["Language_ID"], cognate_ID)
             # print(lang_valueset)
             if lang_valueset not in data["ValueSet"].keys():
                 # print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
                 my_valueset = data.add(common.ValueSet,
                     lang_valueset,
                     id=lang_valueset,
-                    language=data["Language"][row["Language_ID"]],
+                    language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
                     parameter=data["CognateSet"][cognate_ID],
                 )
             else:
