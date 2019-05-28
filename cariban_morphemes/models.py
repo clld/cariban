@@ -14,7 +14,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from clld import interfaces
 from cariban_morphemes.interfaces import IConstruction
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
-from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin, HasSourceMixin
+from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin, HasSourceMixin, common
 
 @implementer(interfaces.IUnitParameter)
 class Meaning(CustomModelMixin, UnitParameter):
@@ -25,16 +25,24 @@ class Meaning(CustomModelMixin, UnitParameter):
 class CognateSet(CustomModelMixin, Parameter, HasSourceMixin):
     pk = Column(Integer, ForeignKey('parameter.pk'), primary_key=True)
 
+class CognatesetReference(Base, common.HasSourceMixin):
+    cognateset_pk = Column(Integer, ForeignKey('parameter.pk'))
+    cognateset = relationship(CognateSet, backref="references")
+    
 @implementer(IConstruction)
 class Construction(Base, PolymorphicBaseMixin, IdNameDescriptionMixin):
     pk = Column(Integer, ForeignKey('contribution.pk'), primary_key=True)
 
 @implementer(interfaces.IUnit)
-class Morpheme(CustomModelMixin, Unit):
+class Morpheme(CustomModelMixin, Unit, HasSourceMixin):
     pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)
     construction_pk = Column(Integer, ForeignKey("construction.pk"))
     construction = relationship(Construction, backref='morphemes')
 
+class MorphemeReference(Base, common.HasSourceMixin):
+    morpheme_pk = Column(Integer, ForeignKey('unit.pk'))
+    morpheme = relationship(Morpheme, backref="references")
+    
 @implementer(interfaces.IValue)
 class Counterpart(CustomModelMixin, Value):
     pk = Column(Integer, ForeignKey('value.pk'), primary_key=True)

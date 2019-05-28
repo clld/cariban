@@ -21,6 +21,10 @@
 	<td>${h.link(request, ctx.language)}</td>
 	</tr>
 	<tr>
+	<td>Source:</td>
+	<td>${h.linked_references(request, ctx)|n}</td>
+	</tr>
+	<tr>
 	<td>Cognate set(s):</td>
 	<td>
 	% if ctx.counterparts:

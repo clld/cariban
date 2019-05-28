@@ -5,6 +5,7 @@ from clld.scripts.util import initializedb, Data
 from clld.db.meta import DBSession
 from clld.db.models import common
 from cariban_morphemes import util
+
 from pycldf import Wordlist
 from clld.lib.bibtex import EntryType, unescape
 from nameparser import HumanName
@@ -16,7 +17,8 @@ from clld.web.util import helpers as h
 from clld_glottologfamily_plugin.util import load_families
 
 cariban_data = Wordlist.from_metadata("../cariban_data.json")
-        
+
+
 def get_source_name(source):
     year = source.get('year', 'nd')
     fields = {}
@@ -225,8 +227,8 @@ def main(args):
     for row in cariban_data["FormTable"]:
         morph_cnt+=1
     for i, row in enumerate(cariban_data["FormTable"]):
-        print("%s/%s" % (i+1, morph_cnt), end="\r")    
-        data.add(models.Morpheme,
+        print("%s/%s" % (i+1, morph_cnt), end="\r")
+        new_morph = data.add(models.Morpheme,
             row["ID"],
             language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
             name=", ".join(row["Form"]),
@@ -234,6 +236,20 @@ def main(args):
             markup_description=generate_markup(row["Description"]),
             id=row["ID"],
         )
+        if row["Source"]:
+            bib_key = row["Source"][0].split("[")[0]
+            if len(row["Source"][0].split("[")) > 1:
+                pages = row["Source"][0].split("[")[1].split("]")[0]
+            else:
+                pages = " "    
+            if bib_key in data["Source"]:
+                source = data["Source"][bib_key]
+                DBSession.add(models.MorphemeReference(
+                    morpheme=new_morph,
+                    source=source,
+                    key=source.id,
+                    description=pages)
+                    )
         for morpheme_function in row["Parameter_ID"]:
             my_key = morpheme_function.replace(".","_")
             #Check if there is already such a function (meaning) defined
@@ -305,14 +321,19 @@ def main(args):
                 markup_description=generate_markup(row["Description"])
         )
         if row["Source"]:
-            for source in row["Source"]:
-                bib_key = source.split("[")[0]
-                if len(source.split("[")) > 1:
-                    pages = source.split("[")[1].split("]")[0]
-                else:
-                    pages = " "    
-                if bib_key in data["Source"]:
-                    new_cset.source = data["Source"][bib_key]
+            bib_key = row["Source"][0].split("[")[0]
+            if len(row["Source"][0].split("[")) > 1:
+                pages = row["Source"][0].split("[")[1].split("]")[0]
+            else:
+                pages = " "    
+            if bib_key in data["Source"]:
+                source = data["Source"][bib_key]
+                DBSession.add(models.CognatesetReference(
+                    cognateset=new_cset,
+                    source=source,
+                    key=source.id,
+                    description=pages)
+                    )
     print("")
     
     print("Adding cognates…")
@@ -342,7 +363,7 @@ def main(args):
                 markup_description=", ".join(row["Form"]),
                 morpheme=data["Morpheme"][row["ID"]]
             )
-    print("")              
+    print("")             
     
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.

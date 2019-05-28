@@ -1,45 +1,62 @@
-from clld.web.datatables import Unitparameters, Units, Values, Parameters
+from clld.web.datatables import Unitparameters, Units, Values, Parameters, Unitvalues, Languages
 from clld.db.models.common import (
     Language
 )
 from clld.web.datatables.base import (
-    Col, LinkCol, PercentCol, IntegerIdCol, LinkToMapCol, DataTable, DetailsRowLinkCol
+    Col, LinkCol, PercentCol, IntegerIdCol, LinkToMapCol, DataTable, DetailsRowLinkCol, RefsCol
 )
-from clld.web.datatables.value import (ValueNameCol, RefsCol)
+from clld.web.datatables.value import (ValueNameCol)
 from clld.web.datatables.unit import (DescriptionLinkCol)
-
+from cariban_morphemes.models import Counterpart, CognateSet, Morpheme
 from clld.interfaces import IMenuItems
-
-class CognateSetCol(LinkCol):
-
-    """Render the label for a Value."""
-
-    def get_obj(self, item):
-        print(item.counterparts)
-        return item.counterparts
+from clld.web.util.helpers import (
+    link, button, icon, JS_CLLD, external_link, linked_references, JSDataTable,
+)
+class CognatesetCol(Col):
+    def __init__(self, dt, name, **kw):
+        kw['sTitle'] = "Cognate set(s)"
+        Col.__init__(self, dt, name, **kw)
 
     def get_attrs(self, item):
-        label = item.__unicode__()
-        title = label
-        return {'label': label, 'title': title}
+        return dict(label = item)
+    
+    def format(self, item):
+        obj = self.get_obj(item)
+        my_link = []
+        for i in obj:
+            my_link.append(link(self.dt.req, i.valueset.parameter, **self.get_attrs(i.valueset.parameter)))
+        return my_link
 
-    def order(self):
-        return DomainElement.number \
-            if self.dt.parameter and self.dt.parameter.domain \
-            else Value.description
-
-    def search(self, qs):
-        if self.dt.parameter and self.dt.parameter.domain:
-            return DomainElement.name.__eq__(qs)
-        return icontains(Value.description, qs)
+class FunctionCol(LinkCol):
+    def __init__(self, dt, name, **kw):
+        kw['sTitle'] = "Function(s)"
+        Col.__init__(self, dt, name, **kw)
+    
+    def get_attrs(self, item):
+        return dict(label = item)
         
+    def format(self, item):
+        obj = self.get_obj(item).unitvalues
+        my_link = []
+        for i in obj:
+            my_link.append(link(self.dt.req, i.unitparameter, **self.get_attrs(i.unitparameter)))
+        return my_link
+        
+class MorphemeCol(LinkCol):
+    def __init__(self, dt, name, **kw):
+        # kw['sTitle'] = "Cognate"
+        Col.__init__(self, dt, name, **kw)
+    
+    def get_attrs(self, item):
+        return dict(label = self.get_obj(item).name)
+      
+    # def format(self, item):
+    #     return(self.get_obj(item).name)
         
 class Meanings(Unitparameters):
     def col_defs(self):
         return [
-            IntegerIdCol(self, 'id'),
-            LinkCol(self, 'form'),
-            # Col(self, 'count_entries', sTitle='# Entries')
+            LinkCol(self, 'Gloss'),
         ]
 
 class Morphemes(Units):
@@ -47,23 +64,65 @@ class Morphemes(Units):
         return [
             LinkCol(self, 'form'),
             DescriptionLinkCol(self, 'function'),
-            LinkCol(
-                self, 'language', model_col=Language.name, get_obj=lambda i: i.language),
-            # CognateSetCol(self, "cognate sets")
+            LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.language),
+            CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.counterparts),
+            RefsCol(self, 'references'),
         ]
     
 class Cognatesets(Parameters):
     def col_defs(self):
         return [
-            DetailsRowLinkCol(self, 'd'),
+            # DetailsRowLinkCol(self, 'd'),
+            LinkCol(self, 'reconstructed'),
+            RefsCol(self, 'references')
+        ]
+
+class LanguageMorphemes(Units):
+    def col_defs(self):
+        return [
             LinkCol(self, 'form'),
+            DescriptionLinkCol(self, 'function'),
+            LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.language),
+            CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.counterparts),
+            RefsCol(self, 'references'),
+        ]
+           
+class Counterparts(Values):
+    def col_defs(self):
+        return [
+            LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.morpheme.language),
+            MorphemeCol(self, 'form', get_obj=lambda i: i.morpheme),
+            FunctionCol(self, 'function', get_obj=lambda i: i.morpheme),
+            RefsCol(self, 'references', get_obj=lambda i: i.morpheme)
+        ]
+
+class Functions(Unitvalues):
+    def col_defs(self):
+        return [
+            MorphemeCol(self, 'form', get_obj=lambda i: i.unit),
+            LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.unit.language),             
+            RefsCol(self, 'references', get_obj=lambda i: i.unit),
+            CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.unit.counterparts),
+        ]
+
+class Languages(Languages):
+    def col_defs(self):
+        return [
+            LinkCol(self, 'name'),
+            LinkToMapCol(self, 'm'),
+            Col(self,
+                'latitude',
+                sDescription='<small>The geographic latitude</small>'),
+            Col(self,
+                'longitude',
+                sDescription='<small>The geographic longitude</small>'),
         ]
         
-class Counterparts(Values):
-    pass
-    
 def includeme(config):
     config.register_datatable('unitparameters', Meanings)
     config.register_datatable('units', Morphemes)
+    config.register_datatable('unitvalues', Functions)
     config.register_datatable('parameters', Cognatesets)
     config.register_datatable('values', Counterparts)
+    config.register_datatable('languages', Languages)
+    config.register_datatable('languagemorphemes', LanguageMorphemes)
