@@ -6,7 +6,7 @@ from clld.db.meta import DBSession
 from clld.db.models import common
 from cariban_morphemes import util
 
-from pycldf import Wordlist
+from pycldf import Wordlist, Generic
 from clld.lib.bibtex import EntryType, unescape
 from nameparser import HumanName
 import cariban_morphemes
@@ -16,7 +16,8 @@ from clld.web.util import helpers as h
 
 from clld_glottologfamily_plugin.util import load_families
 
-cariban_data = Wordlist.from_metadata("../cariban_data.json")
+cariban_data = Wordlist.from_metadata("../cariban_morpheme_data.json")
+construction_data = Generic.from_metadata("../cariban_construction_data.json")
 
 
 def get_source_name(source):
@@ -222,6 +223,16 @@ def main(args):
                 
         return eval(f'f"""{non_f_str}"""')
     
+    print("Adding constructions…")
+    for row in construction_data["FormTable"]:
+        data.add(
+            models.Construction,
+            row["ID"],
+            id=row["ID"],
+            language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
+            name=row["Description"],
+        )
+        
     print("Adding morphemes…")
     morph_cnt=0
     for row in cariban_data["FormTable"]:
@@ -250,25 +261,37 @@ def main(args):
                     key=source.id,
                     description=pages)
                     )
-        for morpheme_function in row["Parameter_ID"]:
-            my_key = morpheme_function.replace(".","_")
-            #Check if there is already such a function (meaning) defined
-            if morpheme_function not in data["Meaning"].keys():
-                # print("Adding a brand new FUNCTION with id %s, name %s!" % (my_key, morpheme_function))
+    
+    print("Adding morpheme functions…")
+    for row in construction_data["ValueTable"]:
+        for function in row["Function"]:
+            my_key = function.replace(".","_")
+            if function not in data["Meaning"].keys():
                 data.add(models.Meaning,
-                    morpheme_function,
+                    function,
                     id=my_key,
-                    name=morpheme_function
+                    name=function
                 )
-            # print("Adding the function %s to the morpheme %s!" % (data["UnitParameter"][morpheme_function], row["ID"]))
-            #This is the "MorphemeFunction" linking a Morpheme (Unit) with a Meaning (UnitParameter)
-            data.add(common.UnitValue,
-                row["ID"]+":"+my_key,
-                id=row["ID"]+":"+my_key,
-                name=lang_dic[row["Language_ID"]]["name"]+": "+my_key,
-                unit=data["Morpheme"][row["ID"]],
-                unitparameter=data["Meaning"][morpheme_function]
-            )
+            if len(row["Construction"]) == 0:
+                data.add(models.MorphemeFunction,
+                    "%s:%s" % (row["Morpheme"], function),
+                    id="%s:%s" % (row["Morpheme"], function.replace(".","_")),
+                    name="MY NAME",
+                    unit=data["Morpheme"][row["Morpheme"]],
+                    unitparameter=data["Meaning"][function],
+                    construction=None
+                )
+            else:
+                for construction in row["Construction"]:
+                    morpheme_function_key = "%s:%s:%s" % (row["Morpheme"], function, construction)
+                    data.add(models.MorphemeFunction,
+                        "%s:%s" % (row["Morpheme"], function),
+                        id=morpheme_function_key,
+                        name="MY NAME",
+                        unit=data["Morpheme"][row["Morpheme"]],
+                        unitparameter=data["Meaning"][function],
+                        construction=data["Construction"][construction]
+                    )
     print("")
     
     print("Checking examples for illustrated morphemes…")
@@ -290,13 +313,16 @@ def main(args):
                 if unitvaluesentence_key in data["UnitValueSentence"].keys():
                     continue
                 is_illustrated[unit_value] = True
-                if unit_value.replace(".","-") not in data["UnitValue"].keys():
+                morph_id = unit_value.split(":")[0]
+                function = unit_value.split(":")[1]
+                morph_function_id = "%s:%s" % (morph_id, function)
+                if morph_function_id not in data["MorphemeFunction"].keys():
                     print("Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
                     continue
                 data.add(models.UnitValueSentence,
                 unitvaluesentence_key,
                 sentence=data["Sentence"][row["ID"]],
-                unitvalue=data["UnitValue"][unit_value.replace(".","-")],
+                unitvalue=data["MorphemeFunction"][morph_function_id],
                 )
     print("")
                 
