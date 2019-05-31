@@ -6,6 +6,7 @@ from functools import partial
 # from cariban_morphemes.models import Morpheme
 # from cariban_morphemes.interfaces import IMorpheme
 from cariban_morphemes import models
+from cariban_morphemes.interfaces import IConstruction
 
 _ = lambda s: s
 _('Parameter')
@@ -23,10 +24,13 @@ def main(global_config, **settings):
         'unitparameter': '/function/{id:[^/\.]+}',
         'units': '/morphemes',
         'unit': '/morpheme/{id:[^/\.]+}',
+        'construction': '/construction/{id:[^/\.]+}',
         'parameters': '/cognatesets',
         'parameter': '/cognateset/{id:[^/\.]+}',
     }
 
     config = Configurator(settings=settings)
     config.include('clld.web.app')
+    config.register_resource(
+        'construction', models.Construction, IConstruction, with_index=True, with_detail=True)
     return config.make_wsgi_app()

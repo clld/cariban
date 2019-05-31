@@ -7,7 +7,7 @@ from clld.web.datatables.base import (
 )
 from clld.web.datatables.value import (ValueNameCol)
 from clld.web.datatables.unit import (DescriptionLinkCol)
-from cariban_morphemes.models import Counterpart, CognateSet, Morpheme
+from cariban_morphemes.models import Counterpart, CognateSet, Morpheme, Construction
 from clld.interfaces import IMenuItems
 from clld.web.util.helpers import (
     link, button, icon, JS_CLLD, external_link, linked_references, JSDataTable,
@@ -63,7 +63,7 @@ class Morphemes(Units):
     def col_defs(self):
         return [
             LinkCol(self, 'form'),
-            DescriptionLinkCol(self, 'function'),
+            FunctionCol(self, 'function'),
             LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.language),
             CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.counterparts),
             RefsCol(self, 'references'),
@@ -85,6 +85,26 @@ class LanguageMorphemes(Units):
             LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.language),
             CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.counterparts),
             RefsCol(self, 'references'),
+        ]
+        
+class ConstructionMorphemes(DataTable):
+
+    __constraints__ = [Construction]
+
+    def base_query(self, query):
+        print(query)
+        query = query.join(Language).options(joinedload(Unit.language))
+
+        if self.language:
+            return query.filter(Unit.language == self.language)
+        return query
+
+    def col_defs(self):
+        return [
+            LinkCol(self, 'name'),
+            # DescriptionLinkCol(self, 'description'),
+            # LinkCol(
+                # self, 'language', model_col=Language.name, get_obj=lambda i: i.language),
         ]
            
 class Counterparts(Values):
@@ -126,3 +146,4 @@ def includeme(config):
     config.register_datatable('values', Counterparts)
     config.register_datatable('languages', Languages)
     config.register_datatable('languagemorphemes', LanguageMorphemes)
+    config.register_datatable('constructionmorphemes', ConstructionMorphemes)

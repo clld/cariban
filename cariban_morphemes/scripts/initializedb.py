@@ -19,7 +19,6 @@ from clld_glottologfamily_plugin.util import load_families
 cariban_data = Wordlist.from_metadata("../cariban_morpheme_data.json")
 construction_data = Generic.from_metadata("../cariban_construction_data.json")
 
-
 def get_source_name(source):
     year = source.get('year', 'nd')
     fields = {}
@@ -84,8 +83,6 @@ def main(args):
             longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
         )
     print("")
-    print(lang_dic)
-
        
     print("Adding sources…")
     length = len(cariban_data.sources)
@@ -223,8 +220,12 @@ def main(args):
                 
         return eval(f'f"""{non_f_str}"""')
     
-    print("Adding constructions…")
+    cons_cnt = 0
     for row in construction_data["FormTable"]:
+        cons_cnt += 1
+    print("Adding constructions…")
+    for i, row in enumerate(construction_data["FormTable"]):
+        print("%s/%s" % (i+1, cons_cnt), end="\r")
         data.add(
             models.Construction,
             row["ID"],
@@ -292,7 +293,6 @@ def main(args):
                         unitparameter=data["Meaning"][function],
                         construction=data["Construction"][construction]
                     )
-    print("")
     
     print("Checking examples for illustrated morphemes…")
     proto_languages = ["pc"]
