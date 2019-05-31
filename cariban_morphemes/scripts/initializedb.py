@@ -103,8 +103,7 @@ def main(args):
 
         
     print("Adding glossing abbreviations…")
-    gloss_txt = open("/Users/florianm/Dropbox/Stuff/development/interlinear_text_tools/glossing.txt", "r").read()
-    length = len(gloss_txt.split("\n"))
+    print(pynterlinear.get_all_abbrevs())
     for i, glossline in enumerate(gloss_txt.split("\n")):
         print("%s/%s" % (i+1, length), end="\r")
         key = glossline.split("\t")[0].upper()
