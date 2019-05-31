@@ -5,7 +5,7 @@ from clld.scripts.util import initializedb, Data
 from clld.db.meta import DBSession
 from clld.db.models import common
 from cariban_morphemes import util
-
+from pynterlinear import pynterlinear
 from pycldf import Wordlist, Generic
 from clld.lib.bibtex import EntryType, unescape
 from nameparser import HumanName
@@ -103,11 +103,9 @@ def main(args):
 
         
     print("Adding glossing abbreviations…")
-    print(pynterlinear.get_all_abbrevs())
-    for i, glossline in enumerate(gloss_txt.split("\n")):
+    length = len(pynterlinear.get_all_abbrevs().keys())
+    for i, (key, name) in enumerate(pynterlinear.get_all_abbrevs().items()):
         print("%s/%s" % (i+1, length), end="\r")
-        key = glossline.split("\t")[0].upper()
-        name = glossline.split("\t")[1]
         DBSession.add(common.GlossAbbreviation(id=key, name=name))
     print("")    
     
