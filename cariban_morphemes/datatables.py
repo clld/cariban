@@ -1,7 +1,8 @@
 from clld.web.datatables import Unitparameters, Units, Values, Parameters, Unitvalues, Languages
 from clld.db.models.common import (
-    Language
+    Language, UnitParameter
 )
+from clld.db.models import common
 from clld.web.datatables.base import (
     Col, LinkCol, PercentCol, IntegerIdCol, LinkToMapCol, DataTable, DetailsRowLinkCol, RefsCol
 )
@@ -58,7 +59,7 @@ class Meanings(Unitparameters):
         return [
             LinkCol(self, 'Gloss'),
         ]
-
+        
 class Morphemes(Units):
     def col_defs(self):
         return [
@@ -86,26 +87,6 @@ class LanguageMorphemes(Units):
             CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.counterparts),
             RefsCol(self, 'references'),
         ]
-        
-class ConstructionMorphemes(DataTable):
-
-    __constraints__ = [Construction]
-
-    def base_query(self, query):
-        print(query)
-        query = query.join(Language).options(joinedload(Unit.language))
-
-        if self.language:
-            return query.filter(Unit.language == self.language)
-        return query
-
-    def col_defs(self):
-        return [
-            LinkCol(self, 'name'),
-            # DescriptionLinkCol(self, 'description'),
-            # LinkCol(
-                # self, 'language', model_col=Language.name, get_obj=lambda i: i.language),
-        ]
            
 class Counterparts(Values):
     def col_defs(self):
@@ -125,6 +106,13 @@ class Functions(Unitvalues):
             CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.unit.counterparts),
         ]
 
+class Constructions(DataTable):
+    def col_defs(self):
+        return [
+            LinkCol(self, 'name'),
+            LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.language),             
+        ]
+        
 class Languages(Languages):
     def col_defs(self):
         return [
@@ -146,4 +134,5 @@ def includeme(config):
     config.register_datatable('values', Counterparts)
     config.register_datatable('languages', Languages)
     config.register_datatable('languagemorphemes', LanguageMorphemes)
-    config.register_datatable('constructionmorphemes', ConstructionMorphemes)
+    # config.register_datatable('constructionmorphemes', ConstructionMorphemes)
+    config.register_datatable('constructions', Constructions)

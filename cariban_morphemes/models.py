@@ -30,7 +30,7 @@ class CognatesetReference(Base, common.HasSourceMixin):
     cognateset = relationship(CognateSet, backref="references")
     
 @implementer(IConstruction)
-class Construction(Base, PolymorphicBaseMixin, IdNameDescriptionMixin):
+class Construction(Base, PolymorphicBaseMixin, IdNameDescriptionMixin, HasSourceMixin):
     pk = Column(Integer, primary_key=True)
     language = relationship(Language, backref="constructions")
     language_pk = Column(Integer, ForeignKey("language.pk"))

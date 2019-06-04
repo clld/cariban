@@ -17,6 +17,7 @@ from clld.web.adapters import get_adapter, get_adapters
 from clld.lib.coins import ContextObject
 from clld.lib import bibtex
 from clld.lib import rdf
+from cariban_morphemes import models as cariban_models
 
 
 def xify(text):

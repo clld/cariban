@@ -13,12 +13,12 @@ import cariban_morphemes
 from cariban_morphemes import models
 import re
 from clld.web.util import helpers as h
-
-from clld_glottologfamily_plugin.util import load_families
+import os
 
 cariban_data = Wordlist.from_metadata("../cariban_morpheme_data.json")
 construction_data = Generic.from_metadata("../cariban_construction_data.json")
 
+#This returns a author-year style reference from the bibtex file.
 def get_source_name(source):
     year = source.get('year', 'nd')
     fields = {}
@@ -63,25 +63,28 @@ def main(args):
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
     
     print("Adding languages…")
+    #This will contain a dict to look up the language IDs (and names) based on glottocodes -- the CLLD app uses custom language IDs, but the CLDF files use glottocodes.
     lang_dic = {}
+    #This will contain a dict to look up full language names based on shorthand forms (e.g. maqui). This is only used to render markdown.
     lang_abbrev_dic = {}
     lg_count = 0
     for row in cariban_data["LanguageTable"]:
-        lg_count+=1
-    for i, row in enumerate(cariban_data["LanguageTable"]):
-        print("%s/%s" % (i+1, lg_count), end="\r")
-        if row["sampled"] != "y":
-            continue
-        lang_dic[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
-        lang_abbrev_dic[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
-        data.add(
-            common.Language,
-            row["ID"],
-            id=row["ID"],
-            name=row["Name"],
-            latitude=float(row["Latitude"]) if row["Latitude"] is not None else None,
-            longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
-        )
+        if row["sampled"] == "y": lg_count+=1
+    i = 0
+    for row in cariban_data["LanguageTable"]:
+        if row["sampled"] == "y":
+            i += 1
+            print("%s/%s" % (i, lg_count), end="\r")        
+            lang_dic[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
+            lang_abbrev_dic[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
+            data.add(
+                common.Language,
+                row["ID"],
+                id=row["ID"],
+                name=row["Name"],
+                latitude=float(row["Latitude"]) if row["Latitude"] is not None else None,
+                longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
+            )
     print("")
        
     print("Adding sources…")
@@ -96,7 +99,7 @@ def main(args):
             src.id,
             id=src.id,
             name=get_source_name(src),
-            description=src.get("title", src.get("booktitle")),
+            description=src.get("title", src.get("booktitle")).replace("{","").replace("}",""),
             bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
     print("")
@@ -131,7 +134,6 @@ def main(args):
         
     for i, row in enumerate(cariban_data["ExampleTable"]):
         print("%s/%s" % (i+1, ex_cnt), end="\r")
-        # print(lang_dic[row["Language_ID"]]["ID"])
         new_ex = data.add(common.Sentence,
         row["ID"],
         id=row["ID"],
@@ -142,15 +144,13 @@ def main(args):
         language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
         comment=row["Comment"],
         markup_gloss=row["Morpheme_IDs"].replace(" ","\t")
-        # source=data["Source"][row["Source"].split("[")[0]]
-        # source=row["Source"]
         )
         if row["Source"]:
             bib_key = row["Source"].split("[")[0]
             if len(row["Source"].split("[")) > 1:
                 pages = row["Source"].split("[")[1].split("]")[0]
             else:
-                pages = " "    
+                pages = ""    
             if bib_key in data["Source"]:
                 source = data["Source"][bib_key]
                 DBSession.add(common.SentenceReference(
@@ -207,8 +207,6 @@ def main(args):
             return "<i><a href='/morpheme/%s' >%s</a></i>" % (morph_id, form)
             
         def render_ex(ex_id):
-            
-            print(data["Sentence"][ex_id].references[0].source.id)
             return """
                 <blockquote style='margin-top: 5px;'>
                 %s (%s)
@@ -229,7 +227,9 @@ def main(args):
             id=row["ID"],
             language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
             name=row["Description"],
+            markup_description=generate_markup(row["Comment"]),
         )
+    print("")
         
     print("Adding morphemes…")
     morph_cnt=0
@@ -259,6 +259,7 @@ def main(args):
                     key=source.id,
                     description=pages)
                     )
+    print("")
     
     print("Adding morpheme functions…")
     for row in construction_data["ValueTable"]:
