@@ -1,1 +1,11 @@
+.paradigm-table {
+  width: auto !important;
+  border-collapse: collapse;
+  display: inline;
+  margin:4px;
+}
 
+.paradigm-td {
+  padding: 10px;
+  border: 0.5px dotted black;
+}

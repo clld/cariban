@@ -19,6 +19,7 @@ from clld.lib import bibtex
 from clld.lib import rdf
 from cariban_morphemes import models as cariban_models
 
+from collections import OrderedDict
 
 def xify(text):
     ids = []
@@ -144,3 +145,153 @@ def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False
         ),
         class_="sentence-wrapper",
     )
+
+def html_table(lol, caption):
+    output = ""
+    output += '<table class="table paradigm-table"> <caption>%s</caption>' % caption
+    for sublist in lol:
+        output += '  <tr><td class="td paradigm-td">'
+        output += '    </td><td class="td paradigm-td">'.join(sublist)
+        output += '  </td></tr>'
+    output += '</table>'
+    return output
+
+def keyify(list, hash):
+    return re.sub(r"(\d):", r"\1", ":".join(get_args(list, hash))).strip(":")
+
+#This takes a list of keys (in this case, of parameter names) and a hash (in this case, of an entry), and returns a list of values from the hash. Used to combine different parameters
+def get_args(list, hash): 
+    output = []
+    for item in list:
+        output.append(hash[item])
+    return(output)
+
+def person_sort(s):
+    sortation = {
+        "1": 1,
+        "2": 2,
+        "3": 4,
+        "1+2": 3,
+        "1+3": 5,
+        "": 0
+    }
+    return sortation[s]
+    
+def build_table(table, label, caption):
+    output = []
+    x_values = []
+    y_values = []
+    output.append([])
+    for y_key, y in table.items():
+        if y_key not in y_values:
+            y_values.append(y_key)
+        for x_key, x in y.items():
+            if x_key not in x_values:
+                x_values.append(x_key)
+    x_values = sorted(x_values, key=person_sort)
+    row_count = 0
+    output[0].append(label)
+    for x in x_values:
+        output[row_count].append(x)
+    
+    for x_key in table.keys():
+        output.append([])
+        row_count += 1
+        output[row_count].append(x_key)
+        for i in x_values:
+            output[row_count].append("")
+        for y_key, y in table[x_key].items():
+            col_count = 0
+            while col_count < len(x_values):
+                if output[0][col_count+1] == y_key:
+                    if type(y) is list:
+                        # print(y)
+                        y = "; ".join(y)
+                    output[row_count][col_count+1] = y
+                col_count += 1
+    if label == "": del output[0]
+    return html_table(output, caption)
+
+def intransitive_construction_paradigm(construction, functions):
+    table = {}
+    entries = []
+    for entry in functions:
+        new_entry = entry
+        if re.match("\d(\+\d)?S", entry["Function"]):
+            new_entry["S"] = entry["Function"].replace("S","")
+        else:
+            continue
+        entries.append(new_entry)
+        
+    for entry in entries:
+        if entry["S"] not in table.keys() and entry["Construction"] == construction:
+            table[entry["S"]] = {"":[]}
+    
+    table = dict(sorted(table.items(), key=lambda kv: person_sort(kv[0])))
+    table = OrderedDict(table.items())
+    for entry in entries:
+        if entry["Construction"] != construction: continue
+        for morpheme in entry["Morpheme"]:
+            table[entry["S"]][""].append("morph:" + morpheme)
+    
+    # table = filter(lambda entry: "morph:" in str(entry), table.items())
+    table = dict((k, v) for k, v in table.items() if "morph:" in str(v))
+    
+    return build_table(table, "", "Intransitive person marking")
+        
+def transitive_construction_paradigm(construction, functions):
+    x_dim = ["P"]
+    y_dim = ["A"]
+    
+    filtered_parameters = {
+        "Construction": construction
+    }
+    
+    entries = []
+    for entry in functions:
+        new_entry = entry
+        if re.match("\d(\+\d)?P", entry["Function"]):
+            new_entry["P"] = entry["Function"].replace("P","")
+            new_entry["S"] = ""
+            new_entry["A"] = ""
+        elif re.match("\d(\+\d)?A", entry["Function"]):
+            new_entry["P"] = ""
+            new_entry["S"] = ""
+            new_entry["A"] = entry["Function"].replace("A","")
+        elif ">" in entry["Function"]:
+            new_entry["P"] = entry["Function"].split(">")[1]
+            new_entry["A"] = entry["Function"].split(">")[0]
+            new_entry["S"] = ""
+        else:
+            continue
+        entries.append(new_entry)
+    
+
+    table = {}
+    #Iterate through all entries and generate the necessary rows in the appropriate tables
+    for entry in entries:
+        if entry["Construction"] != construction: continue
+        y_key = keyify(y_dim, entry)
+        if y_key not in table.keys():
+            table[y_key] = {}
+            
+    table = dict(sorted(table.items(), key=lambda kv: person_sort(kv[0])))
+    table = OrderedDict(table.items())
+    #Iterate through all entries and put the form into the appropriate place
+    for entry in entries:
+        if entry["Construction"] != construction: continue
+        y_key = keyify(y_dim, entry)
+        my_y = table[y_key]
+        good = True
+        x_key = keyify(x_dim, entry)
+        if x_key not in my_y.keys(): my_y[x_key] = []
+        for col, val in filtered_parameters.items():
+            if entry[col] != val:
+                good = False
+        if good:
+            #Find the appropriate column
+            string = ""
+            for morpheme in entry["Morpheme"]:
+                string += "morph:" + morpheme + " "
+            my_y[x_key].append(string)
+    return build_table(table, "A/P", "Transitive person marking")

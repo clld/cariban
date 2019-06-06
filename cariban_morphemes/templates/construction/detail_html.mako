@@ -14,29 +14,7 @@
 ${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}
 % endif
 
-<table class="table table-nonfluid">
-    <tbody>
-	<tr>
-	<td>Language:</td>
-	<td>${h.link(request, ctx.language)}</td>
-	</tr>
-	<tr>
-	<td>Morphemes:</td>
-	<td>
-	% if ctx.morphemefunctions:
-		<ul class="inline">
-			% for c in ctx.morphemefunctions:
-				<li>${h.link(request, c.unit)}</li>
-				<li>${h.link(request, c.unitparameter)}</li>
-			% endfor
-		</ul>
-	% endif
-	</td>
-	</tr>
-    </tbody>
-</table>
-
-## ${request.get_datatable('constructionmorphemes', h.models.UnitValue, construction=ctx).render()}
+${request.get_datatable('unitvalues', h.models.UnitValue, construction=ctx).render()}
 
 ## This is what is called for the language index view in vanilla CLLD
 ## ${request.get_datatable('values', h.models.Value, language=ctx).render()}

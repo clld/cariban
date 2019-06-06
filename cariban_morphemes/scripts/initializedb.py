@@ -215,22 +215,6 @@ def main(args):
                 
         return eval(f'f"""{non_f_str}"""')
     
-    cons_cnt = 0
-    for row in construction_data["FormTable"]:
-        cons_cnt += 1
-    print("Adding constructions…")
-    for i, row in enumerate(construction_data["FormTable"]):
-        print("%s/%s" % (i+1, cons_cnt), end="\r")
-        data.add(
-            models.Construction,
-            row["ID"],
-            id=row["ID"],
-            language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
-            name=row["Description"],
-            markup_description=generate_markup(row["Comment"]),
-        )
-    print("")
-        
     print("Adding morphemes…")
     morph_cnt=0
     for row in cariban_data["FormTable"]:
@@ -240,8 +224,7 @@ def main(args):
         new_morph = data.add(models.Morpheme,
             row["ID"],
             language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
-            name=", ".join(row["Form"]),
-            description=", ".join(row["Parameter_ID"]),
+            name="/".join(row["Form"]),
             markup_description=generate_markup(row["Description"]),
             id=row["ID"],
         )
@@ -261,6 +244,49 @@ def main(args):
                     )
     print("")
     
+    #Create shorthand lists for the paradigm generator function
+    morpheme_list_paradigms = {}
+    for row in cariban_data["FormTable"]:
+        morpheme_list_paradigms[row["ID"]] = dict(row)
+
+    function_list_paradigms = []
+    for entry in construction_data["ValueTable"]:
+        if entry["ID"] == "11": print(entry)
+        for function in entry["Function"]:
+            for construction in entry["Construction"]:
+                function_entry = {
+                    "Function": function,
+                    "Construction": construction,
+                    "Morpheme": entry["Morpheme"]
+                }
+                # if function == "2>1": print(function_entry)
+                merged_dict = {**morpheme_list_paradigms[entry["Morpheme"][0]], **{"Construction": construction, "Function": function}}
+                function_list_paradigms.append(function_entry)
+    # print(function_list_paradigms)
+    
+    cons_cnt = 0
+    for row in construction_data["FormTable"]:
+        cons_cnt += 1
+    print("Adding constructions…")
+    for i, row in enumerate(construction_data["FormTable"]):
+        print("%s/%s" % (i+1, cons_cnt), end="\r")
+        if row["Comment"] is None:
+            description = ""
+        else:
+            description = row["Comment"]
+        description += util.transitive_construction_paradigm(row["ID"], function_list_paradigms)
+        description += util.intransitive_construction_paradigm(row["ID"], function_list_paradigms)
+        data.add(
+            models.Construction,
+            row["ID"],
+            id=row["ID"],
+            language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
+            name=row["Description"],
+            markup_description=generate_markup(description),
+        )
+    print("")
+        
+    
     print("Adding morpheme functions…")
     for row in construction_data["ValueTable"]:
         for function in row["Function"]:
@@ -272,25 +298,29 @@ def main(args):
                     name=function
                 )
             if len(row["Construction"]) == 0:
-                data.add(models.MorphemeFunction,
-                    "%s:%s" % (row["Morpheme"], function),
-                    id="%s:%s" % (row["Morpheme"], function.replace(".","_")),
-                    name="MY NAME",
-                    unit=data["Morpheme"][row["Morpheme"]],
-                    unitparameter=data["Meaning"][function],
-                    construction=None
-                )
+                if len(row["Morpheme"]) == 1:
+                    for morpheme in row["Morpheme"]:
+                        data.add(models.MorphemeFunction,
+                            "%s:%s" % (morpheme, function),
+                            id="%s:%s" % (morpheme, function.replace(".","_")),
+                            name="MY NAME",
+                            unit=data["Morpheme"][morpheme],
+                            unitparameter=data["Meaning"][function],
+                            construction=None
+                        )
             else:
                 for construction in row["Construction"]:
-                    morpheme_function_key = "%s:%s:%s" % (row["Morpheme"], function, construction)
-                    data.add(models.MorphemeFunction,
-                        "%s:%s" % (row["Morpheme"], function),
-                        id=morpheme_function_key,
-                        name="MY NAME",
-                        unit=data["Morpheme"][row["Morpheme"]],
-                        unitparameter=data["Meaning"][function],
-                        construction=data["Construction"][construction]
-                    )
+                    if len(row["Morpheme"]) == 1:
+                        for morpheme in row["Morpheme"]:
+                            morpheme_function_key = "%s:%s:%s" % (morpheme, function, construction)
+                            data.add(models.MorphemeFunction,
+                                "%s:%s" % (morpheme, function),
+                                id=morpheme_function_key,
+                                name="MY NAME",
+                                unit=data["Morpheme"][morpheme],
+                                unitparameter=data["Meaning"][function],
+                                construction=data["Construction"][construction]
+                            )
     
     print("Checking examples for illustrated morphemes…")
     proto_languages = ["pc"]
@@ -382,7 +412,7 @@ def main(args):
             my_value = data.add(models.Counterpart,
                 cognate_ID+":"+row["ID"],
                 valueset=my_valueset,
-                name=row["Form"][0]+": "+", ".join(row["Parameter_ID"]),
+                name=row["Form"][0],
                 description=row["Form"][0],
                 markup_description=", ".join(row["Form"]),
                 morpheme=data["Morpheme"][row["ID"]]
