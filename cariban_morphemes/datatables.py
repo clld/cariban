@@ -123,7 +123,8 @@ class MorphemeFunctions(Unitvalues):
         ]
         if not self.unitparameter:
             base.append(LinkCol(self, 'function', get_obj=lambda i: i.unitparameter))
-        base.append(LinkCol(self, 'construction', get_obj=lambda i: i.construction))
+        if not self.construction:
+            base.append(LinkCol(self, 'construction', get_obj=lambda i: i.construction))
         if not self.language and not self.construction:
             base.append(LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.unit.language))
         return base + [

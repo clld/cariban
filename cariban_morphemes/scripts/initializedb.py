@@ -14,6 +14,7 @@ from cariban_morphemes import models
 import re
 from clld.web.util import helpers as h
 import os
+import csv
 
 cariban_data = Wordlist.from_metadata("../cariban_morpheme_data.json")
 construction_data = Generic.from_metadata("../cariban_construction_data.json")
@@ -103,7 +104,6 @@ def main(args):
             bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
     print("")
-
         
     print("Adding glossing abbreviations…")
     length = len(pynterlinear.get_all_abbrevs().keys())
