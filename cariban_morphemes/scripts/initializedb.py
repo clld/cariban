@@ -225,7 +225,7 @@ def main(args):
             row["ID"],
             language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
             name="/".join(row["Form"]),
-            markup_description=generate_markup(row["Description"]),
+            markup_description=generate_markup(row["Comment"]),
             id=row["ID"],
         )
         if row["Source"]:
@@ -251,7 +251,6 @@ def main(args):
 
     function_list_paradigms = []
     for entry in construction_data["ValueTable"]:
-        if entry["ID"] == "11": print(entry)
         for function in entry["Function"]:
             for construction in entry["Construction"]:
                 function_entry = {
@@ -303,7 +302,7 @@ def main(args):
                         data.add(models.MorphemeFunction,
                             "%s:%s" % (morpheme, function),
                             id="%s:%s" % (morpheme, function.replace(".","_")),
-                            name="MY NAME",
+                            name="MorphemeFunction %s:%s"% (morpheme, function.replace(".","_")),
                             unit=data["Morpheme"][morpheme],
                             unitparameter=data["Meaning"][function],
                             construction=None
@@ -316,7 +315,7 @@ def main(args):
                             data.add(models.MorphemeFunction,
                                 "%s:%s" % (morpheme, function),
                                 id=morpheme_function_key,
-                                name="MY NAME",
+                                name="MorphemeFunction %s:%s:%s"% (morpheme, function.replace(".","_"), construction),
                                 unit=data["Morpheme"][morpheme],
                                 unitparameter=data["Meaning"][function],
                                 construction=data["Construction"][construction]

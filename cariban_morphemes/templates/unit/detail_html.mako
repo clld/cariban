@@ -6,10 +6,6 @@
 
 <h3>${_('Morpheme')} ${ctx.name}</h3>
 
-## <p>
-##     ${ctx.description}
-## </p>
-
 <table class="table table-nonfluid">
     <tbody>
 	<tr>
@@ -36,6 +32,15 @@
 	% endif
 	</td>
 	</tr>
+	% if ctx.description or ctx_markup_description:
+	Comments
+	<tr>
+	<td>Comments:</td>
+	<td>
+	${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}
+	</td>
+	</tr>
+	% endif
     </tbody>
 </table>
 
@@ -49,19 +54,53 @@
 </dl>
 
 <h4>${_('Functions:')}</h4>
+<%
+shown_functions = {}
+%>
+<%
+for i, value in enumerate(ctx.unitvalues):
+	if value.unitparameter not in shown_functions.keys():
+		shown_functions[value.unitparameter] = {}
+	shown_functions[value.unitparameter][value] = value.construction
+%>
 <dl>
-    % for i, value in enumerate(ctx.unitvalues):
+    % for function, function_construction_pair in shown_functions.items():
 		<div style="clear: right;">
-		    <ul class="nav nav-pills pull-right">
-		        <li><a data-toggle="collapse" data-target="#s${i}">Show/hide details</a></li>
-		    </ul>
+##		    <ul class="nav nav-pills pull-right">
+##		        <li><a data-toggle="collapse" data-target="#s${i}">Show/hide details</a></li>
+##		    </ul>
 			<h4>
-				<dt>${h.link(request, value.unitparameter)}</dt>
+				<% construction_l = len(function_construction_pair.values()) %>
+				<dt>${h.link(request, function)}
+				<%
+				construction_specified = False
+				for i, construction in enumerate(function_construction_pair.values()):
+					if construction != None: construction_specified = True
+				%>
+				%if construction_specified:	
+				(in the \
+				% for i, construction in enumerate(function_construction_pair.values()):
+					${h.link(request, construction)}\
+					<%
+					if i < construction_l-2: comma = ","
+					elif i == construction_l-2: comma = "and"
+					else: comma = ""
+					%>\
+					${comma}
+				%endfor
+				<%
+				if construction_l == 1: cons_text = "construction"
+				else: cons_text = "constructions"
+				%>
+				${cons_text})
+				%endif
+			</dt>
 			</h4>
 		    <div id="s${i}" class="collapse in">
-				${cmutil.sentences(value)}
+				% for morphemefunction in function_construction_pair.keys():
+					${cmutil.sentences(morphemefunction)}
+				%endfor
 		    </div>
 		</div>
-    ##<dd>${h.link(request, value)}</dd>
     % endfor
 </dl>

@@ -5,7 +5,7 @@
 
 <h2>${_('Language')} ${ctx.name}</h2>
 
-${request.get_datatable('languagemorphemes', h.models.Unit, language=ctx).render()}
+${request.get_datatable('units', h.models.Unit, language=ctx).render()}
 
 <%def name="sidebar()">
     ${util.language_meta()}

@@ -170,12 +170,12 @@ def person_sort(s):
     sortation = {
         "1": 1,
         "2": 2,
-        "3": 4,
+        "3": 5,
         "1+2": 3,
-        "1+3": 5,
+        "1+3": 4,
         "": 0
     }
-    return sortation[s]
+    return sortation[re.sub("[A,S,P]", "", s)]
     
 def build_table(table, label, caption):
     output = []
@@ -218,7 +218,7 @@ def intransitive_construction_paradigm(construction, functions):
     for entry in functions:
         new_entry = entry
         if re.match("\d(\+\d)?S", entry["Function"]):
-            new_entry["S"] = entry["Function"].replace("S","")
+            new_entry["S"] = entry["Function"]#.replace("S","")
         else:
             continue
         entries.append(new_entry)
@@ -234,9 +234,10 @@ def intransitive_construction_paradigm(construction, functions):
         for morpheme in entry["Morpheme"]:
             table[entry["S"]][""].append("morph:" + morpheme)
     
-    # table = filter(lambda entry: "morph:" in str(entry), table.items())
     table = dict((k, v) for k, v in table.items() if "morph:" in str(v))
     
+    if "morph:" not in str(table):
+        return ""
     return build_table(table, "", "Intransitive person marking")
         
 def transitive_construction_paradigm(construction, functions):
@@ -251,16 +252,16 @@ def transitive_construction_paradigm(construction, functions):
     for entry in functions:
         new_entry = entry
         if re.match("\d(\+\d)?P", entry["Function"]):
-            new_entry["P"] = entry["Function"].replace("P","")
+            new_entry["P"] = entry["Function"]#.replace("P","")
             new_entry["S"] = ""
             new_entry["A"] = ""
         elif re.match("\d(\+\d)?A", entry["Function"]):
             new_entry["P"] = ""
             new_entry["S"] = ""
-            new_entry["A"] = entry["Function"].replace("A","")
+            new_entry["A"] = entry["Function"]#.replace("A","")
         elif ">" in entry["Function"]:
-            new_entry["P"] = entry["Function"].split(">")[1]
-            new_entry["A"] = entry["Function"].split(">")[0]
+            new_entry["P"] = entry["Function"].split(">")[1]+"P"
+            new_entry["A"] = entry["Function"].split(">")[0]+"A"
             new_entry["S"] = ""
         else:
             continue
@@ -294,4 +295,4 @@ def transitive_construction_paradigm(construction, functions):
             for morpheme in entry["Morpheme"]:
                 string += "morph:" + morpheme + " "
             my_y[x_key].append(string)
-    return build_table(table, "A/P", "Transitive person marking")
+    return build_table(table, " ", "Transitive person marking")

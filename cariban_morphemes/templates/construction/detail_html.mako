@@ -1,6 +1,6 @@
 <%inherit file="../${context.get('request').registry.settings.get('clld.app_template', 'app.mako')}"/>
 <%namespace name="util" file="../util.mako"/>
-<%! active_menu_item = "parameters" %>
+<%! active_menu_item = "constructions" %>
 <%block name="title">${_('Construction')} ${ctx.name}</%block>
 
 <h2>The ${h.link(request, ctx.language)} ${ctx.name} clause</h2>
