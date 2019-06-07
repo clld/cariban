@@ -5,7 +5,6 @@
 
 
 <h3>${_('Morpheme')} ${ctx.name}</h3>
-
 <table class="table table-nonfluid">
     <tbody>
 	<tr>
@@ -32,8 +31,7 @@
 	% endif
 	</td>
 	</tr>
-	% if ctx.description or ctx_markup_description:
-	Comments
+	% if ctx.description or ctx.markup_description:
 	<tr>
 	<td>Comments:</td>
 	<td>
