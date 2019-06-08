@@ -10,10 +10,12 @@
 	<td>Reconstructed form:</td>
 	<td>${ctx.name}</td>
 	</tr>
-	<tr>
-	<td>Original function:</td>
-	<td>${ctx.description}</td>
-	</tr>
+	% if ctx.description:
+		<tr>
+		<td>Original function:</td>
+		<td>${ctx.description}</td>
+		</tr>
+	% endif
 	% if ctx.references:
 		<tr>
 			<td>Source:</td>
