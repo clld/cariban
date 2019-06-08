@@ -85,6 +85,7 @@ class Cognatesets(Parameters):
     def col_defs(self):
         return [
             LinkCol(self, 'reconstructed'),
+            Col(self, 'description'),
             RefsCol(self, 'references')
         ]
            

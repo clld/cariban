@@ -371,6 +371,7 @@ def main(args):
                 row["ID"],
                 id=row["ID"],
                 name=row["Name"],
+                description=row["Function"],
                 markup_description=generate_markup(row["Description"])
         )
         if row["Source"]:

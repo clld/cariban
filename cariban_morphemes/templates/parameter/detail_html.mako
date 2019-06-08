@@ -5,13 +5,12 @@
 
 <h2>${_('Cognate set')} ${ctx.name}</h2>
 
-% if ctx.description:
+% if ctx.references:
 <p>Source: (${h.linked_references(request, ctx)|n})</p>
 % endif
-% if ctx.description:
-<p>${ctx.description}</p>
-% elif ctx.markup_description:
-${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}
+Original function: ${ctx.description}
+% if ctx.markup_description:
+${h.text2html(h.Markup(ctx.markup_description), mode='p')}
 % endif
 
 % if map_ or request.map:
