@@ -4,11 +4,25 @@
 <%block name="title">${_('Cognate set')} ${ctx.name}</%block>
 
 <h2>${_('Cognate set')} ${ctx.name}</h2>
+<table class="table table-nonfluid">
+    <tbody>
+	<tr>
+	<td>Reconstructed form:</td>
+	<td>${ctx.name}</td>
+	</tr>
+	<tr>
+	<td>Original function:</td>
+	<td>${ctx.description}</td>
+	</tr>
+	% if ctx.references:
+		<tr>
+			<td>Source:</td>
+			<td>${h.linked_references(request, ctx)|n}</td>
+		</tr>
+	%endif
+    </tbody>
+</table>
 
-% if ctx.references:
-<p>Source: (${h.linked_references(request, ctx)|n})</p>
-% endif
-Original function: ${ctx.description}
 % if ctx.markup_description:
 ${h.text2html(h.Markup(ctx.markup_description), mode='p')}
 % endif
