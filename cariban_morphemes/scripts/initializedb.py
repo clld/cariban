@@ -107,7 +107,24 @@ def main(args):
             bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
     print("")
+    
+    print(DBSession.query(common.Language))
         
+    language_pks = {}
+    for language in DBSession.query(common.Language):
+        language_pks[language.id] = language.pk
+        
+    source_pks = {}
+    for source in DBSession.query(common.Source):
+        source_pks[source.id] = source.pk
+
+    language_sources = {}
+    mapreader = csv.DictReader(open("../../raw examples/lit_lang_mappings.csv"))
+    for row in mapreader:
+        # print(data["Language"][row["Language_ID"]].pk)
+        DBSession.add(common.LanguageSource(language_pk=language_pks[row["Language_ID"]], source_pk=source_pks[row["Source"]]))
+    #     language_sources[row[0]] = row[1]
+    
     print("Adding glossing abbreviations…")
     length = len(pynterlinear.get_all_abbrevs().keys())
     for i, (key, name) in enumerate(pynterlinear.get_all_abbrevs().items()):

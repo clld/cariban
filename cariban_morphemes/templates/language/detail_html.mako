@@ -10,6 +10,7 @@
         <li class="active"><a href="#morphemes" data-toggle="tab">Morphemes</a></li>
         <li><a href="#constructions" data-toggle="tab">Constructions</a></li>
         <li><a href="#sentences" data-toggle="tab">Example sentences</a></li>
+        <li><a href="#sources" data-toggle="tab">Sources</a></li>
     </ul>
     <div class="tab-content" style="overflow: visible;">
         <div id="morphemes" class="tab-pane active">
@@ -21,8 +22,12 @@
         <div id="sentences" class="tab-pane">
 			${request.get_datatable('sentences', h.models.Sentence, language=ctx).render()}
         </div>
+        <div id="sources" class="tab-pane">
+			${request.get_datatable('sources', h.models.Source, language=ctx).render()}
+			${ctx.pk}
+        </div>
     </div>	
-
+</div>
 
 <%def name="sidebar()">
     ${util.language_meta()}

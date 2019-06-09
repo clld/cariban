@@ -158,7 +158,7 @@ class Languages (Languages):
                 'longitude',
                 sDescription='<small>The geographic longitude</small>'),
         ]
-        
+
 def includeme(config):
     config.register_datatable('unitparameters', Meanings)
     config.register_datatable('units', Morphemes)
