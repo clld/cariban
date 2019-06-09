@@ -99,11 +99,22 @@ class Counterparts(Values):
         ]
 
 class Constructions(DataTable):
+    __constraints__ = [Language]
+    
+    def base_query(self, query):
+        
+        if self.language:
+            return query.filter(Construction.language_pk == self.language.pk)
+        
+    
     def col_defs(self):
-        return [
+        base = [
             LinkCol(self, 'name'),
-            LinkCol(self, 'language', get_obj=lambda i: i.language),             
         ]
+        if not self.language:
+            base.append(LinkCol(self, 'language', get_obj=lambda i: i.language))
+        return base
+            
 
 class MorphemeFunctions(Unitvalues):
     __constraints__ = Unitvalues.__constraints__ + [Construction, Language]
