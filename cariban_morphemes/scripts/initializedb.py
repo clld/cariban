@@ -195,9 +195,9 @@ def main(args):
                 
         def cogset_lk(cogset_id, text=""):
             if text == "":
-                return "<a href='/cognateset/%s' >%s</a>" % (cogset_id, cognate_sets[cogset_id])
+                return "<i><a href='/cognateset/%s' >%s</a></i>" % (cogset_id, cognate_sets[cogset_id])
             else:
-                return "<a href='/cognateset/%s' >%s</a>" % (cogset_id, text)
+                return "<i><a href='/cognateset/%s' >%s</a></i>" % (cogset_id, text)
     
         def src_lk(source):
             bib_key = source.split("[")[0]
