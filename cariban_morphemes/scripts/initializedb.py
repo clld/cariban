@@ -40,8 +40,7 @@ def get_source_name(source):
         authors = [HumanName(a) for a in authors]
         authors = [n.last or n.first for n in authors]
         authors = '%s%s' % (' and '.join(authors), eds)
-        if len(authors) > 2:
-            authors += etal_string
+        authors += etal_string
 
         return ('%s %s' % (authors, year)).strip()
 
