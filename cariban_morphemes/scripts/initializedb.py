@@ -32,12 +32,16 @@ def get_source_name(source):
             eds = ' (eds.)'
     if authors:
         authors = unescape(authors).split(' and ')
+        etal_string = ""
         if len(authors) > 2:
             authors = authors[:1]
+            etal_string = " et al."
 
         authors = [HumanName(a) for a in authors]
         authors = [n.last or n.first for n in authors]
         authors = '%s%s' % (' and '.join(authors), eds)
+        if len(authors) > 2:
+            authors += etal_string
 
         return ('%s %s' % (authors, year)).strip()
 
