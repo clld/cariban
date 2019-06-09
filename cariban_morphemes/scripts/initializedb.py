@@ -178,8 +178,8 @@ def main(args):
             "cogset:([a-z\_0-9]*)": r"{cogset_lk('\1')}",
             "src:([a-z\_0-9\[\]\-]*)": r"{src_lk('\1')}",
             "ex:([a-z\_0-9\-]*)": r"{render_ex('\1')}",
-            "obj:([\w\-]*)": r"<i>\1</i>",
-            "rc:([\w\-]*)": r"<i>*\1</i>",
+            "obj:([\w\-\(\)]*)": r"<i>\1</i>",
+            "rc:([\w\-\(\)]*)": r"<i>*\1</i>",
         }
         for orig, sub in substitutions.items():
             non_f_str = re.sub(orig, sub, non_f_str)
