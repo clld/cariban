@@ -106,10 +106,12 @@ class Constructions(DataTable):
         if self.language:
             return query.filter(Construction.language_pk == self.language.pk)
         
+        return query
+        
     
     def col_defs(self):
         base = [
-            LinkCol(self, 'name'),
+            LinkCol(self, 'name')
         ]
         if not self.language:
             base.append(LinkCol(self, 'language', get_obj=lambda i: i.language))
