@@ -174,6 +174,7 @@ def main(args):
         substitutions = {
             "morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)": r"{morph_lk('\1','\2')}",
             "lg:([a-z]*)": r"{lang_lk('\1')}",
+            "cons:([a-z\_]*)": r"{cons_lk('\1')}",
             "cogset:([a-z\_0-9]*)": r"{cogset_lk('\1')}",
             "src:([a-z\_0-9\[\]\-]*)": r"{src_lk('\1')}",
             "ex:([a-z\_0-9\-]*)": r"{render_ex('\1')}",
@@ -182,7 +183,10 @@ def main(args):
         }
         for orig, sub in substitutions.items():
             non_f_str = re.sub(orig, sub, non_f_str)
-                
+        
+        def cons_lk(shorthand):
+            return "<a href='/construction/%s' >%s</a>" % (shorthand, data["Construction"][shorthand].language.name + " " + data["Construction"][shorthand].name + " clause")
+                    
         def lang_lk(shorthand):
             if shorthand in lang_abbrev_dic.keys():
                 return "<a href='/languages/%s' >%s</a>" % (lang_abbrev_dic[shorthand]["ID"], lang_abbrev_dic[shorthand]["name"])
