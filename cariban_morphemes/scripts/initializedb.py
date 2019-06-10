@@ -107,8 +107,6 @@ def main(args):
             bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
     print("")
-    
-    print(DBSession.query(common.Language))
         
     language_pks = {}
     for language in DBSession.query(common.Language):
