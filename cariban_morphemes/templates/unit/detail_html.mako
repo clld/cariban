@@ -31,17 +31,13 @@
 	% endif
 	</td>
 	</tr>
-	% if ctx.description or ctx.markup_description:
-	<tr>
-	<td>Comments:</td>
-	<td>
-	${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}
-	</td>
-	</tr>
-	% endif
     </tbody>
 </table>
 
+% if ctx.description or ctx.markup_description:
+${h.text2html(h.Markup("Comments: " + ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}
+% endif
+	
 <dl>
 % for key, objs in h.groupby(ctx.data, lambda o: o.key):
 <dt>${key}</dt>

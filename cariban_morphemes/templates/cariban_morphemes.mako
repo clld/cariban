@@ -1,11 +1,9 @@
 <%inherit file="app.mako"/>
 
-##
-## define app-level blocks:
-##
-<%block name="header">
-    <a href="${request.route_url('dataset')}">
-        <img src="${request.static_url('cariban_morphemes:static/header.gif')}"/>
+
+<%block name="brand">
+    <a class="brand" style="padding-top: 7px; padding-bottom: 5px;" href="${request.route_url('dataset')}" title="${request.dataset.name}">
+        Cariban Morphology
     </a>
 </%block>
 

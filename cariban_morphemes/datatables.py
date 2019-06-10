@@ -1,4 +1,4 @@
-from clld.web.datatables import Unitparameters, Units, Values, Parameters, Unitvalues, Languages
+from clld.web.datatables import Unitparameters, Units, Values, Parameters, Unitvalues, Languages, Sentences
 from clld.db.models.common import (
     Language, UnitParameter, UnitValue
 )
@@ -158,12 +158,42 @@ class Languages (Languages):
                 'longitude',
                 sDescription='<small>The geographic longitude</small>'),
         ]
+   
+class TsvCol(Col):
+    def search(self, qs):
+        return super(TsvCol, self).search('\t'.join(qs.split()))
+             
+class Sentences(Sentences):
 
+    def col_defs(self):
+        base = [
+            Col(self, 'id', bSortable=False, input_size='mini'),
+            LinkCol(self, 'name', sTitle='Primary text', sClass="object-language"),
+            TsvCol(self, 'analyzed', sTitle='Analyzed text'),
+            TsvCol(self, 'gloss', sClass="gloss"),
+            Col(self,
+                'description',
+                sTitle=self.req.translate('Translation'),
+                sClass="translation"),
+            DetailsRowLinkCol(self, "d", sTitle="IGT"),
+        ]
+        if not self.language:
+            base.append(LinkCol(
+                self,
+                'language',
+                model_col=Language.name,
+                get_obj=lambda i: i.language,
+                bSortable=not self.language,
+                bSearchable=not self.language))
+        base.append(RefsCol(self, 'references'))
+        return base
+        
 def includeme(config):
     config.register_datatable('unitparameters', Meanings)
     config.register_datatable('units', Morphemes)
     config.register_datatable('parameters', Cognatesets)
     config.register_datatable('values', Counterparts)
+    config.register_datatable('sentences', Sentences)
     config.register_datatable('languages', Languages)
     config.register_datatable('unitvalues', MorphemeFunctions)
     config.register_datatable('constructions', Constructions)

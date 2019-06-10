@@ -177,7 +177,7 @@ def main(args):
                     sentence=new_ex,
                     source=source,
                     key=source.id,
-                    description=pages)
+                    description=pages.replace("--","–"))
                     )
     print("")
     
@@ -223,7 +223,7 @@ def main(args):
             bib_key = source.split("[")[0]
             if len(source.split("[")) > 1:
                 pages = source.split("[")[1].split("]")[0]
-                return "<a href='/sources/%s' >%s</a>: %s" % (bib_key, get_source_name(cariban_data.sources[bib_key]), pages)
+                return "<a href='/sources/%s' >%s</a>: %s" % (bib_key, get_source_name(cariban_data.sources[bib_key]), pages.replace("--", "–"))
             else:
                 return "<a href='/sources/%s' >%s</a>" % (bib_key, get_source_name(cariban_data.sources[bib_key]))
 
@@ -265,8 +265,9 @@ def main(args):
                     morpheme=new_morph,
                     source=source,
                     key=source.id,
-                    description=pages)
+                    description=pages.replace("--","–")
                     )
+                )
     print("")
     
     #Create shorthand lists for the paradigm generator function
@@ -353,7 +354,7 @@ def main(args):
     print("Checking examples for illustrated morphemes…")
     proto_languages = ["pc"]
     is_illustrated = {}
-    for key, row in data["UnitValue"].items():
+    for key, row in data["MorphemeFunction"].items():
         if row.unit.language.id in proto_languages:
             continue
         is_illustrated["%s:%s" % (row.unit.id, row.unitparameter.id)] = False
