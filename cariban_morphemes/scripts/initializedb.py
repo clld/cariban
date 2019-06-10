@@ -223,7 +223,7 @@ def main(args):
             bib_key = source.split("[")[0]
             if len(source.split("[")) > 1:
                 pages = source.split("[")[1].split("]")[0]
-                return "<a href='/sources/%s' >%s: %s</a>" % (bib_key, get_source_name(cariban_data.sources[bib_key]), pages)
+                return "<a href='/sources/%s' >%s</a>: %s" % (bib_key, get_source_name(cariban_data.sources[bib_key]), pages)
             else:
                 return "<a href='/sources/%s' >%s</a>" % (bib_key, get_source_name(cariban_data.sources[bib_key]))
 
