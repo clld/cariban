@@ -1,6 +1,8 @@
 from pyramid.config import Configurator
+from pyramid.response import Response
 from clld.web.app import menu_item
 from functools import partial
+from pyramid.httpexceptions import HTTPFound
 
 # we must make sure custom models are known at database initialization!
 # from cariban_morphemes.models import Morpheme
@@ -16,6 +18,9 @@ _('Units')
 _('Unitparameter')
 _('Unitparameters')
 
+def notfound(request):
+    raise HTTPFound(location='/')
+    
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
@@ -33,4 +38,5 @@ def main(global_config, **settings):
     config.include('clld.web.app')
     config.register_resource(
         'construction', models.Construction, IConstruction, with_index=True, with_detail=True)
+    config.add_notfound_view(notfound)
     return config.make_wsgi_app()
