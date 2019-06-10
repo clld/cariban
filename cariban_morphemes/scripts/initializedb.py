@@ -251,7 +251,6 @@ def main(args):
             row["ID"],
             language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
             name="/".join(row["Form"]),
-            markup_description=generate_markup(row["Comment"]),
             id=row["ID"],
         )
         if row["Source"]:
@@ -310,7 +309,11 @@ def main(args):
             markup_description=generate_markup(description),
         )
     print("")
-        
+    
+    print("Adding morpheme comments…")
+    for i, row in enumerate(cariban_data["FormTable"]):
+        print("%s/%s" % (i+1, morph_cnt), end="\r")
+        data["Morpheme"][row["ID"]].markup_description=generate_markup(row["Comment"])
     
     print("Adding morpheme functions…")
     for row in construction_data["ValueTable"]:
