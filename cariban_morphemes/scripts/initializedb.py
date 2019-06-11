@@ -241,9 +241,9 @@ def main(args):
         
         result = eval(f'f"""{non_f_str}"""')
         return result.replace("-</a></i>£", "-</a></i>").replace("£", " ")
+        #TODO do the same for suffixes!
         if "pan_1p" in result:
             print("-</a></i>£" in result)
-            # print("-</a></i>£" in eval(f'f"""{non_f_str}"""'.replace("-</a></i>£", "-</a></i>MM")))
     
     print("Adding morphemes…")
     morph_cnt=0
