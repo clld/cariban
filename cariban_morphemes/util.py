@@ -233,7 +233,7 @@ def intransitive_construction_paradigm(construction, functions):
         if entry["Construction"] != construction: continue
         string = ""
         for morpheme in entry["Morpheme"]:
-            string += "morph:" + morpheme + " "
+            string += "morph:" + morpheme + "£"
         table[entry["S"]][""].append(string)
             
     table = dict((k, v) for k, v in table.items() if "morph:" in str(v))
@@ -294,6 +294,6 @@ def transitive_construction_paradigm(construction, functions):
             #Find the appropriate column
             string = ""
             for morpheme in entry["Morpheme"]:
-                string += "morph:" + morpheme + " "
+                string += "morph:" + morpheme + "£"
             my_y[x_key].append(string)
     return build_table(table, " ", "Transitive person marking")

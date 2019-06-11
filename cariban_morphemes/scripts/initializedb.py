@@ -229,7 +229,7 @@ def main(args):
             if morph_id == "":
                 return ""
             if form == "":
-                form = data["Morpheme"][morph_id].name
+                form = data["Morpheme"][morph_id].name#.split("/")[0]
             return "<i><a href='/morpheme/%s' >%s</a></i>" % (morph_id, form)
             
         def render_ex(ex_id):
@@ -238,8 +238,12 @@ def main(args):
                 %s (%s)
                     %s
                 </blockquote>""" % (lang_lk(data["Sentence"][ex_id].language.id), src_lk("%s[%s]" % (data["Sentence"][ex_id].references[0].source.id, data["Sentence"][ex_id].references[0].description)), util.rendered_sentence(data["Sentence"][ex_id]))
-                
-        return eval(f'f"""{non_f_str}"""')
+        
+        result = eval(f'f"""{non_f_str}"""')
+        return result.replace("-</a></i>£", "-</a></i>").replace("£", " ")
+        if "pan_1p" in result:
+            print("-</a></i>£" in result)
+            # print("-</a></i>£" in eval(f'f"""{non_f_str}"""'.replace("-</a></i>£", "-</a></i>MM")))
     
     print("Adding morphemes…")
     morph_cnt=0
