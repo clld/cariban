@@ -226,6 +226,8 @@ def main(args):
                 return "<a href='/sources/%s' >%s</a>" % (bib_key, get_source_name(cariban_data.sources[bib_key]))
 
         def morph_lk(morph_id, form=""):
+            if morph_id == "":
+                return ""
             if form == "":
                 form = data["Morpheme"][morph_id].name
             return "<i><a href='/morpheme/%s' >%s</a></i>" % (morph_id, form)
@@ -283,7 +285,11 @@ def main(args):
                     "Morpheme": entry["Morpheme"]
                 }
                 # if function == "2>1": print(function_entry)
-                merged_dict = {**morpheme_list_paradigms[entry["Morpheme"][0]], **{"Construction": construction, "Function": function}}
+                # if entry["Morpheme"] == "?":
+                    # print(morpheme_list_paradigms)
+                    # merged_dict
+                # else:
+                    # merged_dict = {**morpheme_list_paradigms[entry["Morpheme"][0]], **{"Construction": construction, "Function": function}}
                 function_list_paradigms.append(function_entry)
     # print(function_list_paradigms)
     
@@ -337,7 +343,7 @@ def main(args):
                         )
             else:
                 for construction in row["Construction"]:
-                    if len(row["Morpheme"]) == 1:
+                    if len(row["Morpheme"]) == 1 and row["Morpheme"][0] != "?":
                         for morpheme in row["Morpheme"]:
                             morpheme_function_key = "%s:%s:%s" % (morpheme, function, construction)
                             data.add(models.MorphemeFunction,

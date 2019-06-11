@@ -231,9 +231,11 @@ def intransitive_construction_paradigm(construction, functions):
     table = OrderedDict(table.items())
     for entry in entries:
         if entry["Construction"] != construction: continue
+        string = ""
         for morpheme in entry["Morpheme"]:
-            table[entry["S"]][""].append("morph:" + morpheme)
-    
+            string += "morph:" + morpheme + " "
+        table[entry["S"]][""].append(string)
+            
     table = dict((k, v) for k, v in table.items() if "morph:" in str(v))
     
     if "morph:" not in str(table):
@@ -266,8 +268,7 @@ def transitive_construction_paradigm(construction, functions):
         else:
             continue
         entries.append(new_entry)
-    
-
+        
     table = {}
     #Iterate through all entries and generate the necessary rows in the appropriate tables
     for entry in entries:
