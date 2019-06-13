@@ -6,6 +6,8 @@ from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from markupsafe import Markup
 
+from clld.lib.bibtex import EntryType, unescape
+from nameparser import HumanName
 import clld
 from clld import interfaces
 from clld import RESOURCES
@@ -17,8 +19,10 @@ from clld.web.adapters import get_adapter, get_adapters
 from clld.lib.coins import ContextObject
 from clld.lib import bibtex
 from clld.lib import rdf
-from cariban_morphemes import models as cariban_models
+from cariban_morphemes.models import Morpheme, Construction, CognateSet
+from clld.db.models import Language, Source, Sentence
 
+from cariban_morphemes.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS
 from collections import OrderedDict
 
 def xify(text):
@@ -145,7 +149,74 @@ def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False
         ),
         class_="sentence-wrapper",
     )
+        
+def generate_markup(non_f_str: str):
 
+    if non_f_str is None:
+        return ""
+        
+    substitutions = {
+        "morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)": r"{morph_lk('\1','\2')}",
+        "lg:([a-z]*)": r"{lang_lk('\1')}",
+        "cons:([a-z\_]*)": r"{cons_lk('\1')}",
+        "cogset:([a-z\_0-9]*)": r"{cogset_lk('\1')}",
+        "src:([a-z\_0-9\[\]\-]*)": r"{src_lk('\1')}",
+        "ex:([a-z\_0-9\-]*)": r"{render_ex('\1')}",
+        "obj:([\w\-\(\)]*)": r"<i>\1</i>",
+        "rc:([\w\-\(\)]*)": r"<i>*\1</i>",
+    }
+    for orig, sub in substitutions.items():
+        non_f_str = re.sub(orig, sub, non_f_str)
+    
+    def cons_lk(shorthand):
+        cons = DBSession.query(Construction).filter(Construction.id == shorthand)[0]
+        return "<a href='/construction/%s'>%s</a>" % (shorthand, cons.language.name + " " + cons.name + " clause")
+                
+    def lang_lk(shorthand):
+        if shorthand in LANG_ABBREV_DIC.keys():
+            return "<a href='/languages/%s'>%s</a>" % (LANG_ABBREV_DIC[shorthand]["ID"], LANG_ABBREV_DIC[shorthand]["name"])
+        else:
+            language = DBSession.query(Language).filter(Language.id == shorthand)[0]
+            return "<a href='/languages/%s'>%s</a>" % (shorthand, language.name)            
+            
+    def cogset_lk(cogset_id, text=""):
+        cogset = DBSession.query(CognateSet).filter(CognateSet.id == cogset_id)[0]
+        if text == "":
+            return "<i><a href='/cognateset/%s'>%s</a></i>" % (cogset_id, cogset)
+        else:
+            return "<i><a href='/cognateset/%s'>%s</a></i>" % (cogset_id, text)
+
+    def src_lk(source_str):
+        bib_key = source_str.split("[")[0]
+        source = DBSession.query(Source).filter(Source.id == bib_key)[0]
+        if len(source_str.split("[")) > 1:
+            pages = source_str.split("[")[1].split("]")[0]
+            return "<a href='/sources/%s'>%s</a>: %s" % (bib_key, source, pages.replace("--", "–"))
+        else:
+            return "<a href='/sources/%s'>%s</a>" % (bib_key, source)
+
+    def morph_lk(morph_id, form=""):
+        if morph_id == "":
+            return ""
+        morph = DBSession.query(Morpheme).filter(Morpheme.id == morph_id)[0]
+        if form == "":
+            form = morph.name#.split("/")[0]
+        return "<i><a href='/morpheme/%s'>%s</a></i>" % (morph_id, form)
+        
+    def render_ex(ex_id):
+        example = DBSession.query(Sentence).filter(Sentence.id == ex_id)[0]
+        return """
+            <blockquote style='margin-top: 5px; margin-bottom: 5px'>
+            %s (%s)
+                %s
+            </blockquote>""" % (  lang_lk(example.language.id),
+                            src_lk("%s[%s]" % (example.references[0].source.id, example.references[0].description)),
+                            rendered_sentence(example)
+                        )
+    
+    result = eval(f'f"""{non_f_str}"""')
+    return result.replace("-</a></i>£", "-</a></i>").replace("£", " ").replace("\n\n","PARAGRAPHBREAK").replace("\n"," ").replace("PARAGRAPHBREAK","\n\n")
+    
 def html_table(lol, caption):
     output = ""
     output += '<table class="table paradigm-table"> <caption>%s</caption>' % caption
@@ -188,7 +259,11 @@ def build_table(table, label, caption):
         for x_key, x in y.items():
             if x_key not in x_values:
                 x_values.append(x_key)
-    x_values = sorted(x_values, key=person_sort)
+    sort_me = True
+    for x_value in x_values:
+        if x_value not in ["1", "2", "3", "1+2", "1+3"]: sort_me = False
+    if sort_me:
+        x_values = sorted(x_values, key=person_sort)
     row_count = 0
     output[0].append(label)
     for x in x_values:
@@ -212,10 +287,10 @@ def build_table(table, label, caption):
     if label == "": del output[0]
     return html_table(output, caption)
 
-def intransitive_construction_paradigm(construction, functions):
+def intransitive_construction_paradigm(construction):
     table = {}
     entries = []
-    for entry in functions:
+    for entry in FUNCTION_PARADIGMS:
         new_entry = entry
         if re.match("\d(\+\d)?S", entry["Function"]):
             new_entry["S"] = entry["Function"]#.replace("S","")
@@ -241,8 +316,47 @@ def intransitive_construction_paradigm(construction, functions):
     if "morph:" not in str(table):
         return ""
     return build_table(table, "", "Intransitive person marking")
+
+def comparative_function_paradigm(constructions, label, values):
+    entries = []
+    for entry in FUNCTION_PARADIGMS:
+        for value in values:
+            if value == entry["Function"]:
+                entries.append(entry)
+    x_dim = ["Function"]
+    y_dim = ["Construction"]
         
-def transitive_construction_paradigm(construction, functions):
+    table = {}
+    #Iterate through all entries and generate the necessary rows in the appropriate tables
+    for entry in entries:
+        if entry["Construction"] not in constructions:
+            continue
+        y_key = "cons:"+keyify(y_dim, entry)
+        if y_key not in table.keys():
+            table[y_key] = {}
+            
+    table = OrderedDict(table.items())
+    #Iterate through all entries and put the form into the appropriate place
+    for entry in entries:
+        if entry["Construction"] not in constructions:
+            continue
+        y_key = "cons:"+keyify(y_dim, entry)
+        my_y = table[y_key]
+        good = True
+        x_key = keyify(x_dim, entry)
+        if x_key not in my_y.keys(): my_y[x_key] = []
+        # for col, val in filtered_parameters.items():
+            # if entry[col] != val:
+                # good = False
+        if good:
+            #Find the appropriate column
+            string = ""
+            for morpheme in entry["Morpheme"]:
+                string += "morph:" + morpheme + "£"
+            my_y[x_key].append(string)
+    return build_table(table, " ", label)
+     
+def transitive_construction_paradigm(construction):
     x_dim = ["P"]
     y_dim = ["A"]
     
@@ -251,7 +365,7 @@ def transitive_construction_paradigm(construction, functions):
     }
     
     entries = []
-    for entry in functions:
+    for entry in FUNCTION_PARADIGMS:
         new_entry = entry
         if re.match("\d(\+\d)?P", entry["Function"]):
             new_entry["P"] = entry["Function"]#.replace("P","")

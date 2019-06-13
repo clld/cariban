@@ -184,66 +184,6 @@ def main(args):
     for row in cariban_data["CognatesetTable"]:
         cognate_sets[row["ID"]] = name=row["Name"]
         cogset_cnt+=1
-        
-    def generate_markup(non_f_str: str):
-        if non_f_str is None:
-            return ""
-            
-        substitutions = {
-            "morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)": r"{morph_lk('\1','\2')}",
-            "lg:([a-z]*)": r"{lang_lk('\1')}",
-            "cons:([a-z\_]*)": r"{cons_lk('\1')}",
-            "cogset:([a-z\_0-9]*)": r"{cogset_lk('\1')}",
-            "src:([a-z\_0-9\[\]\-]*)": r"{src_lk('\1')}",
-            "ex:([a-z\_0-9\-]*)": r"{render_ex('\1')}",
-            "obj:([\w\-\(\)]*)": r"<i>\1</i>",
-            "rc:([\w\-\(\)]*)": r"<i>*\1</i>",
-        }
-        for orig, sub in substitutions.items():
-            non_f_str = re.sub(orig, sub, non_f_str)
-        
-        def cons_lk(shorthand):
-            return "<a href='/construction/%s' >%s</a>" % (shorthand, data["Construction"][shorthand].language.name + " " + data["Construction"][shorthand].name + " clause")
-                    
-        def lang_lk(shorthand):
-            if shorthand in lang_abbrev_dic.keys():
-                return "<a href='/languages/%s' >%s</a>" % (lang_abbrev_dic[shorthand]["ID"], lang_abbrev_dic[shorthand]["name"])
-            else:
-                return "<a href='/languages/%s' >%s</a>" % (shorthand, data["Language"][shorthand].name)            
-                
-        def cogset_lk(cogset_id, text=""):
-            if text == "":
-                return "<i><a href='/cognateset/%s' >%s</a></i>" % (cogset_id, cognate_sets[cogset_id])
-            else:
-                return "<i><a href='/cognateset/%s' >%s</a></i>" % (cogset_id, text)
-    
-        def src_lk(source):
-            bib_key = source.split("[")[0]
-            if len(source.split("[")) > 1:
-                pages = source.split("[")[1].split("]")[0]
-                return "<a href='/sources/%s' >%s</a>: %s" % (bib_key, get_source_name(cariban_data.sources[bib_key]), pages.replace("--", "–"))
-            else:
-                return "<a href='/sources/%s' >%s</a>" % (bib_key, get_source_name(cariban_data.sources[bib_key]))
-
-        def morph_lk(morph_id, form=""):
-            if morph_id == "":
-                return ""
-            if form == "":
-                form = data["Morpheme"][morph_id].name#.split("/")[0]
-            return "<i><a href='/morpheme/%s' >%s</a></i>" % (morph_id, form)
-            
-        def render_ex(ex_id):
-            return """
-                <blockquote style='margin-top: 5px;'>
-                %s (%s)
-                    %s
-                </blockquote>""" % (lang_lk(data["Sentence"][ex_id].language.id), src_lk("%s[%s]" % (data["Sentence"][ex_id].references[0].source.id, data["Sentence"][ex_id].references[0].description)), util.rendered_sentence(data["Sentence"][ex_id]))
-        
-        result = eval(f'f"""{non_f_str}"""')
-        return result.replace("-</a></i>£", "-</a></i>").replace("£", " ")
-        #TODO do the same for suffixes!
-        if "pan_1p" in result:
-            print("-</a></i>£" in result)
     
     print("Adding morphemes…")
     morph_cnt=0
@@ -275,10 +215,6 @@ def main(args):
     print("")
     
     #Create shorthand lists for the paradigm generator function
-    morpheme_list_paradigms = {}
-    for row in cariban_data["FormTable"]:
-        morpheme_list_paradigms[row["ID"]] = dict(row)
-
     function_list_paradigms = []
     for entry in construction_data["ValueTable"]:
         for function in entry["Function"]:
@@ -288,14 +224,8 @@ def main(args):
                     "Construction": construction,
                     "Morpheme": entry["Morpheme"]
                 }
-                # if function == "2>1": print(function_entry)
-                # if entry["Morpheme"] == "?":
-                    # print(morpheme_list_paradigms)
-                    # merged_dict
-                # else:
-                    # merged_dict = {**morpheme_list_paradigms[entry["Morpheme"][0]], **{"Construction": construction, "Function": function}}
                 function_list_paradigms.append(function_entry)
-    # print(function_list_paradigms)
+
     
     cons_cnt = 0
     for row in construction_data["FormTable"]:
@@ -303,26 +233,14 @@ def main(args):
     print("Adding constructions…")
     for i, row in enumerate(construction_data["FormTable"]):
         print("%s/%s" % (i+1, cons_cnt), end="\r")
-        if row["Comment"] is None:
-            description = ""
-        else:
-            description = row["Comment"]
-        description += util.transitive_construction_paradigm(row["ID"], function_list_paradigms)
-        description += util.intransitive_construction_paradigm(row["ID"], function_list_paradigms)
         data.add(
             models.Construction,
             row["ID"],
             id=row["ID"],
             language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
             name=row["Description"],
-            markup_description=generate_markup(description),
         )
     print("")
-    
-    print("Adding morpheme comments…")
-    for i, row in enumerate(cariban_data["FormTable"]):
-        print("%s/%s" % (i+1, morph_cnt), end="\r")
-        data["Morpheme"][row["ID"]].markup_description=generate_markup(row["Comment"])
     
     print("Adding morpheme functions…")
     for row in construction_data["ValueTable"]:
@@ -410,7 +328,6 @@ def main(args):
                 id=row["ID"],
                 name=row["Name"],
                 description=row["Function"],
-                markup_description=generate_markup(row["Description"])
         )
         if row["Source"]:
             bib_key = row["Source"][0].split("[")[0]
@@ -455,8 +372,38 @@ def main(args):
                 markup_description=", ".join(row["Form"]),
                 morpheme=data["Morpheme"][row["ID"]]
             )
-    print("")             
+    print("")
     
+    print("Adding morpheme comments…")
+    for i, row in enumerate(cariban_data["FormTable"]):
+        print("%s/%s" % (i+1, morph_cnt), end="\r")
+        data["Morpheme"][row["ID"]].markup_description=util.generate_markup(row["Comment"])
+    print("")
+    
+    print("Adding constructions descriptions…")
+    for i, row in enumerate(construction_data["FormTable"]):
+        print("%s/%s" % (i+1, cons_cnt), end="\r")
+        if row["Comment"] is None:
+            description = ""
+        else:
+            description = util.generate_markup(row["Comment"])
+        description += util.generate_markup(util.transitive_construction_paradigm(row["ID"]))
+        description += util.generate_markup(util.intransitive_construction_paradigm(row["ID"]))
+        data["Construction"][row["ID"]].markup_description = description
+    print("")
+    
+    print("Adding cognate set descriptions…")
+    for i, row in enumerate(cariban_data["CognatesetTable"]):
+        print("%s/%s" % (i+1, cogset_cnt), end="\r")
+        data["CognateSet"][row["ID"]].markup_description = markup_description=util.generate_markup(row["Description"])
+        if row["ID"] == "13pro":
+            data["CognateSet"][row["ID"]].markup_description += util.generate_markup(
+                util.comparative_function_paradigm(
+                    ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_old"],
+                    "1+3 scenarios",
+                    ["1+3S", "1+3>3", "3>1+3", "2>1+3", "1+3>2"]))
+    print("")
+        
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
     This procedure should be separate from the db initialization, because

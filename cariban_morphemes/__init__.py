@@ -38,5 +38,10 @@ def main(global_config, **settings):
     config.include('clld.web.app')
     config.register_resource(
         'construction', models.Construction, IConstruction, with_index=True, with_detail=True)
+    config.add_route_and_view(
+        '1+3',
+        '/1+3',
+        views.firstexcl,
+        renderer='pages/1+3.mako')
     config.add_notfound_view(notfound)
     return config.make_wsgi_app()
