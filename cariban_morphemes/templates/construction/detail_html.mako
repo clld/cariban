@@ -3,7 +3,22 @@
 <%! active_menu_item = "constructions" %>
 <%block name="title">${_('Construction')} ${ctx.name}</%block>
 
-<h2>The ${h.link(request, ctx.language)} ${ctx.name} clause</h2>
+<h2>
+	The ${h.link(request, ctx.language)} ${ctx.name} clause
+</h2>
+% if ctx.declarativetype or ctx.finitetype:
+(\
+% if ctx.declarativetype:
+${h.link(request, ctx.declarativetype)}\
+% endif
+% if ctx.declarativetype and ctx.finitetype:
+,
+%endif
+% if ctx.finitetype:
+${h.link(request, ctx.finitetype)}\
+% endif
+)
+% endif
 
 % if ctx.source:
 <p>Source: (${h.linked_references(request, ctx)|n})</p>
