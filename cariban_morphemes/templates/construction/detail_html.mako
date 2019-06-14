@@ -7,7 +7,7 @@
 	The ${h.link(request, ctx.language)} ${ctx.name} clause
 </h2>
 % if ctx.declarativetype or ctx.finitetype:
-(\
+<p>(\
 % if ctx.declarativetype:
 ${h.link(request, ctx.declarativetype)}\
 % endif
@@ -17,7 +17,7 @@ ${h.link(request, ctx.declarativetype)}\
 % if ctx.finitetype:
 ${h.link(request, ctx.finitetype)}\
 % endif
-)
+)</p>
 % endif
 
 % if ctx.source:
