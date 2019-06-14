@@ -21,6 +21,7 @@ from clld.lib import bibtex
 from clld.lib import rdf
 from cariban_morphemes.models import Morpheme, Construction, CognateSet
 from clld.db.models import Language, Source, Sentence
+import cariban_morphemes.models as cariban_models
 
 from cariban_morphemes.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS
 from collections import OrderedDict
