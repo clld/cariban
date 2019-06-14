@@ -257,6 +257,27 @@ def main(args):
                 function_list_paradigms.append(function_entry)
 
     
+    data.add(
+        models.DeclarativeType,
+        "imp",
+        id="imp",
+        name="Imperative"
+    )
+    
+    data.add(
+        models.DeclarativeType,
+        "decl",
+        id="decl",
+        name="Declarative"
+    )
+    
+    data.add(
+        models.FiniteType,
+        "finite",
+        id="finite",
+        name="Finite"
+    )
+    
     cons_cnt = 0
     for row in construction_data["FormTable"]:
         cons_cnt += 1
@@ -269,6 +290,8 @@ def main(args):
             id=row["ID"],
             language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
             name=row["Description"],
+            declarativetype=data["DeclarativeType"][row["DeclarativeType"]],
+            finitetype=data["FiniteType"][row["FiniteType"]]
         )
     print("")
     

@@ -8,7 +8,7 @@ from pyramid.httpexceptions import HTTPFound
 # from cariban_morphemes.models import Morpheme
 # from cariban_morphemes.interfaces import IMorpheme
 from cariban_morphemes import models
-from cariban_morphemes.interfaces import IConstruction
+from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IFiniteType
 
 _ = lambda s: s
 _('Parameter')
@@ -38,6 +38,10 @@ def main(global_config, **settings):
     config.include('clld.web.app')
     config.register_resource(
         'construction', models.Construction, IConstruction, with_index=True, with_detail=True)
+    config.register_resource(
+        'declarativetype', models.DeclarativeType, IDeclarativeType, with_detail=True)
+    config.register_resource(
+        'finitetype', models.FiniteType, IFiniteType, with_detail=True)
     config.add_route_and_view(
         '1+3',
         '/1+3',

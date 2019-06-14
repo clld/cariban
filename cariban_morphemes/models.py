@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from clld import interfaces
-from cariban_morphemes.interfaces import IConstruction
+from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IFiniteType
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
 from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin, HasSourceMixin, common, Language
 
@@ -28,13 +28,25 @@ class CognateSet(CustomModelMixin, Parameter, HasSourceMixin):
 class CognatesetReference(Base, common.HasSourceMixin):
     cognateset_pk = Column(Integer, ForeignKey('parameter.pk'))
     cognateset = relationship(CognateSet, backref="references")
+
+@implementer(IDeclarativeType)
+class DeclarativeType(Base, IdNameDescriptionMixin):
+    pk = Column(Integer, primary_key=True)
+    
+@implementer(IFiniteType)
+class FiniteType(Base, IdNameDescriptionMixin):
+    pk = Column(Integer, primary_key=True)
     
 @implementer(IConstruction)
 class Construction(Base, PolymorphicBaseMixin, IdNameDescriptionMixin, HasSourceMixin):
     pk = Column(Integer, primary_key=True)
     language = relationship(Language, backref="constructions")
     language_pk = Column(Integer, ForeignKey("language.pk"))
-
+    declarativetype = relationship(DeclarativeType, backref="constructions")
+    declarativetype_pk = Column(Integer, ForeignKey("declarativetype.pk"))
+    finitetype = relationship(FiniteType, backref="constructions")
+    finitetype_pk = Column(Integer, ForeignKey("finitetype.pk"))
+    
 @implementer(interfaces.IUnit)
 class Morpheme(CustomModelMixin, Unit, HasSourceMixin):
     pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)

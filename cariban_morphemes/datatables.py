@@ -8,7 +8,7 @@ from clld.web.datatables.base import (
 )
 from clld.web.datatables.value import (ValueNameCol)
 from clld.web.datatables.unit import (DescriptionLinkCol)
-from cariban_morphemes.models import Counterpart, CognateSet, Morpheme, Construction, Meaning, MorphemeFunction
+from cariban_morphemes.models import Counterpart, CognateSet, Morpheme, Construction, Meaning, MorphemeFunction, DeclarativeType, FiniteType
 from clld.interfaces import IMenuItems
 from clld.web.util.helpers import (
     link, button, icon, JS_CLLD, external_link, linked_references, JSDataTable,
@@ -99,22 +99,35 @@ class Counterparts(Values):
         ]
 
 class Constructions(DataTable):
-    __constraints__ = [Language]
+    __constraints__ = [Language, DeclarativeType, FiniteType]
     
     def base_query(self, query):
         
         if self.language:
             return query.filter(Construction.language_pk == self.language.pk)
         
+        if self.declarativetype:
+            return query.filter(Construction.declarativetype_pk == self.declarativetype.pk)
+            
+        if self.finitetype:
+            return query.filter(Construction.finitetype_pk == self.finitetype.pk)
+        
         return query
         
     
     def col_defs(self):
         base = [
-            LinkCol(self, 'name')
+            LinkCol(self, 'name'),
         ]
         if not self.language:
             base.append(LinkCol(self, 'language', get_obj=lambda i: i.language))
+        
+        if not self.declarativetype:
+            base.append(LinkCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype))
+            
+        if not self.finitetype:
+            base.append(LinkCol(self, 'finitetype', sTitle="Finite?", get_obj=lambda i: i.finitetype))
+            
         return base
             
 
