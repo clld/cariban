@@ -7,4 +7,3 @@ with open('lang_abbrev_dic.json') as json_file:
 FUNCTION_PARADIGMS = []
 with open('function_paradigms.json') as json_file:
     FUNCTION_PARADIGMS = json.load(json_file)
-print(FUNCTION_PARADIGMS)

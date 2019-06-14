@@ -156,6 +156,7 @@ def generate_markup(non_f_str: str):
         return ""
         
     substitutions = {
+        "'(.*?)'": r"‘\1’",
         "morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)": r"{morph_lk('\1','\2')}",
         "lg:([a-z]*)": r"{lang_lk('\1')}",
         "cons:([a-z\_]*)": r"{cons_lk('\1')}",

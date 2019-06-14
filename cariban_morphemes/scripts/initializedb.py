@@ -417,7 +417,7 @@ def main(args):
             description = ""
         else:
             description = util.generate_markup(row["Comment"])
-        description += util.generate_markup(util.transitive_construction_paradigm(row["ID"]))
+        description += "\n" + util.generate_markup(util.transitive_construction_paradigm(row["ID"]))
         description += util.generate_markup(util.intransitive_construction_paradigm(row["ID"]))
         data["Construction"][row["ID"]].markup_description = description
     print("")
