@@ -30,10 +30,3 @@ ${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ct
 % endif
 
 ${request.get_datatable('unitvalues', h.models.UnitValue, construction=ctx).render()}
-
-## This is what is called for the language index view in vanilla CLLD
-## ${request.get_datatable('values', h.models.Value, language=ctx).render()}
-
-
-## Values for a parameter
-## ${request.get_datatable('values', h.models.Value, parameter=ctx).render()}

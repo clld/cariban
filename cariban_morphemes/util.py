@@ -16,6 +16,7 @@ from clld.web.util.downloadwidget import DownloadWidget
 from clld.db.meta import DBSession
 from clld.db.models import common as models
 from clld.web.adapters import get_adapter, get_adapters
+from clld.web.util import helpers as h
 from clld.lib.coins import ContextObject
 from clld.lib import bibtex
 from clld.lib import rdf
@@ -152,6 +153,8 @@ def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False
     )
         
 def generate_markup(non_f_str: str):
+    
+    ex_cnt = 0
 
     if non_f_str is None:
         return ""
@@ -206,12 +209,15 @@ def generate_markup(non_f_str: str):
         return "<i><a href='/morpheme/%s'>%s</a></i>" % (morph_id, form)
         
     def render_ex(ex_id):
+        nonlocal ex_cnt
+        ex_cnt += 1
         example = DBSession.query(Sentence).filter(Sentence.id == ex_id)[0]
         return """
             <blockquote style='margin-top: 5px; margin-bottom: 5px'>
-            %s (%s)
+            (<a href='/sentences/%s'>%s</a>) %s (%s)
                 %s
-            </blockquote>""" % (  lang_lk(example.language.id),
+            </blockquote>""" % (example.id,ex_cnt,
+                            lang_lk(example.language.id),
                             src_lk("%s[%s]" % (example.references[0].source.id, example.references[0].description)),
                             rendered_sentence(example)
                         )
