@@ -269,7 +269,7 @@ def build_table(table, label, caption):
                 x_values.append(x_key)
     sort_me = True
     for x_value in x_values:
-        if x_value not in ["1", "2", "3", "1+2", "1+3"]: sort_me = False
+        if re.sub("[A,S,P]", "", x_value) not in ["1", "2", "3", "1+2", "1+3"]: sort_me = False
     if sort_me:
         x_values = sorted(x_values, key=person_sort)
     row_count = 0
