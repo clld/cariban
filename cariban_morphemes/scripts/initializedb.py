@@ -13,10 +13,14 @@ import cariban_morphemes
 from cariban_morphemes import models
 import re
 from clld.web.util import helpers as h
+from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
 import os
 import csv
 import json
-
+#to edit tree labels
+from Bio import Phylo
+import tempfile
+         
 #This contains lists of:
 # morphemes
 # Cariban languages
@@ -80,10 +84,13 @@ def main(args):
     LANG_DIC = {}
     #This will contain a dict to look up full language names based on shorthand forms (e.g. maqui). This is only used to render markdown.
     LANG_ABBREV_DIC = {}
+    #and this is used to look up language names based on the code. used for trees
+    LANG_CODE_DIC = {}
     for row in cariban_data["LanguageTable"]:
         if row["sampled"] == "y":
             LANG_DIC[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
             LANG_ABBREV_DIC[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
+        LANG_CODE_DIC[row["ID"]] = {"shorthand": row["shorthand"], "name": row["Name"]}
     
     #Save to json to make the dic available to util.py
     json_file = json.dumps(LANG_ABBREV_DIC)
@@ -443,7 +450,39 @@ def main(args):
                     "1+3 scenarios",
                     ["1+3S", "1+3>3", "3>1+3", "2>1+3", "1+3>2"]))
     print("")
-        
+    
+    print("Adding trees…")
+    tree_path = "../../trees"
+    newick_files = ["muller_norm","meira_norm", "meira2006_norm", "durbin_norm", "gildea_norm", "gildea2005_norm", "girard_norm", "glottolog_norm", "kaufman_norm", "kaufman2_norm"]
+    for tree_name in newick_files:
+        print(tree_name)
+        norm_file = tree_path+"/"+tree_name+".newick"
+        # tree = open(norm_file, "r").read()
+        biotree = Phylo.read(norm_file, "newick")
+        for node in biotree.find_clades():
+            if node.name in LANG_CODE_DIC.keys():
+                node.name = LANG_CODE_DIC[node.name]["name"]
+        # with tempfile.NamedTemporaryFile() as tmpf:
+        #     Phylo.write(biotree, tmpf, 'newick')
+        #     tmpf.flush()
+            # print(tmpf)
+        # phylo = Phylogeny(
+#                 id=tree_name,
+#                 name=tree_name,
+#                 newick=tree)
+#         for code, name in LANG_CODE_DIC.items():
+#             print(name)
+#         for l in DBSession.query(common.Language):
+#             new_label = LanguageTreeLabel(
+#                 language=l,
+#                 treelabel=TreeLabel(
+#                     id="%s_%s" % (tree_name, l.id),
+#                     name="apa",
+#                     phylogeny=phylo
+#                 )
+#             )
+#         DBSession.add(phylo)
+    
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
     This procedure should be separate from the db initialization, because

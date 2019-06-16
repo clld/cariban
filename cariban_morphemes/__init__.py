@@ -40,6 +40,7 @@ def main(global_config, **settings):
 
     config = Configurator(settings=settings)
     config.include('clld.web.app')
+    config.include('clld_phylogeny_plugin')
     config.register_resource(
         'construction', models.Construction, IConstruction, with_index=True, with_detail=True)
     config.register_resource(
