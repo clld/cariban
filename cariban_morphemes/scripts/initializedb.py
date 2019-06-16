@@ -17,7 +17,16 @@ import os
 import csv
 import json
 
+#This contains lists of:
+# morphemes
+# Cariban languages
+# interlinear examples
+# cognate sets
 cariban_data = Wordlist.from_metadata("../cariban_morpheme_data.json")
+
+#This contains lists of:
+# constructions (clause types)
+# morpheme functions in these constructions
 construction_data = Generic.from_metadata("../cariban_construction_data.json")
 
 #This returns a author-year style reference from the bibtex file.
@@ -62,7 +71,6 @@ def main(args):
         
     DBSession.add(dataset)
     
-    
     print("Adding contributors (me)…")
     c = common.Contributor(id="fm",name="Florian Matter")
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
@@ -76,9 +84,10 @@ def main(args):
         if row["sampled"] == "y":
             LANG_DIC[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
             LANG_ABBREV_DIC[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
-
+    
+    #Save to json to make the dic available to util.py
     json_file = json.dumps(LANG_ABBREV_DIC)
-    f = open("lang_abbrev_dic.json","w")
+    f = open("LANG_ABBREV_DIC.json","w")
     f.write(json_file)
     f.close()
       
@@ -93,14 +102,12 @@ def main(args):
                     "Morpheme": entry["Morpheme"]
                 }
                 FUNCTION_PARADIGMS.append(function_entry)
+                
+    #Save to json to make the function paradigms available to util.py
     with open('function_paradigms.json', 'w') as fout:
         json.dump(FUNCTION_PARADIGMS, fout)
     
     print("Adding languages…")
-    #This will contain a dict to look up the language IDs (and names) based on glottocodes -- the CLLD app uses custom language IDs, but the CLDF files use glottocodes.
-    lang_dic = {}
-    #This will contain a dict to look up full language names based on shorthand forms (e.g. maqui). This is only used to render markdown.
-    lang_abbrev_dic = {}
     lg_count = 0
     for row in cariban_data["LanguageTable"]:
         if row["sampled"] == "y": lg_count+=1
@@ -109,8 +116,6 @@ def main(args):
         if row["sampled"] == "y":
             i += 1
             print("%s/%s" % (i, lg_count), end="\r")        
-            lang_dic[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
-            lang_abbrev_dic[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
             data.add(
                 common.Language,
                 row["ID"],
@@ -137,21 +142,18 @@ def main(args):
             bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
     print("")
-        
+    
+    print("Adding language sources…")    
     language_pks = {}
     for language in DBSession.query(common.Language):
         language_pks[language.id] = language.pk
-        
     source_pks = {}
     for source in DBSession.query(common.Source):
         source_pks[source.id] = source.pk
-
     language_sources = {}
     mapreader = csv.DictReader(open("../../raw examples/lit_lang_mappings.csv"))
     for row in mapreader:
-        # print(data["Language"][row["Language_ID"]].pk)
         DBSession.add(common.LanguageSource(language_pk=language_pks[row["Language_ID"]], source_pk=source_pks[row["Source"]]))
-    #     language_sources[row[0]] = row[1]
     
     print("Adding glossing abbreviations…")
     length = len(pynterlinear.get_all_abbrevs().keys())
@@ -167,8 +169,8 @@ def main(args):
         "3S": "3.S",
         "3P": "3.P",
         "1P": "1.P",
-        "S_A_": "SA",
-        "S_P_": "SP"
+        "S_A_": "Sa",
+        "S_P_": "Sp"
     }            
     def clldify_glosses(gloss_line):
         output = gloss_line
@@ -189,7 +191,7 @@ def main(args):
         description=row["Translated_Text"],
         analyzed="\t".join(row["Analyzed_Word"]),
         gloss=clldify_glosses("\t".join(row["Gloss"])),
-        language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
+        language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
         comment=row["Comment"],
         markup_gloss=row["Morpheme_IDs"].replace(" ","\t")
         )
@@ -209,12 +211,6 @@ def main(args):
                     )
     print("")
     
-    cognate_sets = {}
-    cogset_cnt = 0
-    for row in cariban_data["CognatesetTable"]:
-        cognate_sets[row["ID"]] = name=row["Name"]
-        cogset_cnt+=1
-    
     print("Adding morphemes…")
     morph_cnt=0
     for row in cariban_data["FormTable"]:
@@ -223,7 +219,7 @@ def main(args):
         print("%s/%s" % (i+1, morph_cnt), end="\r")
         new_morph = data.add(models.Morpheme,
             row["ID"],
-            language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
+            language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
             name="/".join(row["Form"]),
             id=row["ID"],
         )
@@ -244,18 +240,7 @@ def main(args):
                 )
     print("")
     
-    #Create shorthand lists for the paradigm generator function
-    function_list_paradigms = []
-    for entry in construction_data["ValueTable"]:
-        for function in entry["Function"]:
-            for construction in entry["Construction"]:
-                function_entry = {
-                    "Function": function,
-                    "Construction": construction,
-                    "Morpheme": entry["Morpheme"]
-                }
-                function_list_paradigms.append(function_entry)
-
+    print("Adding constructions…")
     
     data.add(
         models.DeclarativeType,
@@ -281,14 +266,13 @@ def main(args):
     cons_cnt = 0
     for row in construction_data["FormTable"]:
         cons_cnt += 1
-    print("Adding constructions…")
     for i, row in enumerate(construction_data["FormTable"]):
         print("%s/%s" % (i+1, cons_cnt), end="\r")
         data.add(
             models.Construction,
             row["ID"],
             id=row["ID"],
-            language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
+            language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
             name=row["Description"],
             declarativetype=data["DeclarativeType"][row["DeclarativeType"]],
             finitetype=data["FiniteType"][row["FiniteType"]]
@@ -372,7 +356,10 @@ def main(args):
     for morph in not_ill:
         f.write(morph+"\n")
     f.close()
-                
+    
+    cogset_cnt = 0
+    for row in cariban_data["CognatesetTable"]:
+        cogset_cnt+=1
     print("Adding cognate sets…")
     for i, row in enumerate(cariban_data["CognatesetTable"]):
         print("%s/%s" % (i+1, cogset_cnt), end="\r")
@@ -412,7 +399,7 @@ def main(args):
                 my_valueset = data.add(common.ValueSet,
                     lang_valueset,
                     id=lang_valueset,
-                    language=data["Language"][lang_dic[row["Language_ID"]]["ID"]],
+                    language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
                     parameter=data["CognateSet"][cognate_ID],
                 )
             else:
