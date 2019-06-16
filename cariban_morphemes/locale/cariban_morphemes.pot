@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: cariban_morphemes 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-04-02 11:08+0200\n"
+"POT-Creation-Date: 2019-06-16 13:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,27 +18,35 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: cariban_morphemes/__init__.py:11
+#: cariban_morphemes/__init__.py:14
 msgid "Parameter"
 msgstr ""
 
-#: cariban_morphemes/__init__.py:12
+#: cariban_morphemes/__init__.py:15
 msgid "Parameters"
 msgstr ""
 
-#: cariban_morphemes/__init__.py:13
+#: cariban_morphemes/__init__.py:16
 msgid "Unit"
 msgstr ""
 
-#: cariban_morphemes/__init__.py:14
+#: cariban_morphemes/__init__.py:17
 msgid "Units"
 msgstr ""
 
-#: cariban_morphemes/__init__.py:15
+#: cariban_morphemes/__init__.py:18
 msgid "Unitparameter"
 msgstr ""
 
-#: cariban_morphemes/__init__.py:16
+#: cariban_morphemes/__init__.py:19
 msgid "Unitparameters"
+msgstr ""
+
+#: cariban_morphemes/__init__.py:20
+msgid "Sentence"
+msgstr ""
+
+#: cariban_morphemes/__init__.py:21
+msgid "Sentences"
 msgstr ""
 

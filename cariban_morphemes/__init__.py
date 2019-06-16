@@ -17,6 +17,8 @@ _('Unit')
 _('Units')
 _('Unitparameter')
 _('Unitparameters')
+_('Sentence')
+_('Sentences')
 
 def notfound(request):
     raise HTTPFound(location='/')
@@ -30,6 +32,8 @@ def main(global_config, **settings):
         'units': '/morphemes',
         'unit': '/morpheme/{id:[^/\.]+}',
         'construction': '/construction/{id:[^/\.]+}',
+        'sentences': '/examples',
+        'sentence': '/example/{id:[^/\.]+}',
         'parameters': '/cognatesets',
         'parameter': '/cognateset/{id:[^/\.]+}',
     }
