@@ -261,21 +261,21 @@ def main(args):
         models.DeclarativeType,
         "imp",
         id="imp",
-        name="Imperative"
+        name="imperative"
     )
     
     data.add(
         models.DeclarativeType,
         "decl",
         id="decl",
-        name="Declarative"
+        name="declarative"
     )
     
     data.add(
         models.FiniteType,
         "finite",
         id="finite",
-        name="Finite"
+        name="finite"
     )
     
     cons_cnt = 0
