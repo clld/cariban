@@ -67,7 +67,7 @@ class Counterpart(CustomModelMixin, Value):
     pk = Column(Integer, ForeignKey('value.pk'), primary_key=True)
     morpheme_pk = Column(Integer, ForeignKey('morpheme.pk'))
     morpheme = relationship(Morpheme, backref='counterparts')
-    
+
 class UnitValueSentence(Base, PolymorphicBaseMixin):
 
     """Association between values and sentences given as explanation of a value."""

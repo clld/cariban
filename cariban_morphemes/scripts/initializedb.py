@@ -19,7 +19,7 @@ import csv
 import json
 #to edit tree labels
 from Bio import Phylo
-import tempfile
+import io
          
 #This contains lists of:
 # morphemes
@@ -453,36 +453,47 @@ def main(args):
     
     print("Adding trees…")
     tree_path = "../../trees"
-    newick_files = ["muller_norm","meira_norm", "meira2006_norm", "durbin_norm", "gildea_norm", "gildea2005_norm", "girard_norm", "glottolog_norm", "kaufman_norm", "kaufman2_norm"]
-    for tree_name in newick_files:
-        print(tree_name)
+    newick_files = {"muller_norm": "mattei2002busca",
+"meira_norm": "meira2006cariban",
+"meira2006_norm": "meira2006familia",
+"durbin_norm": "durbin1977carib",
+"gildea_norm": "gildea2012classification",
+"gildea2005_norm": "gildea2005encyclo",
+"girard_norm": "girard1971proto",
+"glottolog_norm": "glottolog",
+"kaufman_norm": "kaufman1994native",
+"kaufman2_norm": "kaufman2007native"}
+    for tree_name, source in newick_files.items():
         norm_file = tree_path+"/"+tree_name+".newick"
-        # tree = open(norm_file, "r").read()
         biotree = Phylo.read(norm_file, "newick")
         for node in biotree.find_clades():
-            if node.name in LANG_CODE_DIC.keys():
-                node.name = LANG_CODE_DIC[node.name]["name"]
-        # with tempfile.NamedTemporaryFile() as tmpf:
-        #     Phylo.write(biotree, tmpf, 'newick')
-        #     tmpf.flush()
-            # print(tmpf)
-        # phylo = Phylogeny(
-#                 id=tree_name,
-#                 name=tree_name,
-#                 newick=tree)
-#         for code, name in LANG_CODE_DIC.items():
-#             print(name)
-#         for l in DBSession.query(common.Language):
-#             new_label = LanguageTreeLabel(
-#                 language=l,
-#                 treelabel=TreeLabel(
-#                     id="%s_%s" % (tree_name, l.id),
-#                     name="apa",
-#                     phylogeny=phylo
-#                 )
-#             )
-#         DBSession.add(phylo)
-    
+            if node.name == None:
+                continue
+            plain_name = node.name.replace("?","")
+            if plain_name in LANG_CODE_DIC.keys():
+                node.name = LANG_CODE_DIC[plain_name]["name"]
+            else:
+                print("Tree %s has unknown languages %s" % (tree_name, plain_name))
+        edited_tree = io.StringIO()
+        Phylo.write(biotree, edited_tree, "newick")
+        tree = edited_tree.getvalue().replace(":0.00000","")
+        print(str(data["Source"][source]))
+        phylo = Phylogeny(
+                id=tree_name,
+                name=str(data["Source"][source]),
+                markup_description=util.generate_markup("src:"+source),
+                newick=tree)
+        for l in DBSession.query(common.Language):
+            new_label = LanguageTreeLabel(
+                language=l,
+                treelabel=TreeLabel(
+                    id="%s_%s" % (tree_name, l.id),
+                    name=l.name,
+                    phylogeny=phylo
+                )
+            )
+        DBSession.add(phylo)
+
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
     This procedure should be separate from the db initialization, because

@@ -3,8 +3,6 @@
 <%! active_menu_item = "parameters" %>
 <%block name="title">${_('Cognate set')} ${ctx.name}</%block>
 
-<h2>${_('Cognate set')} ${ctx.name}</h2>
-
 <table class="table table-nonfluid">
     <tbody>
 	<tr>

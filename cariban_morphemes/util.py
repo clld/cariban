@@ -23,9 +23,11 @@ from clld.lib import rdf
 from cariban_morphemes.models import Morpheme, Construction, CognateSet
 from clld.db.models import Language, Source, Sentence
 import cariban_morphemes.models as cariban_models
+from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
 
 from cariban_morphemes.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS
 from collections import OrderedDict
+from clld.web.util.multiselect import CombinationMultiSelect
 
 def xify(text):
     ids = []
@@ -419,3 +421,17 @@ def transitive_construction_paradigm(construction):
                 string += "morph:" + morpheme + "£"
             my_y[x_key].append(string)
     return build_table(table, " ", "Transitive person marking")
+    
+def phylogeny_detail_html(request=None, context=None, **kw):
+    return {
+        'ms': CombinationMultiSelect,
+}
+
+def parameter_detail_html(request=None, context=None, **kw):
+    return {
+        'ms': CombinationMultiSelect,
+}
+
+def default_tree(request=None, ctx=None, **kw):
+    tree = DBSession.query(Phylogeny).filter(Phylogeny.id == "gildea_norm")[0]
+    return tree
