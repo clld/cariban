@@ -50,14 +50,19 @@ Also, rc:t- shows no strong genealogical influence -- both lg:waimiri and lg:apa
 Interestingly, lg:wayana also shows forms without rc:kɨ.
 
 Leaving aside the issue of 1+2 forms, which are different from first and second person forms in their use of rc:k- in 3>1+2 scenarios anyway, what is different about this reconstructed system?
-Crucially, in 1/2>3, 3>1/2, and 3>3 scenarios, it is only the P argument that is marked on the verb.
-The A is expressed as a free pronoun preceding the verb.
+Crucially, in 1/2>3, 3>1/2, and 3>3 scenarios, it is only the P argument that is marked on the verb, while the A is expressed as a free pronoun preceding the verb.
+This in turn is of course reminiscent of the reanalyses of subordinate nominalized clauses becoming main clauses throughout the history of Cariban, e.g. the cons:pan_new.
+Could lg:pc main clause syntax have come from nominalizations?
+Potentially; a large issue are the 1>2, 2>1, and 3>1+2 scenarios, for which the reconstruction cogset:12 does seem to make the most sense.
+And even though there are many languages which have something other than a reflex of cogset:12, none of them show any form which could be seen as a reflex of a first or second person possessor.
+The situation is different in 3>1+2 scenarios, though, where rc:k- is also 1+2POSS.
+In addition, 2>1 and 1>2 scenarios have undergone quite a bit of restructuring (src:heath1998pragmatic), so it is not entirely unthinkable that a potential original marking (different from rc:k-) has disappeared altogether.
 """, extensions=["tables"])))}
 ${h.text2html(u.generate_markup(
                 u.comparative_function_paradigm(
                     ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
-                    "local scenarios",
-                    ["1>2", "2>1"])))}
+                    "1+3 scenarios",
+                    ["1>2", "2>1", "3>1+2"])))}
 </p>
 
 
