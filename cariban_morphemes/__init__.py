@@ -19,6 +19,7 @@ _('Unitparameter')
 _('Unitparameters')
 _('Sentence')
 _('Sentences')
+_('Phylogenys')
 
 def notfound(request):
     raise HTTPFound(location='/')
@@ -35,6 +36,8 @@ def main(global_config, **settings):
         'sentences': '/examples',
         'sentence': '/example/{id:[^/\.]+}',
         'parameters': '/cognatesets',
+        'phylogenys': '/phylogenies',
+        'phylogeny': '/phylogeny/{id:[^/\.]+}',
         'parameter': '/cognateset/{id:[^/\.]+}',
     }
 

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: cariban_morphemes 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-06-16 13:52+0200\n"
+"POT-Creation-Date: 2019-06-20 09:09+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,5 +48,9 @@ msgstr ""
 
 #: cariban_morphemes/__init__.py:21
 msgid "Sentences"
+msgstr ""
+
+#: cariban_morphemes/__init__.py:22
+msgid "Phylogenys"
 msgstr ""
 
