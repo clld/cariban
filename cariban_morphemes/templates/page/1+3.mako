@@ -1,16 +1,3 @@
-<%inherit file="../home_comp.mako"/>
-<%namespace name="util" file="../util.mako"/>
-<%namespace name="cmutil" file="../cmutil.mako"/>
-## <%def name="sidebar()">
-##     <div class="well">
-##         <h3>Sidebar</h3>
-##         <p>
-##             Content
-##         </p>
-##     </div>
-## </%def>
-<h2>Verbal morphology with 1+3 (“first person exclusive”)</h2>
-
 <p>
 ${h.text2html(u.generate_markup("""In most Cariban languages, the combination of first and third person (1+3, 1EXCL) is expressed by means of a free pronoun, usually accompanied by third person verbal morphology. However, most descriptions only mention or exemplify the scenarios 1+3S, and 1+3>3, some also 3>1+3. Less is said about 2>1+3 and 1+3>2.
 Below is an overview of how these scenarios are expressed in the relevant unmarked main clauses for eleven languages.
@@ -26,7 +13,7 @@ ${h.text2html(u.generate_markup("""
 In most languages, 3>1+3 is expressed with only a reflex of cogset:1pro, without any marking on the verb.
 However, the two languages preserving the linking morpheme cogset:link (lg:panare and lg:hixka) indicate that this scenario was most likely expressed with cogset:13pro cogset:link.
 lg:waiwai is exceptional in that it also has a reflex of cogset:3n in this scenario: ex:wai-57
-However, this can be seen as a more general property of lg:waiwai, as cogset:3n also appears with object nominals (obj:amorɨ 'his hand' is followed by obj:n-): ex:wai-58
+However, this can be seen as a more general property of lg:waiwai, as the reflex of cogset:3n also appear with object nominals (obj:amorɨ 'his hand' is followed by obj:n-): ex:wai-58
 
 Moving on to combinations of second person and 1+3, the data is surprisingly sparse.
 In 2>1+3 scenarios, lg:trio, lg:ikpeng, lg:kalina, lg:panare, and lg:waiwai show a reflex of cogset:13pro cogset:2a.

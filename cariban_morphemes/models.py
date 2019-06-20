@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from clld import interfaces
-from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IFiniteType
+from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IFiniteType, IPage
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
 from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin, HasSourceMixin, common, Language
 
@@ -68,6 +68,10 @@ class Counterpart(CustomModelMixin, Value):
     morpheme_pk = Column(Integer, ForeignKey('morpheme.pk'))
     morpheme = relationship(Morpheme, backref='counterparts')
 
+@implementer(IPage)
+class Page(Base, IdNameDescriptionMixin):
+    pk = Column(Integer, primary_key=True)
+    
 class UnitValueSentence(Base, PolymorphicBaseMixin):
 
     """Association between values and sentences given as explanation of a value."""

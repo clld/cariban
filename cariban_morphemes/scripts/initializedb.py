@@ -4,7 +4,6 @@ import sys
 from clld.scripts.util import initializedb, Data
 from clld.db.meta import DBSession
 from clld.db.models import common
-from cariban_morphemes import util
 from pynterlinear import pynterlinear
 from pycldf import Wordlist, Generic
 from clld.lib.bibtex import EntryType, unescape
@@ -32,6 +31,26 @@ cariban_data = Wordlist.from_metadata("../cariban_morpheme_data.json")
 # constructions (clause types)
 # morpheme functions in these constructions
 construction_data = Generic.from_metadata("../cariban_construction_data.json")
+
+print("Generating language and construction paradigm information…")
+#This will contain a dict to look up the language IDs (and names) based on glottocodes -- the CLLD app uses custom language IDs, but the CLDF files use glottocodes.
+LANG_DIC = {}
+#This will contain a dict to look up full language names based on shorthand forms (e.g. maqui). This is only used to render markdown.
+LANG_ABBREV_DIC = {}
+#and this is used to look up language names based on the code. used for trees
+LANG_CODE_DIC = {}
+for row in cariban_data["LanguageTable"]:
+    if row["sampled"] == "y":
+        LANG_DIC[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
+        LANG_ABBREV_DIC[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
+    LANG_CODE_DIC[row["ID"]] = {"shorthand": row["shorthand"], "name": row["Name"]}
+
+#Save to json to make the dic available to util.py
+json_file = json.dumps(LANG_ABBREV_DIC)
+f = open("LANG_ABBREV_DIC.json","w")
+f.write(json_file)
+f.close()
+from cariban_morphemes import util
 
 #This returns a author-year style reference from the bibtex file.
 def get_source_name(source):
@@ -78,25 +97,6 @@ def main(args):
     print("Adding contributors (me)…")
     c = common.Contributor(id="fm",name="Florian Matter")
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
-    
-    print("Generating language and construction paradigm information…")
-    #This will contain a dict to look up the language IDs (and names) based on glottocodes -- the CLLD app uses custom language IDs, but the CLDF files use glottocodes.
-    LANG_DIC = {}
-    #This will contain a dict to look up full language names based on shorthand forms (e.g. maqui). This is only used to render markdown.
-    LANG_ABBREV_DIC = {}
-    #and this is used to look up language names based on the code. used for trees
-    LANG_CODE_DIC = {}
-    for row in cariban_data["LanguageTable"]:
-        if row["sampled"] == "y":
-            LANG_DIC[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
-            LANG_ABBREV_DIC[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
-        LANG_CODE_DIC[row["ID"]] = {"shorthand": row["shorthand"], "name": row["Name"]}
-    
-    #Save to json to make the dic available to util.py
-    json_file = json.dumps(LANG_ABBREV_DIC)
-    f = open("LANG_ABBREV_DIC.json","w")
-    f.write(json_file)
-    f.close()
       
     #Create shorthand lists for the paradigm generator function
     FUNCTION_PARADIGMS = []
@@ -477,7 +477,6 @@ def main(args):
         edited_tree = io.StringIO()
         Phylo.write(biotree, edited_tree, "newick")
         tree = edited_tree.getvalue().replace(":0.00000","")
-        print(str(data["Source"][source]))
         phylo = Phylogeny(
                 id=tree_name,
                 name=str(data["Source"][source]),
@@ -493,7 +492,23 @@ def main(args):
                 )
             )
         DBSession.add(phylo)
-
+    print("")
+    
+    print("Adding pages…")
+    data.add(models.Page,
+                    "1+3",
+                    id="1+3",
+                    name="Person marking in 1+3 scenarios",
+                    description="this page discusses person marking in 1+3 scenarios, something missing from many descriptions of Cariban languages.",
+            )
+    
+    data.add(models.Page,
+                    "pre_pc",
+                    id="pre_pc",
+                    name="Reconstruction of pre-Proto-Cariban person marking",
+                    description="Speculative exploration of what developments might have led to the reconstructed PC person paradigms.",
+            )
+                    
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
     This procedure should be separate from the db initialization, because

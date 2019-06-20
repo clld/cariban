@@ -8,3 +8,6 @@ class IDeclarativeType(Interface):
     
 class IFiniteType(Interface):
     """marker"""
+    
+class IPage(Interface):
+    """marker"""
