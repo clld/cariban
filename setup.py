@@ -29,6 +29,7 @@ setup(
             'pytest-clld',
             'pytest-mock',
             'pytest-cov',
+            'clld_phylogeny_plugin',
             'coverage>=4.2',
             'selenium',
             'zope.component>=3.11.0',
