@@ -467,7 +467,8 @@ def main(args):
             "orig": row["ID"]+"_orig.newick",
             "norm": row["ID"]+"_norm.newick",
             "source": row["Source"],
-            "comment": row["Comment"]
+            "comment": row["Comment"],
+            "o_comment": row["Orig_Comment"]
         }
     c = 1
     for tree_id, values in newick_files.items():
@@ -494,13 +495,22 @@ def main(args):
         norm_phylo = Phylogeny(
                 id=tree_id+"_norm",
                 name=str(data["Source"][values["source"]]) + " (Normalized)",
-                markup_description=util.generate_markup("src:"+values["source"]),
+                markup_description=util.generate_markup("Source: src:"+values["source"])+
+                "<br>This is a normalized version of <a href='/phylogeny/%s_orig'>this original tree</a>." % tree_id +
+                util.generate_markup(
+                    "<br>Comments: %s" % values["comment"]
+                ),
                 newick=tree
         )
         orig_phylo = Phylogeny(
                 id=tree_id+"_orig",
                 name=str(data["Source"][values["source"]]) + " (Original)",
-                markup_description=util.generate_markup("src:"+values["source"]),
+                markup_description=util.generate_markup("Source: src:"+values["source"])+
+                    "<br>This is a representation of the original classification. A normalized version can be found <a href='/phylogeny/%s_norm'>here</a>." % tree_id +
+                    util.generate_markup(
+                    "<br>Comments: %s" % values["comment"] +
+                    " " + values["o_comment"]
+                    ),
                 newick=orig_tree
         )
         for l in DBSession.query(common.Language):

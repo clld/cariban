@@ -16,7 +16,7 @@
 
         % if ctx.markup_description:
 ##            <div class="alert alert-info">${ctx.markup_description}</div>
-			${h.text2html(h.Markup("Source: " + ctx.markup_description + ".") if ctx.markup_description else ctx.description, mode='p')}
+			${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}
         % endif
         % if tree.parameters:
             <div class="alert alert-success">
