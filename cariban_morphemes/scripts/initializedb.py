@@ -43,8 +43,9 @@ for row in cariban_data["LanguageTable"]:
     if row["sampled"] == "y":
         LANG_DIC[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
         LANG_ABBREV_DIC[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
-    LANG_CODE_DIC[row["ID"]] = {"shorthand": row["shorthand"], "name": row["Name"]}
-
+    if row["dialect_of"] == "":
+        LANG_CODE_DIC[row["ID"]] = {"shorthand": row["shorthand"], "name": row["Name"]}
+print(LANG_CODE_DIC)
 #Save to json to make the dic available to util.py
 json_file = json.dumps(LANG_ABBREV_DIC)
 f = open("LANG_ABBREV_DIC.json","w")
@@ -115,9 +116,13 @@ def main(args):
         json.dump(FUNCTION_PARADIGMS, fout)
     
     print("Adding languages…")
+    dialect_mapping = {}
     lg_count = 0
     for row in cariban_data["LanguageTable"]:
         if row["sampled"] == "y": lg_count+=1
+        if row["dialect_of"] not in ["", "y"]:
+            dialect_mapping[row["ID"]] = row["dialect_of"]
+    print(dialect_mapping)
     i = 0
     for row in cariban_data["LanguageTable"]:
         if row["sampled"] == "y":
@@ -453,45 +458,66 @@ def main(args):
     
     print("Adding trees…")
     tree_path = "../../trees"
-    newick_files = {"muller_norm": "mattei2002busca",
-"meira_norm": "meira2006cariban",
-"meira2006_norm": "meira2006familia",
-"durbin_norm": "durbin1977carib",
-"gildea_norm": "gildea2012classification",
-"gildea2005_norm": "gildea2005encyclo",
-"girard_norm": "girard1971proto",
-"glottolog_norm": "glottolog",
-"kaufman_norm": "kaufman1994native",
-"kaufman2_norm": "kaufman2007native"}
-    for tree_name, source in newick_files.items():
-        norm_file = tree_path+"/"+tree_name+".newick"
-        biotree = Phylo.read(norm_file, "newick")
-        for node in biotree.find_clades():
+    newick_files = {}
+    tree_reader = csv.DictReader(open("../cariban_trees.csv"))
+    tree_cnt = 0
+    for row in tree_reader:
+        tree_cnt += 1
+        newick_files[row["ID"]] = {
+            "orig": row["ID"]+"_orig.newick",
+            "norm": row["ID"]+"_norm.newick",
+            "source": row["Source"],
+            "comment": row["Comment"]
+        }
+    c = 1
+    for tree_id, values in newick_files.items():
+        # print("%s/%s" % (c, tree_cnt), end="\r")
+        print(tree_id)
+        c += 1
+        norm_biotree = Phylo.read(tree_path+"/"+values["norm"], "newick")
+        orig_biotree = Phylo.read(tree_path+"/"+values["orig"], "newick")
+        for node in norm_biotree.find_clades():
             if node.name == None:
                 continue
             plain_name = node.name.replace("?","")
             if plain_name in LANG_CODE_DIC.keys():
                 node.name = LANG_CODE_DIC[plain_name]["name"]
             else:
-                print("Tree %s has unknown languages %s" % (tree_name, plain_name))
+                print("Warning: Normalized tree %s has unknown languages %s." % (tree_id, plain_name))
+                continue
         edited_tree = io.StringIO()
-        Phylo.write(biotree, edited_tree, "newick")
+        Phylo.write(norm_biotree, edited_tree, "newick")
         tree = edited_tree.getvalue().replace(":0.00000","")
-        phylo = Phylogeny(
-                id=tree_name,
-                name=str(data["Source"][source]),
-                markup_description=util.generate_markup("src:"+source),
-                newick=tree)
+        edited_tree = io.StringIO()
+        Phylo.write(orig_biotree, edited_tree, "newick")
+        orig_tree = edited_tree.getvalue().replace(":0.00000","")
+        norm_phylo = Phylogeny(
+                id=tree_id+"_norm",
+                name=str(data["Source"][values["source"]]) + " (Normalized)",
+                markup_description=util.generate_markup("src:"+values["source"]),
+                newick=tree
+        )
+        orig_phylo = Phylogeny(
+                id=tree_id+"_orig",
+                name=str(data["Source"][values["source"]]) + " (Original)",
+                markup_description=util.generate_markup("src:"+values["source"]),
+                newick=orig_tree
+        )
         for l in DBSession.query(common.Language):
+            if l.id in dialect_mapping.keys():
+                lname = LANG_CODE_DIC[dialect_mapping[l.id]]["name"]
+            else:
+                lname = l.name
             new_label = LanguageTreeLabel(
                 language=l,
                 treelabel=TreeLabel(
-                    id="%s_%s" % (tree_name, l.id),
-                    name=l.name,
-                    phylogeny=phylo
+                    id="%s_%s" % (tree_id, l.id),
+                    name=lname,
+                    phylogeny=norm_phylo
                 )
             )
-        DBSession.add(phylo)
+        DBSession.add(norm_phylo)
+        DBSession.add(orig_phylo)
     print("")
     
     print("Adding pages…")
