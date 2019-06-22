@@ -50,15 +50,7 @@ class FunctionCol(LinkCol):
                 my_link.append(link(self.dt.req, i.unitparameter, **self.get_attrs(i.unitparameter)))
             found_functions.append(i.unitparameter)
         return my_link
-        
-class MorphemeCol(LinkCol):
-    def __init__(self, dt, name, **kw):
-        # kw['sTitle'] = "Cognate"
-        Col.__init__(self, dt, name, **kw)
     
-    def get_attrs(self, item):
-        return dict(label = self.get_obj(item).name)
-
 class Meanings(Unitparameters):
     def col_defs(self):
         return [
@@ -93,7 +85,7 @@ class Counterparts(Values):
     def col_defs(self):
         return [
             LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.morpheme.language),
-            MorphemeCol(self, 'form', get_obj=lambda i: i.morpheme),
+            LinkCol(self, 'form', get_obj=lambda i: i.morpheme),
             FunctionCol(self, 'function', get_obj=lambda i: i.morpheme),
             RefsCol(self, 'references', get_obj=lambda i: i.morpheme)
         ]
@@ -146,7 +138,7 @@ class MorphemeFunctions(Unitvalues):
     
     def col_defs(self):
         base = [
-            MorphemeCol(self, 'form', get_obj=lambda i: i.unit),
+            LinkCol(self, 'form', get_obj=lambda i: i.unit),
         ]
         if not self.unitparameter:
             base.append(LinkCol(self, 'function', get_obj=lambda i: i.unitparameter))

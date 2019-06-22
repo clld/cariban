@@ -5,10 +5,24 @@
 <%! from clld_phylogeny_plugin.tree import Tree %>
 <%! from clld_phylogeny_plugin.interfaces import ITree %>
 <% tree = req.registry.queryUtility(ITree)(ctx, req) %>
-
+${tree}
 <%block name="head">
     ${Tree.head(req)|n}
 </%block>
+
+<div>
+    <form>
+      <label>Radial layout</label>
+      <input type="checkbox" id="layout"/>
+    </form>
+</div>
+
+<script type="text/javascript"> 
+	$("#layout").on("click", function(e) {
+		console.log(tree.constructor.name)
+		tree.radial($(this).prop("checked")).placenodes().update();
+});
+</script>
 
 <div class="row-fluid">
     <div class="span8">
