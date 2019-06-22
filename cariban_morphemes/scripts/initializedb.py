@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import sys
 
-from clld.scripts.util import initializedb, Data
+from clld.scripts.util import initializedb, Data, add_language_codes
 from clld.db.meta import DBSession
 from clld.db.models import common
 from pynterlinear import pynterlinear
@@ -127,7 +127,7 @@ def main(args):
         if row["sampled"] == "y":
             i += 1
             print("%s/%s" % (i, lg_count), end="\r")        
-            data.add(
+            language = data.add(
                 common.Language,
                 row["ID"],
                 id=row["ID"],
@@ -135,6 +135,7 @@ def main(args):
                 latitude=float(row["Latitude"]) if row["Latitude"] is not None else None,
                 longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
             )
+            add_language_codes(data, language, isocode="NOT YET", glottocode = row["glottocode"])
     print("")
        
     print("Adding sources…")
@@ -158,7 +159,12 @@ def main(args):
     print("Adding language sources…")    
     mapreader = csv.DictReader(open("../../raw examples/lit_lang_mappings.csv"))
     for row in mapreader:
-        DBSession.add(common.LanguageSource(language_pk=data["Language"][row["Language_ID"]].pk, source_pk=data["Source"][row["Source"]].pk))
+        DBSession.add(
+            common.LanguageSource(
+                language_pk=data["Language"][row["Language_ID"]].pk,
+                source_pk=data["Source"][row["Source"]].pk
+            )
+        )
     
     print("Adding glossing abbreviations…")
     length = len(pynterlinear.get_all_abbrevs().keys())

@@ -4,7 +4,11 @@
 <%block name="title">${_('Language')} ${ctx.name}</%block>
 
 <h2>${_('Language')} ${ctx.name}</h2>
-
+% for type_, identifiers in h.groupby(sorted(ctx.identifiers, key=lambda i: i.type), lambda j: j.type):
+    % for identifier in identifiers:
+    ${type_.capitalize()}: ${h.language_identifier(request, identifier)}
+    % endfor
+% endfor
 <div class="tabbable">
     <ul class="nav nav-tabs">
         <li class="active"><a href="#morphemes" data-toggle="tab">Morphemes</a></li>
