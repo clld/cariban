@@ -154,17 +154,11 @@ def main(args):
     **src)
     print("")
     
+    DBSession.flush()
     print("Adding language sources…")    
-    language_pks = {}
-    for language in DBSession.query(common.Language):
-        language_pks[language.id] = language.pk
-    source_pks = {}
-    for source in DBSession.query(common.Source):
-        source_pks[source.id] = source.pk
-    language_sources = {}
     mapreader = csv.DictReader(open("../../raw examples/lit_lang_mappings.csv"))
     for row in mapreader:
-        DBSession.add(common.LanguageSource(language_pk=language_pks[row["Language_ID"]], source_pk=source_pks[row["Source"]]))
+        DBSession.add(common.LanguageSource(language_pk=data["Language"][row["Language_ID"]].pk, source_pk=data["Source"][row["Source"]].pk))
     
     print("Adding glossing abbreviations…")
     length = len(pynterlinear.get_all_abbrevs().keys())
