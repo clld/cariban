@@ -493,15 +493,17 @@ def main(args):
         c += 1
         norm_biotree = Phylo.read(tree_path+"/"+values["norm"], "newick")
         orig_biotree = Phylo.read(tree_path+"/"+values["orig"], "newick")
+        uncertain_nodes = []
         for node in norm_biotree.find_clades():
             if node.name == None:
                 continue
             plain_name = node.name.replace("?","")
+            if "?" in node.name: uncertain_nodes.append(plain_name)
             if plain_name in LANG_CODE_DIC.keys():
                 node.name = LANG_CODE_DIC[plain_name]["name"]
             else:
                 print("Warning: Normalized tree %s has unknown languages %s." % (tree_id, plain_name))
-                continue
+            if plain_name in uncertain_nodes: node.name += "?"
         edited_tree = io.StringIO()
         Phylo.write(norm_biotree, edited_tree, "newick")
         tree = edited_tree.getvalue().replace(":0.00000","")
@@ -534,6 +536,7 @@ def main(args):
                 lname = LANG_CODE_DIC[dialect_mapping[l.id]]["name"]
             else:
                 lname = l.name
+            if l.id in uncertain_nodes: lname += "?"
             new_label = LanguageTreeLabel(
                 language=l,
                 treelabel=TreeLabel(
