@@ -8,7 +8,7 @@ from pyramid.httpexceptions import HTTPFound
 # from cariban_morphemes.models import Morpheme
 # from cariban_morphemes.interfaces import IMorpheme
 from cariban_morphemes import models
-from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IFiniteType, IPage
+from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage
 
 _ = lambda s: s
 _('Parameter')
@@ -51,7 +51,7 @@ def main(global_config, **settings):
     config.register_resource(
         'declarativetype', models.DeclarativeType, IDeclarativeType, with_detail=True)
     config.register_resource(
-        'finitetype', models.FiniteType, IFiniteType, with_detail=True)
+        'mainclauseverb', models.MainClauseVerb, IMainClauseVerb, with_detail=True)
     config.add_route_and_view(
         '1+3',
         '/1+3',

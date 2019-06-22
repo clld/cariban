@@ -45,7 +45,6 @@ for row in cariban_data["LanguageTable"]:
         LANG_ABBREV_DIC[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
     if row["dialect_of"] == "":
         LANG_CODE_DIC[row["ID"]] = {"shorthand": row["shorthand"], "name": row["Name"]}
-print(LANG_CODE_DIC)
 #Save to json to make the dic available to util.py
 json_file = json.dumps(LANG_ABBREV_DIC)
 f = open("LANG_ABBREV_DIC.json","w")
@@ -122,7 +121,7 @@ def main(args):
         if row["sampled"] == "y": lg_count+=1
         if row["dialect_of"] not in ["", "y"]:
             dialect_mapping[row["ID"]] = row["dialect_of"]
-    print(dialect_mapping)
+
     i = 0
     for row in cariban_data["LanguageTable"]:
         if row["sampled"] == "y":
@@ -269,10 +268,10 @@ def main(args):
     )
     
     data.add(
-        models.FiniteType,
-        "finite",
-        id="finite",
-        name="finite"
+        models.MainClauseVerb,
+        "y",
+        id="y",
+        name="main clause verb"
     )
     
     cons_cnt = 0
@@ -287,7 +286,7 @@ def main(args):
             language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
             name=row["Description"],
             declarativetype=data["DeclarativeType"][row["DeclarativeType"]],
-            finitetype=data["FiniteType"][row["FiniteType"]]
+            mainclauseverb=data["MainClauseVerb"][row["MainClauseVerb"]]
         )
     print("")
     
@@ -316,6 +315,14 @@ def main(args):
                 for construction in row["Construction"]:
                     if len(row["Morpheme"]) == 1 and row["Morpheme"][0] != "?":
                         for morpheme in row["Morpheme"]:
+                            if data["Morpheme"][morpheme].language != data["Construction"][construction].language:
+                                print("Warning: the %s Morpheme %s is stated to occur in the %s construction %s!" % (
+                                data["Morpheme"][morpheme].language,
+                                data["Morpheme"][morpheme],
+                                data["Construction"][construction].language,
+                                data["Construction"][construction]
+                                )
+                                )
                             morpheme_function_key = "%s:%s:%s" % (morpheme, function, construction)
                             data.add(models.MorphemeFunction,
                                 "%s:%s" % (morpheme, function),
@@ -346,10 +353,20 @@ def main(args):
                     continue
                 is_illustrated[unit_value] = True
                 morph_id = unit_value.split(":")[0]
+                if morph_id not in data["Morpheme"].keys():
+                    print("Warning: Example %s illustrates unknown morpheme %s" % (row["ID"], morph_id))
+                elif data["Morpheme"][morph_id].language != data["Sentence"][row["ID"]].language:
+                    print("Warning: The %s example %s claims to contain the %s morpheme %s." % (
+                        data["Sentence"][row["ID"]].language,
+                        row["ID"],
+                        data["Morpheme"][morph_id].language,
+                        data["Morpheme"][morph_id]
+                    )
+                    )
                 function = unit_value.split(":")[1]
                 morph_function_id = "%s:%s" % (morph_id, function)
                 if morph_function_id not in data["MorphemeFunction"].keys():
-                    print("Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
+                    print("Warning: Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
                     continue
                 data.add(models.UnitValueSentence,
                 unitvaluesentence_key,
@@ -472,8 +489,7 @@ def main(args):
         }
     c = 1
     for tree_id, values in newick_files.items():
-        # print("%s/%s" % (c, tree_cnt), end="\r")
-        print(tree_id)
+        print("%s/%s" % (c, tree_cnt), end="\r")
         c += 1
         norm_biotree = Phylo.read(tree_path+"/"+values["norm"], "newick")
         orig_biotree = Phylo.read(tree_path+"/"+values["orig"], "newick")

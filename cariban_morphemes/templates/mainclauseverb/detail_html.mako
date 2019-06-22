@@ -4,4 +4,4 @@
 <%block name="title">${_('Construction')} ${ctx.name}</%block>
 
 <h2>${ctx.name} constructions</h2>
-${request.get_datatable('constructions', u.cariban_models.Construction, finitetype=ctx).render()}
+${request.get_datatable('constructions', u.cariban_models.Construction, mainclauseverb=ctx).render()}

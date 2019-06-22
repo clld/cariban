@@ -6,16 +6,16 @@
 <h2>
 	The ${h.link(request, ctx.language)} ${ctx.name} clause
 </h2>
-% if ctx.declarativetype or ctx.finitetype:
+% if ctx.declarativetype or ctx.mainclauseverb:
 <p>(\
 % if ctx.declarativetype:
 ${h.link(request, ctx.declarativetype)}\
 % endif
-% if ctx.declarativetype and ctx.finitetype:
+% if ctx.declarativetype and ctx.mainclauseverb:
 ,
 %endif
-% if ctx.finitetype:
-${h.link(request, ctx.finitetype)}\
+% if ctx.mainclauseverb:
+${h.link(request, ctx.mainclauseverb)}\
 % endif
 )</p>
 % endif

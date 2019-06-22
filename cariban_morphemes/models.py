@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from clld import interfaces
-from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IFiniteType, IPage
+from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
 from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin, HasSourceMixin, common, Language
 
@@ -33,8 +33,8 @@ class CognatesetReference(Base, common.HasSourceMixin):
 class DeclarativeType(Base, IdNameDescriptionMixin):
     pk = Column(Integer, primary_key=True)
     
-@implementer(IFiniteType)
-class FiniteType(Base, IdNameDescriptionMixin):
+@implementer(IMainClauseVerb)
+class MainClauseVerb(Base, IdNameDescriptionMixin):
     pk = Column(Integer, primary_key=True)
     
 @implementer(IConstruction)
@@ -44,8 +44,8 @@ class Construction(Base, PolymorphicBaseMixin, IdNameDescriptionMixin, HasSource
     language_pk = Column(Integer, ForeignKey("language.pk"))
     declarativetype = relationship(DeclarativeType, backref="constructions")
     declarativetype_pk = Column(Integer, ForeignKey("declarativetype.pk"))
-    finitetype = relationship(FiniteType, backref="constructions")
-    finitetype_pk = Column(Integer, ForeignKey("finitetype.pk"))
+    mainclauseverb = relationship(MainClauseVerb, backref="constructions")
+    mainclauseverb_pk = Column(Integer, ForeignKey("mainclauseverb.pk"))
     
 @implementer(interfaces.IUnit)
 class Morpheme(CustomModelMixin, Unit, HasSourceMixin):

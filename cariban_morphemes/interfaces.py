@@ -6,7 +6,7 @@ class IConstruction(Interface):
 class IDeclarativeType(Interface):
     """marker"""
     
-class IFiniteType(Interface):
+class IMainClauseVerb(Interface):
     """marker"""
     
 class IPage(Interface):
