@@ -87,7 +87,7 @@ def main(args):
         description="Cariban Morphology Database",
         publisher_name="Florian Matter",
         publisher_url="http://www.isw.unibe.ch/ueber_uns/personen/ma_matter_florian/index_ger.html",
-        publisher_place="",
+        publisher_place="University of Bern",
         license="http://creativecommons.org/licenses/by/4.0/",
         contact="florian.matter@isw.unibe.ch"
         )
@@ -124,7 +124,7 @@ def main(args):
 
     i = 0
     for row in cariban_data["LanguageTable"]:
-        if row["Sampled"] == "y":
+        if row["Sampled"] == "y":# or row["Dialect_Of"] == None:
             i += 1
             print("%s/%s" % (i, lg_count), end="\r")        
             language = data.add(
