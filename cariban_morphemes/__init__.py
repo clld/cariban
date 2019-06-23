@@ -40,6 +40,8 @@ def main(global_config, **settings):
         'phylogeny': '/phylogeny/{id:[^/\.]+}',
         'parameter': '/cognateset/{id:[^/\.]+}',
     }
+    
+    settings["clld.github_repos"] = "florianmatter/cariban_morphemes"
 
     config = Configurator(settings=settings)
     config.include('clld.web.app')
