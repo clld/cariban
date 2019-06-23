@@ -216,7 +216,7 @@ def generate_markup(non_f_str: str):
         example = DBSession.query(Sentence).filter(Sentence.id == ex_id)[0]
         return """
             <blockquote style='margin-top: 5px; margin-bottom: 5px'>
-            (<a href='/sentences/%s'>%s</a>) %s (%s)
+            (<a href='/example/%s'>%s</a>) %s (%s)
                 %s
             </blockquote>""" % (example.id,ex_cnt,
                             lang_lk(example.language.id),

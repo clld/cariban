@@ -40,11 +40,11 @@ LANG_ABBREV_DIC = {}
 #and this is used to look up language names based on the code. used for trees
 LANG_CODE_DIC = {}
 for row in cariban_data["LanguageTable"]:
-    if row["sampled"] == "y":
-        LANG_DIC[row["glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
-        LANG_ABBREV_DIC[row["shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
-    if row["dialect_of"] == "":
-        LANG_CODE_DIC[row["ID"]] = {"shorthand": row["shorthand"], "name": row["Name"]}
+    if row["Sampled"] == "y":
+        LANG_DIC[row["Glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
+        LANG_ABBREV_DIC[row["Shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
+    if row["Dialect_Of"] is None:
+        LANG_CODE_DIC[row["ID"]] = {"shorthand": row["Shorthand"], "name": row["Name"]}
 #Save to json to make the dic available to util.py
 json_file = json.dumps(LANG_ABBREV_DIC)
 f = open("LANG_ABBREV_DIC.json","w")
@@ -118,13 +118,13 @@ def main(args):
     dialect_mapping = {}
     lg_count = 0
     for row in cariban_data["LanguageTable"]:
-        if row["sampled"] == "y": lg_count+=1
-        if row["dialect_of"] not in ["", "y"]:
-            dialect_mapping[row["ID"]] = row["dialect_of"]
+        if row["Sampled"] == "y": lg_count+=1
+        if row["Dialect_Of"] not in [None, "y"]:
+            dialect_mapping[row["ID"]] = row["Dialect_Of"]
 
     i = 0
     for row in cariban_data["LanguageTable"]:
-        if row["sampled"] == "y":
+        if row["Sampled"] == "y":
             i += 1
             print("%s/%s" % (i, lg_count), end="\r")        
             language = data.add(
@@ -135,7 +135,7 @@ def main(args):
                 latitude=float(row["Latitude"]) if row["Latitude"] is not None else None,
                 longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
             )
-            add_language_codes(data, language, isocode="NOT YET", glottocode = row["glottocode"])
+            add_language_codes(data, language, isocode="", glottocode = row["Glottocode"])
     print("")
        
     print("Adding sources…")
@@ -204,7 +204,7 @@ def main(args):
         gloss=clldify_glosses("\t".join(row["Gloss"])),
         language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
         comment=row["Comment"],
-        markup_gloss=row["Morpheme_IDs"].replace(" ","\t")
+        markup_gloss="\t".join(row["Morpheme_IDs"])
         )
         if row["Source"]:
             bib_key = row["Source"].split("[")[0]
@@ -343,7 +343,7 @@ def main(args):
     for i, row in enumerate(cariban_data["ExampleTable"]):
         print("%s/%s" % (i+1, ex_cnt), end="\r")
         # see what morphemes this example illustrates; separated by "; "
-        for word in row["Morpheme_IDs"].split(" "):
+        for word in row["Morpheme_IDs"]:
             morph_ids = util.split_word(word)
             for unit_value in morph_ids:
                 if unit_value in ["X","-","="]:
@@ -418,9 +418,9 @@ def main(args):
     shortcut_cognates = {}
     for i, row in enumerate(cariban_data["FormTable"]):
         print("%s/%s" % (i+1, morph_cnt), end="\r")
-        shortcut_cognates[row["ID"]] = row["Cognateset_ID"].split("; ")
+        shortcut_cognates[row["ID"]] = row["Cognateset_ID"]
         #Go through all cognatesets of which this morpheme is a part
-        for cognate_ID in row["Cognateset_ID"].split("; "):
+        for cognate_ID in row["Cognateset_ID"]:
             lang_valueset = "%s_%s" % (row["Language_ID"], cognate_ID)
             # print(lang_valueset)
             if lang_valueset not in data["ValueSet"].keys():
