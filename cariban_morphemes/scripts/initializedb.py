@@ -32,7 +32,7 @@ cariban_data = Wordlist.from_metadata("../cariban_morpheme_data.json")
 # morpheme functions in these constructions
 construction_data = Generic.from_metadata("../cariban_construction_data.json")
 
-print("Generating language and construction paradigm information…")
+print("Generating language information for markdown…")
 #This will contain a dict to look up the language IDs (and names) based on glottocodes -- the CLLD app uses custom language IDs, but the CLDF files use glottocodes.
 LANG_DIC = {}
 #This will contain a dict to look up full language names based on shorthand forms (e.g. maqui). This is only used to render markdown.
@@ -175,11 +175,6 @@ def main(args):
     
     print("Adding examples…")
     gloss_replacements = {
-        "1S": "1.S",
-        "2S": "2.S",
-        "3S": "3.S",
-        "3P": "3.P",
-        "1P": "1.P",
         "S_A_": "Sa",
         "S_P_": "Sp"
     }            
@@ -187,6 +182,7 @@ def main(args):
         output = gloss_line
         for orig, new in gloss_replacements.items():
             output = output.replace(orig,new)
+        output = re.sub(r"(\d)([A-Z])", r"\1.\2", output)
         return output
     
     ex_cnt = 0
