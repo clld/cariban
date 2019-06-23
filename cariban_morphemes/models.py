@@ -53,7 +53,7 @@ class Morpheme(CustomModelMixin, Unit, HasSourceMixin):
     construction_pk = Column(Integer, ForeignKey("construction.pk"))
 
 @implementer(interfaces.IUnitValue)
-class MorphemeFunction(UnitValue, CustomModelMixin):
+class MorphemeFunction(UnitValue, CustomModelMixin, PolymorphicBaseMixin):
     pk = Column(Integer, ForeignKey('unitvalue.pk'), primary_key=True)
     construction = relationship(Construction, backref="morphemefunctions")
     construction_pk = Column(Integer, ForeignKey("construction.pk"))
