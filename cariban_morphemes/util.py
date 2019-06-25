@@ -28,6 +28,8 @@ from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
 from cariban_morphemes.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS
 from collections import OrderedDict
 from clld.web.util.multiselect import CombinationMultiSelect
+import json
+from Bio import Phylo
 
 def xify(text):
     ids = []
@@ -258,7 +260,7 @@ def person_sort(s):
     }
     return sortation[re.sub("[A,S,P]", "", s)]
     
-def build_table(table, label, caption):
+def build_table(table, label):
     output = []
     x_values = []
     y_values = []
@@ -295,9 +297,9 @@ def build_table(table, label, caption):
                     output[row_count][col_count+1] = y
                 col_count += 1
     if label == "": del output[0]
-    return html_table(output, caption)
+    return output
 
-def intransitive_construction_paradigm(construction):
+def intransitive_construction_paradigm(construction, html=True):
     table = {}
     entries = []
     for entry in FUNCTION_PARADIGMS:
@@ -325,7 +327,10 @@ def intransitive_construction_paradigm(construction):
     
     if "morph:" not in str(table):
         return ""
-    return build_table(table, "", "Intransitive person marking")
+    if html:
+        return html_table(build_table(table, " "), "Intransitive person marking")
+    else:
+        return build_table(table, " ")
 
 def comparative_function_paradigm(constructions, label, values):
     entries = []
@@ -364,9 +369,9 @@ def comparative_function_paradigm(constructions, label, values):
             for morpheme in entry["Morpheme"]:
                 string += "morph:" + morpheme + "£"
             my_y[x_key].append(string)
-    return build_table(table, " ", label)
+    return html_table(build_table(table, " "), label)
      
-def transitive_construction_paradigm(construction):
+def transitive_construction_paradigm(construction, html=True):
     x_dim = ["P"]
     y_dim = ["A"]
     
@@ -420,7 +425,10 @@ def transitive_construction_paradigm(construction):
             for morpheme in entry["Morpheme"]:
                 string += "morph:" + morpheme + "£"
             my_y[x_key].append(string)
-    return build_table(table, " ", "Transitive person marking")
+    if html:
+        return html_table(build_table(table, " "), "Transitive person marking")
+    else:
+        return build_table(table, " ")
     
 def phylogeny_detail_html(request=None, context=None, **kw):
     return {
@@ -435,3 +443,116 @@ def parameter_detail_html(request=None, context=None, **kw):
 def default_tree(request=None, ctx=None, **kw):
     tree = DBSession.query(Phylogeny).filter(Phylogeny.id == "gildea_norm")[0]
     return tree
+
+def get_clade_as_json(clade):
+    json_clade = {}
+    if clade.name is None:
+        json_clade["name"] = "Clade"
+    else:
+        json_clade["name"] = clade.name
+    if not clade.is_terminal():
+        json_clade["children"] = []
+        for node in clade:
+            json_clade["children"].append(get_clade_as_json(node))
+    return json_clade
+    
+def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
+    set_1 = {}
+    for i in clauses:
+        set_1[i] = {}
+    for entry in FUNCTION_PARADIGMS:
+        if entry["Construction"] in set_1:
+            if entry["Function"] not in set_1[entry["Construction"]].keys():
+                set_1[entry["Construction"]][entry["Function"]] = [entry["Morpheme"]]
+            else:
+                set_1[entry["Construction"]][entry["Function"]].append(entry["Morpheme"])
+    lang_clauses = {}
+    for clause in set_1:
+        cons = DBSession.query(Construction).filter(Construction.id == clause)[0]
+        lang_clauses[cons.language.id] = set_1[clause]
+    lang_clauses["kax"] = {
+        "3>1+2": [["k-"]],
+        "1>2": [["k-"]],
+        "2>1": [["k-"]],
+        "1>3": [["w-"]],
+        "1+2>3": [["k(ɨt)-"]]
+    }
+    lang_clauses["bak"] = {
+        "3>1+2": [["k-"]],
+        "1>2": [["ə-"]],
+        "2>1": [["j-"]],
+        "1>3": [["s-"]],
+        "1+2>3": [["kɨd-"]]
+    }
+    lang_clauses["yuk"] = {
+        "3>1+2": [["ɨp", "n-"]],
+        "1>2": [["aw", "oj-"]],
+        "2>1": [["am", "j-"]],
+        "1>3": [["Ø-"]],
+        "1+2>3": [["ɨp", "Ø-"]]
+    }
+    lang_clauses["aku"] = {
+        "3>1+2": [["k-"]],
+        "1>2": [["k-"]],
+        "2>1": [["k-"]],
+        "1>3": [["w-"]],
+        "1+2>3": [["kɨt-"]]
+    }
+    lang_clauses["cum"] = {
+        "1>2": [["kaj-"], ["kən-"], ["k-"]],
+        "2>1": [["kaj-"], ["k-"]],
+        "1>3": [["w-"], ["i-"]],
+    }
+    lang_clauses["tam"] = {
+        "3>1+2": ["?"],
+        "1>2": ["?"],
+        "2>1": ["?"],
+        "1>3": [["t-"]],
+        "1+2>3": [["kɨt͡ʃ-"]]
+    }
+    lang_clauses["car"] = {
+        "3>1+2": [["k-"]],
+        "1>2": [["k-"]],
+        "2>1": [["k-"]],
+        "1>3": [["i-"]],
+        "1+2>3": [["kɨt-"]]
+    }
+    lang_clauses["pem"] = {
+        "1>3": "s-",
+        "1>2": ["?"],
+        "2>1": ["?"],
+    }
+    print(lang_clauses)
+    my_tree = Phylo.read("../../trees/%s.newick" % tree_name, "newick")
+    for node in my_tree.find_clades():
+        if node.name == None:
+            continue
+        if node.is_terminal():
+            node.name = node.name.replace("?","")
+            new_name = "lg:" + node.name
+        else:
+            new_name = node.name
+        if node.name in lang_clauses.keys():
+            if scenario in lang_clauses[node.name].keys():
+                all_morphs = []
+                for morpheme_combo in lang_clauses[node.name][scenario]:
+                    this_morph = []
+                    for morpheme in morpheme_combo:
+                        if DBSession.query(Morpheme).filter(Morpheme.id == morpheme).count() >= 1:
+                            if not reconstructed or DBSession.query(Morpheme).filter(Morpheme.id == morpheme)[0].counterparts[0].valueset.parameter.id == "NA":
+                                this_morph.append("morph:" + morpheme)#data["Morpheme"][morpheme].name + " "
+                            else:
+                                # print()
+                                for counterpart in DBSession.query(Morpheme).filter(Morpheme.id == morpheme)[0].counterparts:
+                                    this_morph.append("cogset:" + counterpart.valueset.parameter.id)
+                        else:
+                            this_morph.append("obj:" + morpheme)
+                    all_morphs.append("£".join(this_morph))
+            else:
+                all_morphs = ["-"]
+        else:
+            all_morphs = ["-"]
+        node.name = new_name + " " + " OR ".join(all_morphs)
+        node.name = generate_markup(node.name)
+    print(get_clade_as_json(my_tree.clade))
+    return get_clade_as_json(my_tree.clade)

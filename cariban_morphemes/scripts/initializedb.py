@@ -19,7 +19,7 @@ import json
 #to edit tree labels
 from Bio import Phylo
 import io
-         
+
 #This contains lists of:
 # morphemes
 # Cariban languages
@@ -51,7 +51,7 @@ f = open("LANG_ABBREV_DIC.json","w")
 f.write(json_file)
 f.close()
 from cariban_morphemes import util
-
+    
 #This returns a author-year style reference from the bibtex file.
 def get_source_name(source):
     year = source.get('year', 'nd')
@@ -124,7 +124,7 @@ def main(args):
 
     i = 0
     for row in cariban_data["LanguageTable"]:
-        if row["Sampled"] == "y":# or row["Dialect_Of"] == None:
+        if row["Sampled"] == "y" or row["Dialect_Of"] == None:
             i += 1
             print("%s/%s" % (i, lg_count), end="\r")        
             language = data.add(
@@ -154,9 +154,9 @@ def main(args):
             bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
     print("")
-    
+
     DBSession.flush()
-    print("Adding language sources…")    
+    print("Adding language sources…")
     mapreader = csv.DictReader(open("../../raw examples/lit_lang_mappings.csv"))
     for row in mapreader:
         DBSession.add(
@@ -165,30 +165,30 @@ def main(args):
                 source_pk=data["Source"][row["Source"]].pk
             )
         )
-    
+
     print("Adding glossing abbreviations…")
     length = len(pynterlinear.get_all_abbrevs().keys())
     for i, (key, name) in enumerate(pynterlinear.get_all_abbrevs().items()):
         print("%s/%s" % (i+1, length), end="\r")
         DBSession.add(common.GlossAbbreviation(id=key, name=name))
-    print("")    
-    
+    print("")
+
     print("Adding examples…")
     gloss_replacements = {
         "S_A_": "Sa",
         "S_P_": "Sp"
-    }            
+    }
     def clldify_glosses(gloss_line):
         output = gloss_line
         for orig, new in gloss_replacements.items():
             output = output.replace(orig,new)
         output = re.sub(r"(\d)([A-Z])", r"\1.\2", output)
         return output
-    
+
     ex_cnt = 0
     for row in cariban_data["ExampleTable"]:
         ex_cnt+=1
-        
+
     for i, row in enumerate(cariban_data["ExampleTable"]):
         print("%s/%s" % (i+1, ex_cnt), end="\r")
         new_ex = data.add(common.Sentence,
@@ -207,7 +207,7 @@ def main(args):
             if len(row["Source"].split("[")) > 1:
                 pages = row["Source"].split("[")[1].split("]")[0]
             else:
-                pages = ""    
+                pages = ""
             if bib_key in data["Source"]:
                 source = data["Source"][bib_key]
                 DBSession.add(common.SentenceReference(
@@ -370,7 +370,7 @@ def main(args):
                 unitvalue=data["MorphemeFunction"][morph_function_id],
                 )
     print("")
-                
+
     # see how many morpheme functions are illustrated with example sentences
     good_ill = [key for key, value in is_illustrated.items() if value]
     not_ill = [key for key, value in is_illustrated.items() if not value]
@@ -431,6 +431,7 @@ def main(args):
                 my_valueset = data["ValueSet"][lang_valueset]
             my_value = data.add(models.Counterpart,
                 cognate_ID+":"+row["ID"],
+                id = cognate_ID+":"+row["ID"],
                 valueset=my_valueset,
                 name=row["Form"][0],
                 description=row["Form"][0],
@@ -444,7 +445,7 @@ def main(args):
         print("%s/%s" % (i+1, morph_cnt), end="\r")
         data["Morpheme"][row["ID"]].markup_description=util.generate_markup(row["Comment"])
     print("")
-    
+
     print("Adding constructions descriptions…")
     for i, row in enumerate(construction_data["FormTable"]):
         print("%s/%s" % (i+1, cons_cnt), end="\r")
@@ -456,7 +457,7 @@ def main(args):
         description += util.generate_markup(util.intransitive_construction_paradigm(row["ID"]))
         data["Construction"][row["ID"]].markup_description = description
     print("")
-    
+
     print("Adding cognate set descriptions…")
     for i, row in enumerate(cariban_data["CognatesetTable"]):
         print("%s/%s" % (i+1, cogset_cnt), end="\r")
@@ -468,7 +469,7 @@ def main(args):
                     "1+3 scenarios",
                     ["1+3S", "1+3>3", "3>1+3", "2>1+3", "1+3>2"]))
     print("")
-    
+
     print("Adding trees…")
     tree_path = "../../trees"
     newick_files = {}
@@ -544,7 +545,7 @@ def main(args):
         DBSession.add(norm_phylo)
         DBSession.add(orig_phylo)
     print("")
-    
+
     print("Adding pages…")
     data.add(models.Page,
                     "1+3",
@@ -552,14 +553,27 @@ def main(args):
                     name="Person marking in 1+3 scenarios",
                     description="this page discusses person marking in 1+3 scenarios, something missing from many descriptions of Cariban languages.",
             )
-    
+
     data.add(models.Page,
                     "pre_pc",
                     id="pre_pc",
                     name="Reconstruction of pre-Proto-Cariban person marking",
                     description="Speculative exploration of what developments might have led to the reconstructed PC person paradigms.",
             )
-                    
+
+    data.add(models.Page,
+                    "set_1",
+                    id="set_1",
+                    name="Comparison of Set I constructions",
+                    description="",
+            )
+    data.add(models.Page,
+                    "phylo_test",
+                    id="phylo_test",
+                    name="phylo_test",
+                    description="",
+            )
+        
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
     This procedure should be separate from the db initialization, because

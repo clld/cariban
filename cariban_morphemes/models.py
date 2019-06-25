@@ -67,7 +67,7 @@ class Counterpart(CustomModelMixin, Value):
     pk = Column(Integer, ForeignKey('value.pk'), primary_key=True)
     morpheme_pk = Column(Integer, ForeignKey('morpheme.pk'))
     morpheme = relationship(Morpheme, backref='counterparts')
-
+    
 @implementer(IPage)
 class Page(Base, IdNameDescriptionMixin):
     pk = Column(Integer, primary_key=True)
