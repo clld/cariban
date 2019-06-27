@@ -11,3 +11,4 @@ selenium
 zope.component>=3.11.0
 clld-phylogeny-plugin
 markdown
+biopython
