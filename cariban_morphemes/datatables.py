@@ -56,7 +56,7 @@ class Meanings(Unitparameters):
         return [
             LinkCol(self, 'Gloss'),
         ]
-        
+
 class Morphemes(Units):
 
     def col_defs(self):

@@ -45,9 +45,14 @@ for row in cariban_data["LanguageTable"]:
         LANG_ABBREV_DIC[row["Shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
     if row["Dialect_Of"] is None:
         LANG_CODE_DIC[row["ID"]] = {"shorthand": row["Shorthand"], "name": row["Name"]}
-#Save to json to make the dic available to util.py
+#Save to json to make the dics available to util.py
 json_file = json.dumps(LANG_ABBREV_DIC)
-f = open("LANG_ABBREV_DIC.json","w")
+f = open("lang_code_dic.json","w")
+f.write(json_file)
+f.close()
+
+json_file = json.dumps(LANG_CODE_DIC)
+f = open("lang_code_dic.json","w")
 f.write(json_file)
 f.close()
 from cariban_morphemes import util
@@ -124,7 +129,7 @@ def main(args):
 
     i = 0
     for row in cariban_data["LanguageTable"]:
-        if row["Sampled"] == "y" or row["Dialect_Of"] == None:
+        if row["Sampled"] == "y":# or row["Dialect_Of"] == None:
             i += 1
             print("%s/%s" % (i, lg_count), end="\r")        
             language = data.add(
@@ -173,50 +178,50 @@ def main(args):
         DBSession.add(common.GlossAbbreviation(id=key, name=name))
     print("")
 
-    print("Adding examples…")
-    gloss_replacements = {
-        "S_A_": "Sa",
-        "S_P_": "Sp"
-    }
-    def clldify_glosses(gloss_line):
-        output = gloss_line
-        for orig, new in gloss_replacements.items():
-            output = output.replace(orig,new)
-        output = re.sub(r"(\d)([A-Z])", r"\1.\2", output)
-        return output
-
-    ex_cnt = 0
-    for row in cariban_data["ExampleTable"]:
-        ex_cnt+=1
-
-    for i, row in enumerate(cariban_data["ExampleTable"]):
-        print("%s/%s" % (i+1, ex_cnt), end="\r")
-        new_ex = data.add(common.Sentence,
-        row["ID"],
-        id=row["ID"],
-        name=row["Name"],
-        description=row["Translated_Text"],
-        analyzed="\t".join(row["Analyzed_Word"]),
-        gloss=clldify_glosses("\t".join(row["Gloss"])),
-        language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
-        comment=row["Comment"],
-        markup_gloss="\t".join(row["Morpheme_IDs"])
-        )
-        if row["Source"]:
-            bib_key = row["Source"].split("[")[0]
-            if len(row["Source"].split("[")) > 1:
-                pages = row["Source"].split("[")[1].split("]")[0]
-            else:
-                pages = ""
-            if bib_key in data["Source"]:
-                source = data["Source"][bib_key]
-                DBSession.add(common.SentenceReference(
-                    sentence=new_ex,
-                    source=source,
-                    key=source.id,
-                    description=pages.replace("--","–"))
-                    )
-    print("")
+    # print("Adding examples…")
+    # gloss_replacements = {
+    #     "S_A_": "Sa",
+    #     "S_P_": "Sp"
+    # }
+    # def clldify_glosses(gloss_line):
+    #     output = gloss_line
+    #     for orig, new in gloss_replacements.items():
+    #         output = output.replace(orig,new)
+    #     output = re.sub(r"(\d)([A-Z])", r"\1.\2", output)
+    #     return output
+    #
+    # ex_cnt = 0
+    # for row in cariban_data["ExampleTable"]:
+    #     ex_cnt+=1
+    #
+    # for i, row in enumerate(cariban_data["ExampleTable"]):
+    #     print("%s/%s" % (i+1, ex_cnt), end="\r")
+    #     new_ex = data.add(common.Sentence,
+    #     row["ID"],
+    #     id=row["ID"],
+    #     name=row["Name"],
+    #     description=row["Translated_Text"],
+    #     analyzed="\t".join(row["Analyzed_Word"]),
+    #     gloss=clldify_glosses("\t".join(row["Gloss"])),
+    #     language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+    #     comment=row["Comment"],
+    #     markup_gloss="\t".join(row["Morpheme_IDs"])
+    #     )
+    #     if row["Source"]:
+    #         bib_key = row["Source"].split("[")[0]
+    #         if len(row["Source"].split("[")) > 1:
+    #             pages = row["Source"].split("[")[1].split("]")[0]
+    #         else:
+    #             pages = ""
+    #         if bib_key in data["Source"]:
+    #             source = data["Source"][bib_key]
+    #             DBSession.add(common.SentenceReference(
+    #                 sentence=new_ex,
+    #                 source=source,
+    #                 key=source.id,
+    #                 description=pages.replace("--","–"))
+    #                 )
+    # print("")
     
     print("Adding morphemes…")
     morph_cnt=0
@@ -329,58 +334,58 @@ def main(args):
                                 construction=data["Construction"][construction]
                             )
     
-    print("Checking examples for illustrated morphemes…")
-    proto_languages = ["pc"]
-    is_illustrated = {}
-    for key, row in data["MorphemeFunction"].items():
-        if row.unit.language.id in proto_languages:
-            continue
-        is_illustrated["%s:%s" % (row.unit.id, row.unitparameter.id)] = False
-    for i, row in enumerate(cariban_data["ExampleTable"]):
-        print("%s/%s" % (i+1, ex_cnt), end="\r")
-        # see what morphemes this example illustrates; separated by "; "
-        for word in row["Morpheme_IDs"]:
-            morph_ids = util.split_word(word)
-            for unit_value in morph_ids:
-                if unit_value in ["X","-","="]:
-                    continue
-                unitvaluesentence_key = "{0}-{1}".format(unit_value.replace(".","-"),row["ID"])
-                if unitvaluesentence_key in data["UnitValueSentence"].keys():
-                    continue
-                is_illustrated[unit_value] = True
-                morph_id = unit_value.split(":")[0]
-                if morph_id not in data["Morpheme"].keys():
-                    print("Warning: Example %s illustrates unknown morpheme %s" % (row["ID"], morph_id))
-                elif data["Morpheme"][morph_id].language != data["Sentence"][row["ID"]].language:
-                    print("Warning: The %s example %s claims to contain the %s morpheme %s." % (
-                        data["Sentence"][row["ID"]].language,
-                        row["ID"],
-                        data["Morpheme"][morph_id].language,
-                        data["Morpheme"][morph_id]
-                    )
-                    )
-                function = unit_value.split(":")[1]
-                morph_function_id = "%s:%s" % (morph_id, function)
-                if morph_function_id not in data["MorphemeFunction"].keys():
-                    print("Warning: Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
-                    continue
-                data.add(models.UnitValueSentence,
-                unitvaluesentence_key,
-                sentence=data["Sentence"][row["ID"]],
-                unitvalue=data["MorphemeFunction"][morph_function_id],
-                )
-    print("")
-
-    # see how many morpheme functions are illustrated with example sentences
-    good_ill = [key for key, value in is_illustrated.items() if value]
-    not_ill = [key for key, value in is_illustrated.items() if not value]
-    not_ill.sort()
-    cov = len(good_ill)/len(is_illustrated)*100
-    print("Morpheme exemplification coverage is at %s%%. List of unillustrated morphemes saved to unillustrated_morphemes.txt" % str(round(cov, 2)))
-    f = open("../unillustrated_morphemes.txt", "w")
-    for morph in not_ill:
-        f.write(morph+"\n")
-    f.close()
+    # print("Checking examples for illustrated morphemes…")
+    # proto_languages = ["pc"]
+    # is_illustrated = {}
+    # for key, row in data["MorphemeFunction"].items():
+    #     if row.unit.language.id in proto_languages:
+    #         continue
+    #     is_illustrated["%s:%s" % (row.unit.id, row.unitparameter.id)] = False
+    # for i, row in enumerate(cariban_data["ExampleTable"]):
+    #     print("%s/%s" % (i+1, ex_cnt), end="\r")
+    #     # see what morphemes this example illustrates; separated by "; "
+    #     for word in row["Morpheme_IDs"]:
+    #         morph_ids = util.split_word(word)
+    #         for unit_value in morph_ids:
+    #             if unit_value in ["X","-","="]:
+    #                 continue
+    #             unitvaluesentence_key = "{0}-{1}".format(unit_value.replace(".","-"),row["ID"])
+    #             if unitvaluesentence_key in data["UnitValueSentence"].keys():
+    #                 continue
+    #             is_illustrated[unit_value] = True
+    #             morph_id = unit_value.split(":")[0]
+    #             if morph_id not in data["Morpheme"].keys():
+    #                 print("Warning: Example %s illustrates unknown morpheme %s" % (row["ID"], morph_id))
+    #             elif data["Morpheme"][morph_id].language != data["Sentence"][row["ID"]].language:
+    #                 print("Warning: The %s example %s claims to contain the %s morpheme %s." % (
+    #                     data["Sentence"][row["ID"]].language,
+    #                     row["ID"],
+    #                     data["Morpheme"][morph_id].language,
+    #                     data["Morpheme"][morph_id]
+    #                 )
+    #                 )
+    #             function = unit_value.split(":")[1]
+    #             morph_function_id = "%s:%s" % (morph_id, function)
+    #             if morph_function_id not in data["MorphemeFunction"].keys():
+    #                 print("Warning: Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
+    #                 continue
+    #             data.add(models.UnitValueSentence,
+    #             unitvaluesentence_key,
+    #             sentence=data["Sentence"][row["ID"]],
+    #             unitvalue=data["MorphemeFunction"][morph_function_id],
+    #             )
+    # print("")
+    #
+    # # see how many morpheme functions are illustrated with example sentences
+    # good_ill = [key for key, value in is_illustrated.items() if value]
+    # not_ill = [key for key, value in is_illustrated.items() if not value]
+    # not_ill.sort()
+    # cov = len(good_ill)/len(is_illustrated)*100
+    # print("Morpheme exemplification coverage is at %s%%. List of unillustrated morphemes saved to unillustrated_morphemes.txt" % str(round(cov, 2)))
+    # f = open("../unillustrated_morphemes.txt", "w")
+    # for morph in not_ill:
+    #     f.write(morph+"\n")
+    # f.close()
     
     cogset_cnt = 0
     for row in cariban_data["CognatesetTable"]:
@@ -411,10 +416,8 @@ def main(args):
     print("")
     
     print("Adding cognates…")
-    shortcut_cognates = {}
     for i, row in enumerate(cariban_data["FormTable"]):
         print("%s/%s" % (i+1, morph_cnt), end="\r")
-        shortcut_cognates[row["ID"]] = row["Cognateset_ID"]
         #Go through all cognatesets of which this morpheme is a part
         for cognate_ID in row["Cognateset_ID"]:
             lang_valueset = "%s_%s" % (row["Language_ID"], cognate_ID)
@@ -440,111 +443,111 @@ def main(args):
             )
     print("")
     
-    print("Adding morpheme comments…")
-    for i, row in enumerate(cariban_data["FormTable"]):
-        print("%s/%s" % (i+1, morph_cnt), end="\r")
-        data["Morpheme"][row["ID"]].markup_description=util.generate_markup(row["Comment"])
-    print("")
-
-    print("Adding constructions descriptions…")
-    for i, row in enumerate(construction_data["FormTable"]):
-        print("%s/%s" % (i+1, cons_cnt), end="\r")
-        if row["Comment"] is None:
-            description = ""
-        else:
-            description = util.generate_markup(row["Comment"])
-        description += "\n" + util.generate_markup(util.transitive_construction_paradigm(row["ID"]))
-        description += util.generate_markup(util.intransitive_construction_paradigm(row["ID"]))
-        data["Construction"][row["ID"]].markup_description = description
-    print("")
-
-    print("Adding cognate set descriptions…")
-    for i, row in enumerate(cariban_data["CognatesetTable"]):
-        print("%s/%s" % (i+1, cogset_cnt), end="\r")
-        data["CognateSet"][row["ID"]].markup_description = markup_description=util.generate_markup(row["Description"])
-        if row["ID"] == "13pro":
-            data["CognateSet"][row["ID"]].markup_description += util.generate_markup(
-                util.comparative_function_paradigm(
-                    ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_old"],
-                    "1+3 scenarios",
-                    ["1+3S", "1+3>3", "3>1+3", "2>1+3", "1+3>2"]))
-    print("")
-
-    print("Adding trees…")
-    tree_path = "../../trees"
-    newick_files = {}
-    tree_reader = csv.DictReader(open("../cariban_trees.csv"))
-    tree_cnt = 0
-    for row in tree_reader:
-        tree_cnt += 1
-        newick_files[row["ID"]] = {
-            "orig": row["ID"]+"_orig.newick",
-            "norm": row["ID"]+"_norm.newick",
-            "source": row["Source"],
-            "comment": row["Comment"],
-            "o_comment": row["Orig_Comment"]
-        }
-    c = 1
-    for tree_id, values in newick_files.items():
-        print("%s/%s" % (c, tree_cnt), end="\r")
-        c += 1
-        norm_biotree = Phylo.read(tree_path+"/"+values["norm"], "newick")
-        orig_biotree = Phylo.read(tree_path+"/"+values["orig"], "newick")
-        uncertain_nodes = []
-        for node in norm_biotree.find_clades():
-            if node.name == None:
-                continue
-            plain_name = node.name.replace("?","")
-            if "?" in node.name: uncertain_nodes.append(plain_name)
-            if plain_name in LANG_CODE_DIC.keys():
-                node.name = LANG_CODE_DIC[plain_name]["name"]
-            else:
-                print("Warning: Normalized tree %s has unknown languages %s." % (tree_id, plain_name))
-            if plain_name in uncertain_nodes: node.name += "?"
-        edited_tree = io.StringIO()
-        Phylo.write(norm_biotree, edited_tree, "newick")
-        tree = edited_tree.getvalue().replace(":0.00000","")
-        edited_tree = io.StringIO()
-        Phylo.write(orig_biotree, edited_tree, "newick")
-        orig_tree = edited_tree.getvalue().replace(":0.00000","")
-        norm_phylo = Phylogeny(
-                id=tree_id+"_norm",
-                name=str(data["Source"][values["source"]]) + " (Normalized)",
-                markup_description=util.generate_markup("Source: src:"+values["source"])+
-                "<br>This is a normalized version of <a href='/phylogeny/%s_orig'>this original tree</a>." % tree_id +
-                util.generate_markup(
-                    "<br>Comments: %s" % values["comment"]
-                ),
-                newick=tree
-        )
-        orig_phylo = Phylogeny(
-                id=tree_id+"_orig",
-                name=str(data["Source"][values["source"]]) + " (Original)",
-                markup_description=util.generate_markup("Source: src:"+values["source"])+
-                    "<br>This is a representation of the original classification. A normalized version can be found <a href='/phylogeny/%s_norm'>here</a>." % tree_id +
-                    util.generate_markup(
-                    "<br>Comments: %s" % values["comment"] +
-                    " " + values["o_comment"]
-                    ),
-                newick=orig_tree
-        )
-        for l in DBSession.query(common.Language):
-            if l.id in dialect_mapping.keys():
-                lname = LANG_CODE_DIC[dialect_mapping[l.id]]["name"]
-            else:
-                lname = l.name
-            if l.id in uncertain_nodes: lname += "?"
-            new_label = LanguageTreeLabel(
-                language=l,
-                treelabel=TreeLabel(
-                    id="%s_%s" % (tree_id, l.id),
-                    name=lname,
-                    phylogeny=norm_phylo
-                )
-            )
-        DBSession.add(norm_phylo)
-        DBSession.add(orig_phylo)
-    print("")
+    # print("Adding morpheme comments…")
+    # for i, row in enumerate(cariban_data["FormTable"]):
+    #     print("%s/%s" % (i+1, morph_cnt), end="\r")
+    #     data["Morpheme"][row["ID"]].markup_description=util.generate_markup(row["Comment"])
+    # print("")
+    #
+    # print("Adding constructions descriptions…")
+    # for i, row in enumerate(construction_data["FormTable"]):
+    #     print("%s/%s" % (i+1, cons_cnt), end="\r")
+    #     if row["Comment"] is None:
+    #         description = ""
+    #     else:
+    #         description = util.generate_markup(row["Comment"])
+    #     description += "\n" + util.generate_markup(util.transitive_construction_paradigm(row["ID"]))
+    #     description += util.generate_markup(util.intransitive_construction_paradigm(row["ID"]))
+    #     data["Construction"][row["ID"]].markup_description = description
+    # print("")
+    #
+    # print("Adding cognate set descriptions…")
+    # for i, row in enumerate(cariban_data["CognatesetTable"]):
+    #     print("%s/%s" % (i+1, cogset_cnt), end="\r")
+    #     data["CognateSet"][row["ID"]].markup_description = markup_description=util.generate_markup(row["Description"])
+    #     if row["ID"] == "13pro":
+    #         data["CognateSet"][row["ID"]].markup_description += util.generate_markup(
+    #             util.comparative_function_paradigm(
+    #                 ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_old"],
+    #                 "1+3 scenarios",
+    #                 ["1+3S", "1+3>3", "3>1+3", "2>1+3", "1+3>2"]))
+    # print("")
+    #
+    # print("Adding trees…")
+    # tree_path = "../../trees"
+    # newick_files = {}
+    # tree_reader = csv.DictReader(open("../cariban_trees.csv"))
+    # tree_cnt = 0
+    # for row in tree_reader:
+    #     tree_cnt += 1
+    #     newick_files[row["ID"]] = {
+    #         "orig": row["ID"]+"_orig.newick",
+    #         "norm": row["ID"]+"_norm.newick",
+    #         "source": row["Source"],
+    #         "comment": row["Comment"],
+    #         "o_comment": row["Orig_Comment"]
+    #     }
+    # c = 1
+    # for tree_id, values in newick_files.items():
+    #     print("%s/%s" % (c, tree_cnt), end="\r")
+    #     c += 1
+    #     norm_biotree = Phylo.read(tree_path+"/"+values["norm"], "newick")
+    #     orig_biotree = Phylo.read(tree_path+"/"+values["orig"], "newick")
+    #     uncertain_nodes = []
+    #     for node in norm_biotree.find_clades():
+    #         if node.name == None:
+    #             continue
+    #         plain_name = node.name.replace("?","")
+    #         if "?" in node.name: uncertain_nodes.append(plain_name)
+    #         if plain_name in LANG_CODE_DIC.keys():
+    #             node.name = LANG_CODE_DIC[plain_name]["name"]
+    #         else:
+    #             print("Warning: Normalized tree %s has unknown languages %s." % (tree_id, plain_name))
+    #         if plain_name in uncertain_nodes: node.name += "?"
+    #     edited_tree = io.StringIO()
+    #     Phylo.write(norm_biotree, edited_tree, "newick")
+    #     tree = edited_tree.getvalue().replace(":0.00000","")
+    #     edited_tree = io.StringIO()
+    #     Phylo.write(orig_biotree, edited_tree, "newick")
+    #     orig_tree = edited_tree.getvalue().replace(":0.00000","")
+    #     norm_phylo = Phylogeny(
+    #             id=tree_id+"_norm",
+    #             name=str(data["Source"][values["source"]]) + " (Normalized)",
+    #             markup_description=util.generate_markup("Source: src:"+values["source"])+
+    #             "<br>This is a normalized version of <a href='/phylogeny/%s_orig'>this original tree</a>." % tree_id +
+    #             util.generate_markup(
+    #                 "<br>Comments: %s" % values["comment"]
+    #             ),
+    #             newick=tree
+    #     )
+    #     orig_phylo = Phylogeny(
+    #             id=tree_id+"_orig",
+    #             name=str(data["Source"][values["source"]]) + " (Original)",
+    #             markup_description=util.generate_markup("Source: src:"+values["source"])+
+    #                 "<br>This is a representation of the original classification. A normalized version can be found <a href='/phylogeny/%s_norm'>here</a>." % tree_id +
+    #                 util.generate_markup(
+    #                 "<br>Comments: %s" % values["comment"] +
+    #                 " " + values["o_comment"]
+    #                 ),
+    #             newick=orig_tree
+    #     )
+    #     for l in DBSession.query(common.Language):
+    #         if l.id in dialect_mapping.keys():
+    #             lname = LANG_CODE_DIC[dialect_mapping[l.id]]["name"]
+    #         else:
+    #             lname = l.name
+    #         if l.id in uncertain_nodes: lname += "?"
+    #         new_label = LanguageTreeLabel(
+    #             language=l,
+    #             treelabel=TreeLabel(
+    #                 id="%s_%s" % (tree_id, l.id),
+    #                 name=lname,
+    #                 phylogeny=norm_phylo
+    #             )
+    #         )
+    #     DBSession.add(norm_phylo)
+    #     DBSession.add(orig_phylo)
+    # print("")
 
     print("Adding pages…")
     data.add(models.Page,
@@ -573,7 +576,98 @@ def main(args):
                     name="phylo_test",
                     description="",
             )
-        
+    
+    print("Adding t-adding verb cognate sets…")
+    t_reader = csv.DictReader(open("../cariban_t_cognates.csv"))
+    for row in t_reader:
+        cognate_id = "t"+row["ID"]
+        t_cogset = data.add(models.CognateSet,
+            cognate_id,
+            id=cognate_id,
+            name="*"+row["Form"],
+            description="t-adding verb: ‘%s’" % row["Meaning"]
+        )
+        if row["Source"]:
+            bib_key = row["Source"].split("[")[0]
+            if len(row["Source"].split("[")) > 1:
+                pages = row["Source"].split("[")[1].split("]")[0]
+            else:
+                pages = " "
+            if bib_key in data["Source"]:
+                source = data["Source"][bib_key]
+                DBSession.add(models.CognatesetReference(
+                    cognateset=t_cogset,
+                    source=source,
+                    key=source.id,
+                    description=pages)
+                    )
+            
+    print("Adding t-adding verbs…")
+    t_langs = []
+    data.add(models.Meaning,
+        "t_verb",
+        id="t-verb",
+        name="t-adding verb"
+    )
+    t_reader = csv.DictReader(open("../cariban_t_verbs.csv"))
+    for row in t_reader:
+        if row["Language_ID"] == "cari1283": continue
+        cognate_id = "t"+row["Cognateset_ID"]
+        if LANG_DIC[row["Language_ID"]]["ID"]+"_"+cognate_id in data["Morpheme"].keys():
+            print("double t-verb %s!" % LANG_DIC[row["Language_ID"]]["ID"]+"_"+cognate_id)
+        morph_id = LANG_DIC[row["Language_ID"]]["ID"]+"_"+cognate_id
+        if morph_id in data["Morpheme"].keys():
+            morph_id += "_2"
+        t_verb = data.add(models.Morpheme,
+            morph_id,
+            id=morph_id,
+            name=row["Form"],
+            language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+            description="whatevz",
+        )
+        if row["t?"] == "y" and LANG_DIC[row["Language_ID"]]["ID"] not in t_langs and row["Cognateset_ID"] != "10":
+            t_langs.append(LANG_DIC[row["Language_ID"]]["ID"])
+        if row["Source"]:
+            bib_key = row["Source"].split("[")[0]
+            if len(row["Source"].split("[")) > 1:
+                pages = row["Source"].split("[")[1].split("]")[0]
+            else:
+                pages = " "    
+            if bib_key in data["Source"]:
+                source = data["Source"][bib_key]
+                DBSession.add(models.MorphemeReference(
+                    morpheme=t_verb,
+                    source=source,
+                    key=source.id,
+                    description=pages.replace("--","–")
+                    )
+                )
+        data.add(models.MorphemeFunction,
+            "t_"+row["ID"],
+            id="t_"+row["ID"],
+            name="t-Verb %s" % row["Meaning"],
+            unit=t_verb,
+            unitparameter=data["Meaning"]["t_verb"],
+            construction=None
+        )
+        lang_valueset = "t_"+row["Cognateset_ID"] + "_" + row["Language_ID"]
+        if lang_valueset in data["ValueSet"].keys():
+            lang_valueset += "_2"
+        my_valueset = data.add(common.ValueSet,
+            lang_valueset,
+            id=lang_valueset,
+            language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+            parameter=data["CognateSet"][cognate_id],
+        )
+        my_value = data.add(models.Counterpart,
+            cognate_id+":"+row["ID"],
+            id = cognate_id+":"+row["ID"],
+            name=row["Form"],
+            valueset=my_valueset,
+            morpheme=t_verb
+        )
+    print(t_langs)
+            
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
     This procedure should be separate from the db initialization, because

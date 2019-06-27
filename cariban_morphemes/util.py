@@ -25,11 +25,18 @@ from clld.db.models import Language, Source, Sentence
 import cariban_morphemes.models as cariban_models
 from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
 
-from cariban_morphemes.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS
+from cariban_morphemes.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS, LANG_CODE_DIC
+language_names = {}
+for key, values in LANG_CODE_DIC.items():
+    language_names[values["shorthand"]] = values["name"]
+sampled_languages = {}
+for key, values in LANG_ABBREV_DIC.items():
+    sampled_languages[values["ID"]] = values["name"]
 from collections import OrderedDict
 from clld.web.util.multiselect import CombinationMultiSelect
 import json
 from Bio import Phylo
+import csv
 
 def xify(text):
     ids = []
@@ -184,6 +191,12 @@ def generate_markup(non_f_str: str):
     def lang_lk(shorthand):
         if shorthand in LANG_ABBREV_DIC.keys():
             return "<a href='/languages/%s'>%s</a>" % (LANG_ABBREV_DIC[shorthand]["ID"], LANG_ABBREV_DIC[shorthand]["name"])
+        elif shorthand in sampled_languages.keys():
+            return "<a href='/languages/%s'>%s</a>" % (shorthand, sampled_languages[shorthand])
+        elif shorthand in language_names.keys():
+            return language_names[shorthand]
+        elif shorthand in LANG_CODE_DIC.keys():
+            return LANG_CODE_DIC[shorthand]["name"]
         else:
             language = DBSession.query(Language).filter(Language.id == shorthand)[0]
             return "<a href='/languages/%s'>%s</a>" % (shorthand, language.name)            
@@ -455,6 +468,22 @@ def get_clade_as_json(clade):
         for node in clade:
             json_clade["children"].append(get_clade_as_json(node))
     return json_clade
+
+def get_tree(request, values, tree_name):
+    my_tree = Phylo.read("../../trees/%s.newick" % tree_name, "newick")
+    for node in my_tree.find_clades():
+        if node.name == None:
+            continue
+        if node.is_terminal():
+            node.name = node.name.replace("?","")
+            new_name = "lg:" + node.name
+        else:
+            new_name = node.name
+        if node.name in values.keys():
+            new_name += ": " + h.link(request, values[node.name])
+        node.name = new_name
+        node.name = generate_markup(node.name)
+    return get_clade_as_json(my_tree.clade)
     
 def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
     set_1 = {}
@@ -522,7 +551,25 @@ def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
         "1>2": ["?"],
         "2>1": ["?"],
     }
-    print(lang_clauses)
+    # output = []
+    # for lg, values in lang_clauses.items():
+    #     for scenario, morph_list in values.items():
+    #         for morph_combo in morph_list:
+    #             cogsets = []
+    #             for morpheme in morph_combo:
+    #                 cogset = []
+    #                 if DBSession.query(Morpheme).filter(Morpheme.id == morpheme).count() >= 1:
+    #                     for counterpart in DBSession.query(Morpheme).filter(Morpheme.id == morpheme)[0].counterparts:
+    #                         cogset.append(counterpart.valueset.parameter.id)
+    #                 cogsets.append(":".join(cogset))
+    #             if len(cogsets[0]) > 0:
+    #                 output.append([lg,scenario,":".join(cogsets)])
+    # with open("../../main_clause_markers.csv", 'w+', newline='') as myfile:
+    #      wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+    #      wr.writerow(["Language_ID", "Feature_ID", "Value"])
+    #      for entry in output:
+    #          wr.writerow(entry)
+                
     my_tree = Phylo.read("../../trees/%s.newick" % tree_name, "newick")
     for node in my_tree.find_clades():
         if node.name == None:
@@ -554,5 +601,4 @@ def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
             all_morphs = ["-"]
         node.name = new_name + " " + " OR ".join(all_morphs)
         node.name = generate_markup(node.name)
-    print(get_clade_as_json(my_tree.clade))
     return get_clade_as_json(my_tree.clade)

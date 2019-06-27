@@ -9,12 +9,11 @@ from pyramid.httpexceptions import HTTPFound
 # from cariban_morphemes.interfaces import IMorpheme
 from cariban_morphemes import models
 from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage
+from clld.interfaces import IUnit
 
 _ = lambda s: s
 _('Parameter')
 _('Parameters')
-_('Unit')
-_('Units')
 _('Unitparameter')
 _('Unitparameters')
 _('Sentence')
