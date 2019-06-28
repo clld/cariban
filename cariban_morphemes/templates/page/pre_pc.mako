@@ -1,4 +1,4 @@
-<% import markdown %>
+<% import markdown, json %>
 <p>
 ${h.Markup(u.generate_markup("""
 src:meira2010origin[489] suggest this new reconstruction of lg:pc person marking:
@@ -64,3 +64,48 @@ ${h.text2html(u.generate_markup(
                     "1+3 scenarios",
                     ["1>2", "2>1", "3>1+2"])))}
 </p>
+
+${h.Markup(u.generate_markup("""
+Interestingly, two languages not in my sample, lg:bakairi and lg:yukpa show reflexes of cogset:1p and cogset:2p in 2>1 and 1>2 constructions -- exactly what one would have expected based on the spread of cogset:12 from 3>1+2 to these scenarios, and the potential strict P-marking (possessor-marking) nature of pre-lg:pc verbs.
+Even more interestingly, these two languages are at the periphery of the family, in Southern Brazil and Northern Colombia, respectively.
+"""))}
+
+<h6>1>2 marking throughout the family:</h6>
+<div id="tree1" style="width: 500px; float:left; margin:10px"></div>
+
+<h6>2>1 marking throughout the family:</h6>
+<div id="tree2" style="width: 500px; float:left; margin:10px"></div>
+<% tree1 = u.get_morpheme_tree(
+	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
+	"1>2",
+	"gildea_norm",
+	True,
+)
+tree2 = u.get_morpheme_tree(
+	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
+	"2>1",
+	"gildea_norm",
+	True,
+)
+ %>
+
+<script>
+	
+	$(function() {
+	    $('#tree1').tree({
+	        data: [
+	    ${ json.dumps(tree1) | n },
+	],
+			autoEscape: false,
+			autoOpen: true
+	    });
+	    $('#tree2').tree({
+	        data: [
+	    ${ json.dumps(tree2) | n },
+	],
+			autoEscape: false,
+			autoOpen: true
+	    });
+		
+	});
+</script>

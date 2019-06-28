@@ -37,6 +37,7 @@ from clld.web.util.multiselect import CombinationMultiSelect
 import json
 from Bio import Phylo
 import csv
+import io
 
 def xify(text):
     ids = []
@@ -480,7 +481,7 @@ def get_clade_as_json(clade):
     return json_clade
 
 def get_tree(request, values, tree_name):
-    my_tree = Phylo.read("../../trees/%s.newick" % tree_name, "newick")
+    my_tree = Phylo.read(io.StringIO(DBSession.query(Phylogeny).filter(Phylogeny.id == "matter")[0].newick), "newick")
     for node in my_tree.find_clades():
         if node.name == None:
             continue
@@ -564,26 +565,7 @@ def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
         "1>2": ["?"],
         "2>1": ["?"],
     }
-    # output = []
-    # for lg, values in lang_clauses.items():
-    #     for scenario, morph_list in values.items():
-    #         for morph_combo in morph_list:
-    #             cogsets = []
-    #             for morpheme in morph_combo:
-    #                 cogset = []
-    #                 if DBSession.query(Morpheme).filter(Morpheme.id == morpheme).count() >= 1:
-    #                     for counterpart in DBSession.query(Morpheme).filter(Morpheme.id == morpheme)[0].counterparts:
-    #                         cogset.append(counterpart.valueset.parameter.id)
-    #                 cogsets.append(":".join(cogset))
-    #             if len(cogsets[0]) > 0:
-    #                 output.append([lg,scenario,":".join(cogsets)])
-    # with open("../../main_clause_markers.csv", 'w+', newline='') as myfile:
-    #      wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-    #      wr.writerow(["Language_ID", "Feature_ID", "Value"])
-    #      for entry in output:
-    #          wr.writerow(entry)
-                
-    my_tree = Phylo.read("../../trees/%s.newick" % tree_name, "newick")
+    my_tree = Phylo.read(io.StringIO(DBSession.query(Phylogeny).filter(Phylogeny.id == "matter")[0].newick), "newick")
     for node in my_tree.find_clades():
         if node.name == None:
             continue

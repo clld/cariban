@@ -487,6 +487,19 @@ def main(args):
             "comment": row["Comment"],
             "o_comment": row["Orig_Comment"]
         }
+    #adding my own tree separately.
+    tree_cnt += 1
+    my_tree = Phylo.read(tree_path+"/"+"matter.newick", "newick")
+    edited_tree = io.StringIO()
+    Phylo.write(my_tree, edited_tree, "newick")
+    tree = edited_tree.getvalue().replace(":0.00000","")
+    my_phylo = Phylogeny(
+            "matter",
+            id="matter",
+            name="Matter (2019)",
+            newick=tree
+    )
+    DBSession.add(my_phylo)
     c = 1
     for tree_id, values in newick_files.items():
         print("%s/%s" % (c, tree_cnt), end="\r")
@@ -562,19 +575,6 @@ def main(args):
                     id="pre_pc",
                     name="Reconstruction of pre-Proto-Cariban person marking",
                     description="Speculative exploration of what developments might have led to the reconstructed PC person paradigms.",
-            )
-
-    data.add(models.Page,
-                    "set_1",
-                    id="set_1",
-                    name="Comparison of Set I constructions",
-                    description="",
-            )
-    data.add(models.Page,
-                    "phylo_test",
-                    id="phylo_test",
-                    name="phylo_test",
-                    description="",
             )
     data.add(models.Page,
                     "t_adding_verbs",
