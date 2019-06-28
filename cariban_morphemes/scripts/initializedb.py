@@ -611,6 +611,7 @@ def main(args):
     print("Adding t-adding verbs…")
     t_langs = {}
     t_verbs = {}
+    t_adding_lgs = ["ing","mac","kar","wmr","pan"]
     data.add(models.Meaning,
         "t_verb",
         id="t-verb",
@@ -633,6 +634,8 @@ def main(args):
         )
         if row["t?"] == "y":
             t_verb.name = "[t-]"+t_verb.name
+        if row["t?"] == "?" and lang_id not in t_adding_lgs:
+            t_verb.name = "[t-?]"+t_verb.name
         if lang_id not in t_langs.keys():
             t_langs[lang_id] = {
                 "y": 0,
@@ -646,7 +649,7 @@ def main(args):
                 "?": 0
             }
         t_langs[lang_id][row["t?"]] += 1
-        if lang_id not in ["ing","mac","kar","wmr","pan"]:
+        if lang_id not in t_adding_lgs:
             t_verbs[cognate_id][row["t?"]] += 1
         if row["Source"]:
             bib_key = row["Source"].split("[")[0]

@@ -64,5 +64,3 @@ ${h.text2html(u.generate_markup(
                     "1+3 scenarios",
                     ["1>2", "2>1", "3>1+2"])))}
 </p>
-
-

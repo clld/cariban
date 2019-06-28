@@ -3,13 +3,26 @@
 ${h.text2html(u.generate_markup("""In many Cariban languages, there are some verbs that show a reflex of a prefix rc:t(ɨ)- in certain contexts.
 The prefix occurs where one would otherwise expect a reflex of cogset:3i, and does not seem to contribute a meaning of its own (anymore).
 An overview of all cognates of such t-adding verbs in the database can be found <a href=/function/t-verb>here</a>.
-The tree below shows, for any given language, how many of the reflexes of a verb that show rc:t- in some other language occur with a reflex of obj:t- in this language.
+Some sources (src:triomeira1999[234] for lg:tri, src:maquiritaricaceres2011[127] for lg:mak, src:wayanatavares2005[199] for lg:way, src:hixkaryanaderby1985[192--193] for lg:hix, src:waiwaihawkins1998[192] for lg:wai, and src:alves2017arara[156] for lg:ara) explicitly mention the lexically conditioned nature of this prefix and provide a list.
+In these cases, I assumed that if a verb was not listed there, but does occur in the language, it shows no obj:t-.
+In other cases, it is unclear whether a given verb would occur with obj:t-, given the right context.
 
+The tree below shows, for any given language, how many of the reflexes of a verb that show rc:t- in some other language occur with a reflex of obj:t- in this language.
 The first observation is that languages that are usually included in the Venezuelan branch show little to zero occurrences of rc:t-.
 Also, lg:kalina seems to have absolutely zero reflexes of rc:t-.
 lg:waimiri only has one potential example of rc:t-, and it is unclear whether that is the case, or whether it is the rc:t- occurring in the rc:t-Σ-tjɤ construction.
 
-As for the verbs that trigger rc:t-, there are some that are attested to (still) do so in many languages, and some that only occur with rc:t- in a few languages or just one, and some that only occur in a few languages, regardless of whether they have rc:t- or not.
+As for the verbs that trigger obj:t-, there is quite a bit of heterogeneity.
+Some verbs only show reflexes in a subset of languages.
+Other verbs have reflexes in a language that otherwise has rc:t-, but not for this verb.
+In languages that have an overt reflex of cogset:3i in their person marking prefixes (lg:tri, lg:way, lg:mak, lg:arara), this /i/ disappears and is sometimes replaced by an /ɨ/.
+In lg:arara and lg:maqui, most of the t-adding stems are analyzed as being /ɨ/-initial.
+
+It can be argued that the core of this lexical cluster is cogset:t10 'to do, make, give'.
+While, due to its complete absence from lg:arara/lg:ikpeng, it is not attested across the family, it shows rc:t- in all other languages that have reflexes of rc:t-, <b>including the Venezuelan branch</b>.
+Reflexes of cogset:t10 also show interesting irregular properties.
+In lg:trio, morph:tri_t10 does not show the usual form morph:tri_3sa_pst, but obj:kɨnɨ- (src:triomeira1999[308--309]).
+[TO BE CONTINUED].
 
 The solidly attested verbs are cogset:t1 'to eat starchy food', cogset:t14 'to shoot, kill', and cogset:t6 'to grate manioc', which occur in all subbranches for which reflexes of rc:t- are attested.
 I have not found reflexes of cogset:t2 'to eat meat' in Pekodian, but it is attested to occur with rc:t- across the rest of the (t-adding) family.
