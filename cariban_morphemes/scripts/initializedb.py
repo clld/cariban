@@ -590,7 +590,7 @@ def main(args):
         t_cogset = data.add(models.CognateSet,
             cognate_id,
             id=cognate_id,
-            name="*"+row["Form"],
+            name="*"+"[t-]"+row["Form"],
             description="t-adding verb: ‘%s’" % row["Meaning"]
         )
         if row["Source"]:
@@ -687,11 +687,8 @@ def main(args):
             valueset=my_valueset,
             morpheme=t_verb
         )
-    final_count = {}
     for lang, values in t_langs.items():
-        t_pct = values["y"]/(values["y"]+values["n"])
-        final_count[lang] = t_pct
-        data["Language"][lang].update_jsondata(t_pct=t_pct)
+        data["Language"][lang].update_jsondata(t_values=values)
     for verb, values in t_verbs.items():
         data["CognateSet"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
         data["CognateSet"][verb].markup_description = util.generate_markup("This verb occurs with obj:t- in %s of %s languages which show reflexes of cogset:t." % (str(values["y"]), str(values["n"]+values["y"]+values["?"])))

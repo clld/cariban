@@ -461,7 +461,10 @@ def t_adding_pct():
     result = {}
     for l in DBSession.query(Language):
         if l.id == "pc": continue
-        result[l.id] = "{:.1%}".format(l.jsondata["t_pct"])
+        result[l.id] = "%s/%s" % (
+                                    l.jsondata["t_values"]["y"],
+                                    (l.jsondata["t_values"]["y"]+l.jsondata["t_values"]["n"]+l.jsondata["t_values"]["?"])
+                                )
     return result
     
 def get_clade_as_json(clade):
