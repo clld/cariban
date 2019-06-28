@@ -457,6 +457,13 @@ def default_tree(request=None, ctx=None, **kw):
     tree = DBSession.query(Phylogeny).filter(Phylogeny.id == "gildea_norm")[0]
     return tree
 
+def t_adding_pct():
+    result = {}
+    for l in DBSession.query(Language):
+        if l.id == "pc": continue
+        result[l.id] = "{:.1%}".format(l.jsondata["t_pct"])
+    return result
+    
 def get_clade_as_json(clade):
     json_clade = {}
     if clade.name is None:
@@ -480,7 +487,10 @@ def get_tree(request, values, tree_name):
         else:
             new_name = node.name
         if node.name in values.keys():
-            new_name += ": " + h.link(request, values[node.name])
+            if type(values[node.name]) is str:
+                new_name += ": " + values[node.name]
+            else:
+                new_name += ": " + h.link(request, values[node.name])
         node.name = new_name
         node.name = generate_markup(node.name)
     return get_clade_as_json(my_tree.clade)

@@ -576,6 +576,12 @@ def main(args):
                     name="phylo_test",
                     description="",
             )
+    data.add(models.Page,
+                    "t_adding_verbs",
+                    id="t_adding_verbs",
+                    name="t-adding verbs",
+                    description="",
+            )
     
     print("Adding t-adding verb cognate sets…")
     t_reader = csv.DictReader(open("../cariban_t_cognates.csv"))
@@ -603,7 +609,8 @@ def main(args):
                     )
             
     print("Adding t-adding verbs…")
-    t_langs = []
+    t_langs = {}
+    t_verbs = {}
     data.add(models.Meaning,
         "t_verb",
         id="t-verb",
@@ -613,20 +620,34 @@ def main(args):
     for row in t_reader:
         if row["Language_ID"] == "cari1283": continue
         cognate_id = "t"+row["Cognateset_ID"]
-        if LANG_DIC[row["Language_ID"]]["ID"]+"_"+cognate_id in data["Morpheme"].keys():
-            print("double t-verb %s!" % LANG_DIC[row["Language_ID"]]["ID"]+"_"+cognate_id)
-        morph_id = LANG_DIC[row["Language_ID"]]["ID"]+"_"+cognate_id
+        lang_id = LANG_DIC[row["Language_ID"]]["ID"]
+        morph_id = lang_id+"_"+cognate_id
         if morph_id in data["Morpheme"].keys():
             morph_id += "_2"
         t_verb = data.add(models.Morpheme,
             morph_id,
             id=morph_id,
             name=row["Form"],
-            language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+            language=data["Language"][lang_id],
             description="whatevz",
         )
-        if row["t?"] == "y" and LANG_DIC[row["Language_ID"]]["ID"] not in t_langs and row["Cognateset_ID"] != "10":
-            t_langs.append(LANG_DIC[row["Language_ID"]]["ID"])
+        if row["t?"] == "y":
+            t_verb.name = "[t-]"+t_verb.name
+        if lang_id not in t_langs.keys():
+            t_langs[lang_id] = {
+                "y": 0,
+                "n": 0,
+                "?": 0
+            }
+        if cognate_id not in t_verbs.keys():
+            t_verbs[cognate_id] = {
+                "y": 0,
+                "n": 0,
+                "?": 0
+            }
+        t_langs[lang_id][row["t?"]] += 1
+        if lang_id not in ["ing","mac","kar","wmr","pan"]:
+            t_verbs[cognate_id][row["t?"]] += 1
         if row["Source"]:
             bib_key = row["Source"].split("[")[0]
             if len(row["Source"].split("[")) > 1:
@@ -656,7 +677,7 @@ def main(args):
         my_valueset = data.add(common.ValueSet,
             lang_valueset,
             id=lang_valueset,
-            language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+            language=data["Language"][lang_id],
             parameter=data["CognateSet"][cognate_id],
         )
         my_value = data.add(models.Counterpart,
@@ -666,7 +687,14 @@ def main(args):
             valueset=my_valueset,
             morpheme=t_verb
         )
-    print(t_langs)
+    final_count = {}
+    for lang, values in t_langs.items():
+        t_pct = values["y"]/(values["y"]+values["n"])
+        final_count[lang] = t_pct
+        data["Language"][lang].update_jsondata(t_pct=t_pct)
+    for verb, values in t_verbs.items():
+        data["CognateSet"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
+        data["CognateSet"][verb].markup_description = util.generate_markup("This verb occurs with obj:t- in %s of %s languages which show reflexes of cogset:t." % (str(values["y"]), str(values["n"]+values["y"]+values["?"])))
             
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
