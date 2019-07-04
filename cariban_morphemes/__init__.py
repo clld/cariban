@@ -8,12 +8,10 @@ from pyramid.httpexceptions import HTTPFound
 # from cariban_morphemes.models import Morpheme
 # from cariban_morphemes.interfaces import IMorpheme
 from cariban_morphemes import models
-from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ITVerb
+from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ITVerb, ICognateset, ICognate
 from clld.interfaces import IUnit
 
 _ = lambda s: s
-_('Parameter')
-_('Parameters')
 _('Unitparameter')
 _('Unitparameters')
 _('Sentence')
@@ -34,10 +32,8 @@ def main(global_config, **settings):
         'construction': '/construction/{id:[^/\.]+}',
         'sentences': '/examples',
         'sentence': '/example/{id:[^/\.]+}',
-        'parameters': '/cognatesets',
         'phylogenys': '/phylogenies',
         'phylogeny': '/phylogeny/{id:[^/\.]+}',
-        'parameter': '/cognateset/{id:[^/\.]+}',
     }
     
     settings["clld.github_repos"] = "florianmatter/cariban_morphemes"
@@ -45,6 +41,10 @@ def main(global_config, **settings):
     config = Configurator(settings=settings)
     config.include('clld.web.app')
     config.include('clld_phylogeny_plugin')
+    config.register_resource(
+            'cognateset', models.Cognateset, ICognateset, with_index=True, with_detail=True)
+    config.register_resource(
+            'cognate', models.Cognate, ICognate, with_index=True)
     # config.register_resource(
 #         'morpheme', models.Morpheme, IUnit, with_index=True, with_detail=True)
 #     config.register_resource(

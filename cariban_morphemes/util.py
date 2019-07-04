@@ -20,7 +20,7 @@ from clld.web.util import helpers as h
 from clld.lib.coins import ContextObject
 from clld.lib import bibtex
 from clld.lib import rdf
-from cariban_morphemes.models import Morpheme, Construction, CognateSet
+from cariban_morphemes.models import Morpheme, Construction, Cognateset
 from clld.db.models import Language, Source, Sentence
 import cariban_morphemes.models as cariban_models
 from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
@@ -203,7 +203,7 @@ def generate_markup(non_f_str: str):
             return "<a href='/languages/%s'>%s</a>" % (shorthand, language.name)            
             
     def cogset_lk(cogset_id, text=""):
-        cogset = DBSession.query(CognateSet).filter(CognateSet.id == cogset_id)[0]
+        cogset = DBSession.query(Cognateset).filter(Cognateset.id == cogset_id)[0]
         if text == "":
             return "<i><a href='/cognateset/%s'>%s</a></i>" % (cogset_id, cogset)
         else:

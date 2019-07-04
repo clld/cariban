@@ -8,11 +8,12 @@ from sqlalchemy import (
     ForeignKey,
     UniqueConstraint,
 )
+import sqlalchemy as sa
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from clld import interfaces
-from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage
+from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ICognateset, ICognate
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
 from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin, HasSourceMixin, common, Language
 
@@ -20,14 +21,6 @@ from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, Unit
 class Meaning(CustomModelMixin, UnitParameter):
     pk = Column(Integer, ForeignKey('unitparameter.pk'), primary_key=True)
     form = Column(String)
-    
-@implementer(interfaces.IParameter)
-class CognateSet(CustomModelMixin, Parameter, HasSourceMixin):
-    pk = Column(Integer, ForeignKey('parameter.pk'), primary_key=True)
-
-class CognatesetReference(Base, common.HasSourceMixin):
-    cognateset_pk = Column(Integer, ForeignKey('parameter.pk'))
-    cognateset = relationship(CognateSet, backref="references")
 
 @implementer(IDeclarativeType)
 class DeclarativeType(Base, IdNameDescriptionMixin):
@@ -61,12 +54,28 @@ class MorphemeFunction(UnitValue, CustomModelMixin, PolymorphicBaseMixin):
 class MorphemeReference(Base, common.HasSourceMixin):
     morpheme_pk = Column(Integer, ForeignKey('unit.pk'))
     morpheme = relationship(Morpheme, backref="references")
-    
-@implementer(interfaces.IValue)
-class Counterpart(CustomModelMixin, Value):
-    pk = Column(Integer, ForeignKey('value.pk'), primary_key=True)
-    morpheme_pk = Column(Integer, ForeignKey('morpheme.pk'))
-    morpheme = relationship(Morpheme, backref='counterparts')
+
+@implementer(ICognateset)
+class Cognateset(Base,
+                 PolymorphicBaseMixin,
+                 IdNameDescriptionMixin,
+                 ):
+    pk = Column(Integer, primary_key=True)
+
+class CognatesetReference(Base, HasSourceMixin):
+    cognateset_pk = sa.Column(sa.Integer, sa.ForeignKey('cognateset.pk'))
+    cognateset = sa.orm.relationship(Cognateset, backref="references")
+
+@implementer(ICognate)
+class Cognate(Base):
+    """
+    The association table between morphemes in particular languages and
+    cognate sets.
+    """
+    cognateset_pk = sa.Column(sa.Integer, sa.ForeignKey('cognateset.pk'))
+    cognateset = sa.orm.relationship(Cognateset, backref='cognates')
+    counterpart_pk = sa.Column(sa.Integer, sa.ForeignKey('morpheme.pk'))
+    counterpart = sa.orm.relationship(Morpheme, backref='counterparts')
     
 @implementer(IPage)
 class Page(Base, IdNameDescriptionMixin):

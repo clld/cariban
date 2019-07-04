@@ -25,7 +25,7 @@
 	% if ctx.counterparts:
 		<ul class="inline">
 			% for c in ctx.counterparts:
-				<li>${h.link(request, c.valueset.parameter)}</li>
+				<li>${h.link(request, c.cognateset)}</li>
 			% endfor
 		</ul>
 	% endif

@@ -8,7 +8,7 @@ from clld.web.datatables.base import (
 )
 from clld.web.datatables.value import (ValueNameCol)
 from clld.web.datatables.unit import (DescriptionLinkCol)
-from cariban_morphemes.models import Counterpart, CognateSet, Morpheme, Construction, Meaning, MorphemeFunction, DeclarativeType, MainClauseVerb
+from cariban_morphemes.models import Cognate, Cognateset, Morpheme, Construction, Meaning, MorphemeFunction, DeclarativeType, MainClauseVerb
 from clld.interfaces import IMenuItems
 from clld.web.util.helpers import (
     link, button, icon, JS_CLLD, external_link, linked_references, JSDataTable,
@@ -25,7 +25,7 @@ class CognatesetCol(Col):
         obj = self.get_obj(item)
         my_link = []
         for i in obj:
-            my_link.append(link(self.dt.req, i.valueset.parameter, **self.get_attrs(i.valueset.parameter)))
+            my_link.append(link(self.dt.req, i.cognateset, **self.get_attrs(i.cognateset)))
         return my_link
 
 class FunctionCol(LinkCol):
@@ -73,22 +73,39 @@ class Morphemes(Units):
             RefsCol(self, 'references'),
         ]
     
-class Cognatesets(Parameters):
+class Cognatesets(DataTable):
     def col_defs(self):
         return [
             LinkCol(self, 'reconstructed'),
             Col(self, 'description'),
             RefsCol(self, 'references')
         ]
-           
-class Counterparts(Values):
+        
+class Cognates(DataTable):
+    
+    __constraints__ = [Cognateset]
+    
+    def base_query(self, query):
+        
+        if self.cognateset:
+            return query.filter(Cognate.cognateset_pk == self.cognateset.pk)
+            
     def col_defs(self):
         return [
-            LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.morpheme.language),
-            LinkCol(self, 'form', get_obj=lambda i: i.morpheme),
-            FunctionCol(self, 'function', get_obj=lambda i: i.morpheme),
-            RefsCol(self, 'references', get_obj=lambda i: i.morpheme)
+            LinkCol(self, 'language', get_obj=lambda i: i.counterpart.language),
+            LinkCol(self, 'form', get_obj=lambda i: i.counterpart),
+            FunctionCol(self, 'function', get_obj=lambda i: i.counterpart),
+            RefsCol(self, 'references', get_obj=lambda i: i.counterpart)
         ]
+
+# class Counterparts(Values):
+#     def col_defs(self):
+#         return [
+#             LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.morpheme.language),
+#             LinkCol(self, 'form', get_obj=lambda i: i.morpheme),
+#             FunctionCol(self, 'function', get_obj=lambda i: i.morpheme),
+#             RefsCol(self, 'references', get_obj=lambda i: i.morpheme)
+#         ]
 
 class Constructions(DataTable):
     __constraints__ = [Language, DeclarativeType, MainClauseVerb]
@@ -196,8 +213,9 @@ class Sentences(Sentences):
 def includeme(config):
     config.register_datatable('unitparameters', Meanings)
     config.register_datatable('units', Morphemes)
-    config.register_datatable('parameters', Cognatesets)
-    config.register_datatable('values', Counterparts)
+    config.register_datatable('cognates', Cognates)
+    config.register_datatable('cognatesets', Cognatesets)
+    # config.register_datatable('values', Counterparts)
     config.register_datatable('sentences', Sentences)
     config.register_datatable('languages', Languages)
     config.register_datatable('unitvalues', MorphemeFunctions)

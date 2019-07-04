@@ -393,7 +393,7 @@ def main(args):
     print("Adding cognate sets…")
     for i, row in enumerate(cariban_data["CognatesetTable"]):
         print("%s/%s" % (i+1, cogset_cnt), end="\r")
-        new_cset = data.add(models.CognateSet,
+        new_cset = data.add(models.Cognateset,
                 row["ID"],
                 id=row["ID"],
                 name=row["Name"],
@@ -420,27 +420,33 @@ def main(args):
         print("%s/%s" % (i+1, morph_cnt), end="\r")
         #Go through all cognatesets of which this morpheme is a part
         for cognate_ID in row["Cognateset_ID"]:
-            lang_valueset = "%s_%s" % (row["Language_ID"], cognate_ID)
-            # print(lang_valueset)
-            if lang_valueset not in data["ValueSet"].keys():
-                # print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
-                my_valueset = data.add(common.ValueSet,
-                    lang_valueset,
-                    id=lang_valueset,
-                    language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
-                    parameter=data["CognateSet"][cognate_ID],
+            DBSession.add(models.Cognate(
+                    # key=cognate_ID+":"+row["ID"],
+                    cognateset=data["Cognateset"][cognate_ID],
+                    counterpart=data["Morpheme"][row["ID"]]
                 )
-            else:
-                my_valueset = data["ValueSet"][lang_valueset]
-            my_value = data.add(models.Counterpart,
-                cognate_ID+":"+row["ID"],
-                id = cognate_ID+":"+row["ID"],
-                valueset=my_valueset,
-                name=row["Form"][0],
-                description=row["Form"][0],
-                markup_description=", ".join(row["Form"]),
-                morpheme=data["Morpheme"][row["ID"]]
             )
+            # lang_valueset = "%s_%s" % (row["Language_ID"], cognate_ID)
+#             # print(lang_valueset)
+#             if lang_valueset not in data["ValueSet"].keys():
+#                 # print("Adding ValueSet for %s, cognate set %s" % (row["Language_ID"], cognate_ID))
+#                 my_valueset = data.add(common.ValueSet,
+#                     lang_valueset,
+#                     id=lang_valueset,
+#                     language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+#                     parameter=data["Cognateset"][cognate_ID],
+#                 )
+#             else:
+#                 my_valueset = data["ValueSet"][lang_valueset]
+#             my_value = data.add(models.Counterpart,
+#                 cognate_ID+":"+row["ID"],
+#                 id = cognate_ID+":"+row["ID"],
+#                 valueset=my_valueset,
+#                 name=row["Form"][0],
+#                 description=row["Form"][0],
+#                 markup_description=", ".join(row["Form"]),
+#                 morpheme=data["Morpheme"][row["ID"]]
+#             )
     print("")
     
     print("Adding morpheme comments…")
@@ -464,9 +470,9 @@ def main(args):
     print("Adding cognate set descriptions…")
     for i, row in enumerate(cariban_data["CognatesetTable"]):
         print("%s/%s" % (i+1, cogset_cnt), end="\r")
-        data["CognateSet"][row["ID"]].markup_description = markup_description=util.generate_markup(row["Description"])
+        data["Cognateset"][row["ID"]].markup_description = markup_description=util.generate_markup(row["Description"])
         if row["ID"] == "13pro":
-            data["CognateSet"][row["ID"]].markup_description += util.generate_markup(
+            data["Cognateset"][row["ID"]].markup_description += util.generate_markup(
                 util.comparative_function_paradigm(
                     ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_old"],
                     "1+3 scenarios",
@@ -583,121 +589,121 @@ def main(args):
                     description="",
             )
     
-    print("Adding t-adding verb cognate sets…")
-    t_reader = csv.DictReader(open("../cariban_t_cognates.csv"))
-    for row in t_reader:
-        cognate_id = "t"+row["ID"]
-        t_cogset = data.add(models.CognateSet,
-            cognate_id,
-            id=cognate_id,
-            name="*"+"[t-]"+row["Form"],
-            description="t-adding verb: ‘%s’" % row["Meaning"]
-        )
-        if row["Source"]:
-            bib_key = row["Source"].split("[")[0]
-            if len(row["Source"].split("[")) > 1:
-                pages = row["Source"].split("[")[1].split("]")[0]
-            else:
-                pages = " "
-            if bib_key in data["Source"]:
-                source = data["Source"][bib_key]
-                DBSession.add(models.CognatesetReference(
-                    cognateset=t_cogset,
-                    source=source,
-                    key=source.id,
-                    description=pages)
-                    )
-            
-    print("Adding t-adding verbs…")
-    t_langs = {}
-    t_verbs = {}
-    non_t_adding_lgs = ["ing","mac","kar","wmr","pan"]
-    data.add(models.Meaning,
-        "t_verb",
-        id="t-verb",
-        name="t-adding verb"
-    )
-    t_reader = csv.DictReader(open("../cariban_t_verbs.csv"))
-    for row in t_reader:
-        if row["Language_ID"] == "cari1283": continue
-        cognate_id = "t"+row["Cognateset_ID"]
-        lang_id = LANG_DIC[row["Language_ID"]]["ID"]
-        morph_id = lang_id+"_"+cognate_id
-        if morph_id in data["Morpheme"].keys():
-            morph_id += "_2"
-        t_verb = data.add(models.Morpheme,
-            morph_id,
-            id=morph_id,
-            name=row["Form"],
-            language=data["Language"][lang_id],
-        )
-        if row["t?"] == "y":
-            t_verb.name = "[t-]"+t_verb.name
-            t_verb.description = "Shows t-"
-        if row["t?"] == "?" and lang_id not in non_t_adding_lgs:
-            t_verb.name = "[t-?]"+t_verb.name
-            t_verb.description = "It is not known if this verb shows t-"
-        if row["t?"] == "n":
-            t_verb.description = "Does not show t-"
-        if lang_id not in t_langs.keys():
-            t_langs[lang_id] = {
-                "y": 0,
-                "n": 0,
-                "?": 0
-            }
-        if cognate_id not in t_verbs.keys():
-            t_verbs[cognate_id] = {
-                "y": 0,
-                "n": 0,
-                "?": 0
-            }
-        t_langs[lang_id][row["t?"]] += 1
-        if lang_id not in non_t_adding_lgs:
-            t_verbs[cognate_id][row["t?"]] += 1
-        if row["Source"]:
-            bib_key = row["Source"].split("[")[0]
-            if len(row["Source"].split("[")) > 1:
-                pages = row["Source"].split("[")[1].split("]")[0]
-            else:
-                pages = " "    
-            if bib_key in data["Source"]:
-                source = data["Source"][bib_key]
-                DBSession.add(models.MorphemeReference(
-                    morpheme=t_verb,
-                    source=source,
-                    key=source.id,
-                    description=pages.replace("--","–")
-                    )
-                )
-        data.add(models.MorphemeFunction,
-            "t_"+row["ID"],
-            id="t_"+row["ID"],
-            name="t-Verb %s" % row["Meaning"],
-            unit=t_verb,
-            unitparameter=data["Meaning"]["t_verb"],
-            construction=None
-        )
-        lang_valueset = "t_"+row["Cognateset_ID"] + "_" + row["Language_ID"]
-        if lang_valueset in data["ValueSet"].keys():
-            lang_valueset += "_2"
-        my_valueset = data.add(common.ValueSet,
-            lang_valueset,
-            id=lang_valueset,
-            language=data["Language"][lang_id],
-            parameter=data["CognateSet"][cognate_id],
-        )
-        my_value = data.add(models.Counterpart,
-            cognate_id+":"+row["ID"],
-            id = cognate_id+":"+row["ID"],
-            name=row["Form"],
-            valueset=my_valueset,
-            morpheme=t_verb
-        )
-    for lang, values in t_langs.items():
-        data["Language"][lang].update_jsondata(t_values=values)
-    for verb, values in t_verbs.items():
-        data["CognateSet"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
-        data["CognateSet"][verb].markup_description = util.generate_markup("This verb occurs with obj:t- in %s of %s languages which show reflexes of cogset:t." % (str(values["y"]), str(values["n"]+values["y"]+values["?"])))
+    # print("Adding t-adding verb cognate sets…")
+#     t_reader = csv.DictReader(open("../cariban_t_cognates.csv"))
+#     for row in t_reader:
+#         cognate_id = "t"+row["ID"]
+#         t_cogset = data.add(models.Cognateset,
+#             cognate_id,
+#             id=cognate_id,
+#             name="*"+"[t-]"+row["Form"],
+#             description="t-adding verb: ‘%s’" % row["Meaning"]
+#         )
+#         if row["Source"]:
+#             bib_key = row["Source"].split("[")[0]
+#             if len(row["Source"].split("[")) > 1:
+#                 pages = row["Source"].split("[")[1].split("]")[0]
+#             else:
+#                 pages = " "
+#             if bib_key in data["Source"]:
+#                 source = data["Source"][bib_key]
+#                 DBSession.add(models.CognatesetReference(
+#                     cognateset=t_cogset,
+#                     source=source,
+#                     key=source.id,
+#                     description=pages)
+#                     )
+#
+#     print("Adding t-adding verbs…")
+#     t_langs = {}
+#     t_verbs = {}
+#     non_t_adding_lgs = ["ing","mac","kar","wmr","pan"]
+#     data.add(models.Meaning,
+#         "t_verb",
+#         id="t-verb",
+#         name="t-adding verb"
+#     )
+#     t_reader = csv.DictReader(open("../cariban_t_verbs.csv"))
+#     for row in t_reader:
+#         if row["Language_ID"] == "cari1283": continue
+#         cognate_id = "t"+row["Cognateset_ID"]
+#         lang_id = LANG_DIC[row["Language_ID"]]["ID"]
+#         morph_id = lang_id+"_"+cognate_id
+#         if morph_id in data["Morpheme"].keys():
+#             morph_id += "_2"
+#         t_verb = data.add(models.Morpheme,
+#             morph_id,
+#             id=morph_id,
+#             name=row["Form"],
+#             language=data["Language"][lang_id],
+#         )
+#         if row["t?"] == "y":
+#             t_verb.name = "[t-]"+t_verb.name
+#             t_verb.description = "Shows t-"
+#         if row["t?"] == "?" and lang_id not in non_t_adding_lgs:
+#             t_verb.name = "[t-?]"+t_verb.name
+#             t_verb.description = "It is not known if this verb shows t-"
+#         if row["t?"] == "n":
+#             t_verb.description = "Does not show t-"
+#         if lang_id not in t_langs.keys():
+#             t_langs[lang_id] = {
+#                 "y": 0,
+#                 "n": 0,
+#                 "?": 0
+#             }
+#         if cognate_id not in t_verbs.keys():
+#             t_verbs[cognate_id] = {
+#                 "y": 0,
+#                 "n": 0,
+#                 "?": 0
+#             }
+#         t_langs[lang_id][row["t?"]] += 1
+#         if lang_id not in non_t_adding_lgs:
+#             t_verbs[cognate_id][row["t?"]] += 1
+#         if row["Source"]:
+#             bib_key = row["Source"].split("[")[0]
+#             if len(row["Source"].split("[")) > 1:
+#                 pages = row["Source"].split("[")[1].split("]")[0]
+#             else:
+#                 pages = " "
+#             if bib_key in data["Source"]:
+#                 source = data["Source"][bib_key]
+#                 DBSession.add(models.MorphemeReference(
+#                     morpheme=t_verb,
+#                     source=source,
+#                     key=source.id,
+#                     description=pages.replace("--","–")
+#                     )
+#                 )
+#         data.add(models.MorphemeFunction,
+#             "t_"+row["ID"],
+#             id="t_"+row["ID"],
+#             name="t-Verb %s" % row["Meaning"],
+#             unit=t_verb,
+#             unitparameter=data["Meaning"]["t_verb"],
+#             construction=None
+#         )
+#         lang_valueset = "t_"+row["Cognateset_ID"] + "_" + row["Language_ID"]
+#         if lang_valueset in data["ValueSet"].keys():
+#             lang_valueset += "_2"
+#         my_valueset = data.add(common.ValueSet,
+#             lang_valueset,
+#             id=lang_valueset,
+#             language=data["Language"][lang_id],
+#             parameter=data["Cognateset"][cognate_id],
+#         )
+#         my_value = data.add(models.Counterpart,
+#             cognate_id+":"+row["ID"],
+#             id = cognate_id+":"+row["ID"],
+#             name=row["Form"],
+#             valueset=my_valueset,
+#             morpheme=t_verb
+#         )
+#     for lang, values in t_langs.items():
+#         data["Language"][lang].update_jsondata(t_values=values)
+#     for verb, values in t_verbs.items():
+#         data["Cognateset"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
+#         data["Cognateset"][verb].markup_description = util.generate_markup("This verb occurs with obj:t- in %s of %s languages which show reflexes of cogset:t." % (str(values["y"]), str(values["n"]+values["y"]+values["?"])))
             
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.

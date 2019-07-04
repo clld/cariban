@@ -14,3 +14,9 @@ class IPage(Interface):
     
 class ITVerb(Interface):
     """marker"""
+    
+class ICognateset(Interface):
+    """marker"""
+    
+class ICognate(Interface):
+    """marker"""
