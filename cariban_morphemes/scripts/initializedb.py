@@ -611,7 +611,7 @@ def main(args):
     print("Adding t-adding verbs…")
     t_langs = {}
     t_verbs = {}
-    t_adding_lgs = ["ing","mac","kar","wmr","pan"]
+    non_t_adding_lgs = ["ing","mac","kar","wmr","pan"]
     data.add(models.Meaning,
         "t_verb",
         id="t-verb",
@@ -630,12 +630,15 @@ def main(args):
             id=morph_id,
             name=row["Form"],
             language=data["Language"][lang_id],
-            description="whatevz",
         )
         if row["t?"] == "y":
             t_verb.name = "[t-]"+t_verb.name
-        if row["t?"] == "?" and lang_id not in t_adding_lgs:
+            t_verb.description = "Shows t-"
+        if row["t?"] == "?" and lang_id not in non_t_adding_lgs:
             t_verb.name = "[t-?]"+t_verb.name
+            t_verb.description = "It is not known if this verb shows t-"
+        if row["t?"] == "n":
+            t_verb.description = "Does not show t-"
         if lang_id not in t_langs.keys():
             t_langs[lang_id] = {
                 "y": 0,
@@ -649,7 +652,7 @@ def main(args):
                 "?": 0
             }
         t_langs[lang_id][row["t?"]] += 1
-        if lang_id not in t_adding_lgs:
+        if lang_id not in non_t_adding_lgs:
             t_verbs[cognate_id][row["t?"]] += 1
         if row["Source"]:
             bib_key = row["Source"].split("[")[0]

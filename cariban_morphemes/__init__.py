@@ -8,7 +8,7 @@ from pyramid.httpexceptions import HTTPFound
 # from cariban_morphemes.models import Morpheme
 # from cariban_morphemes.interfaces import IMorpheme
 from cariban_morphemes import models
-from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage
+from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ITVerb
 from clld.interfaces import IUnit
 
 _ = lambda s: s
@@ -45,6 +45,10 @@ def main(global_config, **settings):
     config = Configurator(settings=settings)
     config.include('clld.web.app')
     config.include('clld_phylogeny_plugin')
+    # config.register_resource(
+#         'morpheme', models.Morpheme, IUnit, with_index=True, with_detail=True)
+#     config.register_resource(
+#         'tverb', models.TVerb, ITVerb, with_index=True, with_detail=True)
     config.register_resource(
         'construction', models.Construction, IConstruction, with_index=True, with_detail=True)
     config.register_resource(

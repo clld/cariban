@@ -11,3 +11,6 @@ class IMainClauseVerb(Interface):
     
 class IPage(Interface):
     """marker"""
+    
+class ITVerb(Interface):
+    """marker"""
