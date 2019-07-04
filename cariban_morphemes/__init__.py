@@ -32,6 +32,7 @@ def main(global_config, **settings):
         'construction': '/construction/{id:[^/\.]+}',
         'sentences': '/examples',
         'sentence': '/example/{id:[^/\.]+}',
+        'cognateset': '/cognateset/{id:[^/\.]+}',
         'phylogenys': '/phylogenies',
         'phylogeny': '/phylogeny/{id:[^/\.]+}',
     }
