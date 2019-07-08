@@ -493,6 +493,11 @@ def get_tree(request, values, tree_name):
         if node.name in values.keys():
             if type(values[node.name]) is str:
                 new_name += ": " + values[node.name]
+            elif type(values[node.name]) is list:
+                append_string = []
+                for value in values[node.name]:
+                    append_string.append(h.link(request, value))
+                new_name += ": " + "; ".join(append_string)
             else:
                 new_name += ": " + h.link(request, values[node.name])
         node.name = new_name

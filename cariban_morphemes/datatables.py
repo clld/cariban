@@ -36,11 +36,6 @@ class FunctionCol(LinkCol):
     def get_attrs(self, item):
         return dict(label = item)
     
-    def search(self, qs):
-        if self.dt.unitparameter and self.dt.unitparameter.domain:
-            return common.UnitDomainElement.name.contains(qs)
-        return common.UnitValue.name.contains(qs)
-            
     def format(self, item):
         obj = self.get_obj(item).unitvalues
         my_link = []
@@ -58,7 +53,9 @@ class Meanings(Unitparameters):
         ]
 
 class Morphemes(Units):
-
+    
+    __constraints__ = [MorphemeFunction, Language]
+    
     def col_defs(self):
         base = [
             LinkCol(self, 'form'),

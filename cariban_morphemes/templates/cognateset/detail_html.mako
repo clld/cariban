@@ -43,7 +43,11 @@ ${request.get_datatable('cognates', u.cariban_models.Cognate, cognateset=ctx).re
 
 <% cogset_values = {} %>
 % for cognate in ctx.cognates:
-	<% cogset_values[cognate.counterpart.language.id] = cognate.counterpart %>
+	% if cognate.counterpart.language.id not in cogset_values.keys():
+		<!-- print("adding %s" % cognate.counterpart.language.id) -->
+		<% cogset_values[cognate.counterpart.language.id] = [] %>
+	% endif
+	<% cogset_values[cognate.counterpart.language.id].append(cognate.counterpart) %>
 % endfor
 <% my_tree = u.get_tree(
 	request,
