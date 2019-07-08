@@ -605,7 +605,6 @@ def main(args):
     for row in t_reader:
         if row["Language_ID"] == "cari1283": continue
         cognate_ID = "t"+row["Cognateset_ID"]
-        print(cognate_ID)
         lang_id = LANG_DIC[row["Language_ID"]]["ID"]
         morph_id = lang_id+"_"+cognate_ID
         if morph_id in data["Morpheme"].keys():
@@ -616,7 +615,6 @@ def main(args):
             name=row["Form"],
             language=data["Language"][lang_id],
         )
-        print("adding cognate %s for cognate set %s" % (morph_id, cognate_ID))
         DBSession.add(models.Cognate(
                 cognateset=data["Cognateset"][cognate_ID],
                 counterpart=t_verb
