@@ -32,12 +32,14 @@ for key, values in LANG_CODE_DIC.items():
 sampled_languages = {}
 for key, values in LANG_ABBREV_DIC.items():
     sampled_languages[values["ID"]] = values["name"]
+
 from collections import OrderedDict
 from clld.web.util.multiselect import CombinationMultiSelect
 import json
 from Bio import Phylo
 import csv
 import io
+from pynterlinear import pynterlinear
 
 def xify(text):
     ids = []
@@ -164,7 +166,7 @@ def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False
         class_="sentence-wrapper",
     )
         
-def generate_markup(non_f_str: str):
+def generate_markup(non_f_str: str, html=True):
     
     ex_cnt = 0
 
@@ -222,9 +224,12 @@ def generate_markup(non_f_str: str):
         if morph_id == "":
             return ""
         morph = DBSession.query(Morpheme).filter(Morpheme.id == morph_id)[0]
-        if form == "":
-            form = morph.name#.split("/")[0]
-        return "<i><a href='/morpheme/%s'>%s</a></i>" % (morph_id, form)
+        if html:
+            if form == "": form = morph.name#.split("/")[0]
+            return "<i><a href='/morpheme/%s'>%s</a></i>" % (morph_id, form)
+        else:
+            if form == "": form = morph.name#.split("/")[0]
+            return "\\obj{%s}" % form
         
     def render_ex(ex_id):
         nonlocal ex_cnt
@@ -241,7 +246,7 @@ def generate_markup(non_f_str: str):
                         )
     
     result = eval(f'f"""{non_f_str}"""')
-    return result.replace("-</a></i>£", "-</a></i>").replace("£", " ").replace("\n\n","PARAGRAPHBREAK").replace("\n"," ").replace("PARAGRAPHBREAK","\n\n")
+    return result.replace("-</a></i>£", "-</a></i>").replace("-}£", "-}").replace("£", " ").replace("\n\n","PARAGRAPHBREAK").replace("\n"," ").replace("PARAGRAPHBREAK","\n\n")
     
 def html_table(lol, caption):
     output = ""
@@ -251,6 +256,28 @@ def html_table(lol, caption):
         output += '    </td><td class="td paradigm-td">'.join(sublist)
         output += '  </td></tr>'
     output += '</table>'
+    return output
+
+def render_latex_code(input):
+    if "morph:" not in input:
+        return pynterlinear.get_expex_code(input)
+    else:
+        return generate_markup(input, html=False)
+    
+def latex_table(lol):
+    output = """\\begin{tabular}{@{}"""
+    col_cnt = len(lol[1])
+    for i in range(0,col_cnt):
+        output += "l"
+    output += "@{}}\n\\mytoprule"
+    for i, sublist in enumerate(lol):
+        sublist = [render_latex_code(x) for x in sublist]
+        output += "\n"
+        output += " & ".join(sublist)
+        output += "\\\\"
+        if i == 0: output += "\n\\mymidrule"
+    output += """\n\\mybottomrule
+\\end{tabular}"""
     return output
 
 def keyify(list, hash):

@@ -43,8 +43,8 @@ for row in cariban_data["LanguageTable"]:
     if row["Sampled"] == "y":
         LANG_DIC[row["Glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
         LANG_ABBREV_DIC[row["Shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
-    if row["Dialect_Of"] is None:
-        LANG_CODE_DIC[row["ID"]] = {"shorthand": row["Shorthand"], "name": row["Name"]}
+    # if row["Dialect_Of"] is None:
+    LANG_CODE_DIC[row["ID"]] = {"shorthand": row["Shorthand"], "name": row["Name"]}
 #Save to json to make the dics available to util.py
 json_file = json.dumps(LANG_ABBREV_DIC)
 f = open("lang_code_dic.json","w")
@@ -492,7 +492,7 @@ def main(args):
         orig_biotree = Phylo.read(tree_path+"/"+values["orig"], "newick")
         uncertain_nodes = []
         for node in norm_biotree.find_clades():
-            if node.name == None:
+            if node.name == None or not node.is_terminal():
                 continue
             plain_name = node.name.replace("?","")
             if "?" in node.name: uncertain_nodes.append(plain_name)
@@ -567,6 +567,39 @@ def main(args):
                     description="",
             )
     
+    
+    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"]
+    for clause in main_clauses:
+        lang_id = data["Construction"][clause].language.id
+        
+        table_file = open("../../thesis/tables/transitive/%s_tr.tex" % lang_id, "w")
+        table_file.write(util.latex_table(util.transitive_construction_paradigm(clause, html=False)))
+        table_file.close()
+        
+        table_file = open("../../thesis/tables/intransitive/%s_intr.tex" % lang_id, "w")
+        table_file.write(util.latex_table(util.intransitive_construction_paradigm(clause, html=False)))
+        table_file.close()
+        
+        table_file = open("../../thesis/tables/%s_person_marking.tex" % lang_id, "w")
+        table_file.write("""\\begin{table}
+\\caption{\\%s person marking}
+\\label{tab:%s_person}
+\\begin{minipage}{0.69\\textwidth}
+\\centering
+\\subcaption{transitive}
+\\label{tab:%s_tr}
+\input{tables/transitive/%s_tr.tex}
+\\end{minipage}
+\\hfill
+\\begin{minipage}{0.29\\textwidth}
+\\centering
+\\subcaption{intransitive}
+\\label{tab:%s_intr}
+\input{tables/intransitive/%s_intr.tex}
+\\end{minipage}
+\\end{table}""" % (LANG_CODE_DIC[lang_id]["shorthand"], lang_id, lang_id, lang_id, lang_id, lang_id))
+        table_file.close()
+
     print("Adding t-adding verb cognate sets…")
     t_reader = csv.DictReader(open("../cariban_t_cognates.csv"))
     for row in t_reader:
