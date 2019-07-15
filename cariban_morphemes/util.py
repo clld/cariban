@@ -39,7 +39,7 @@ import json
 from Bio import Phylo
 import csv
 import io
-from pynterlinear import pynterlinear
+# from pynterlinear import pynterlinear
 
 def xify(text):
     ids = []
@@ -259,9 +259,9 @@ def html_table(lol, caption):
     return output
 
 def render_latex_code(input):
-    if "morph:" not in input:
-        return pynterlinear.get_expex_code(input)
-    else:
+    # if "morph:" not in input:
+    #     return pynterlinear.get_expex_code(input)
+    # else:
         return generate_markup(input, html=False)
     
 def latex_table(lol):
