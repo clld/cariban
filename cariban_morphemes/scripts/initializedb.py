@@ -568,7 +568,31 @@ def main(args):
             )
     
     
+    print("Creating Set I LaTeX and csv tables…")
     main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"]
+    main_clause_markers = [["Language_ID", "Feature_ID", "Value"]]
+    
+    for morpheme_function in FUNCTION_PARADIGMS:
+        # if ("1+3" in morpheme_function["Function"] and "2" in morpheme_function["Function"]) or morpheme_function["Construction"] not in main_clauses:
+        if morpheme_function["Construction"] not in main_clauses or morpheme_function["Morpheme"][0] == "?":
+            continue
+        cognate_sets = []
+        for morph in morpheme_function["Morpheme"]:
+            if morph == "?":
+                continue
+            else:
+                for counterpart in data["Morpheme"][morph].counterparts:
+                    cognate_sets.append(counterpart.cognateset.id)
+        main_clause_markers.append([
+            data["Construction"][morpheme_function["Construction"]].language.id,
+            morpheme_function["Function"],
+            ":".join(cognate_sets)
+        ])
+        
+    with open("/Users/florianm/Dropbox/Uni/Research/LiMiTS/trees/phylo_tree/main_clause_markers.csv", "w") as f:
+        writer = csv.writer(f)
+        writer.writerows(main_clause_markers)
+        
     for clause in main_clauses:
         lang_id = data["Construction"][clause].language.id
         

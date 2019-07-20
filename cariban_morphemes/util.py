@@ -340,6 +340,7 @@ def build_table(table, label):
     if label == "": del output[0]
     return output
 
+
 def intransitive_construction_paradigm(construction, html=True):
     table = {}
     entries = []
