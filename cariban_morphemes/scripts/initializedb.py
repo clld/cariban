@@ -164,6 +164,7 @@ def main(args):
     print("Adding language sources…")
     mapreader = csv.DictReader(open("../../raw examples/lit_lang_mappings.csv"))
     for row in mapreader:
+        if row["Language_ID"] not in data["Language"].keys(): continue
         DBSession.add(
             common.LanguageSource(
                 language_pk=data["Language"][row["Language_ID"]].pk,
@@ -195,6 +196,7 @@ def main(args):
         ex_cnt+=1
 
     for i, row in enumerate(cariban_data["ExampleTable"]):
+        if row["Language_ID"] not in LANG_DIC.keys(): continue
         print("%s/%s" % (i+1, ex_cnt), end="\r")
         new_ex = data.add(common.Sentence,
         row["ID"],
@@ -463,6 +465,7 @@ def main(args):
     tree_reader = csv.DictReader(open("../cariban_trees.csv"))
     tree_cnt = 0
     for row in tree_reader:
+        if row["ID"] == "matter": continue
         tree_cnt += 1
         newick_files[row["ID"]] = {
             "orig": row["ID"]+"_orig.newick",
@@ -569,7 +572,7 @@ def main(args):
     
     
     print("Creating Set I LaTeX and csv tables…")
-    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"]
+    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old", "bak_main", "yuk_imm"]
     main_clause_markers = [["Language_ID", "Feature_ID", "Value"]]
     
     for morpheme_function in FUNCTION_PARADIGMS:

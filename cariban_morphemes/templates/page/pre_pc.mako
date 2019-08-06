@@ -75,6 +75,16 @@ Even more interestingly, these two languages are at the periphery of the family,
 
 <h6>2>1 marking throughout the family:</h6>
 <div id="tree2" style="width: 500px; float:left; margin:10px"></div>
+
+<h6>1>3 marking throughout the family:</h6>
+<div id="tree3" style="width: 500px; float:left; margin:10px"></div>
+
+<h6>3>1 marking throughout the family:</h6>
+<div id="tree4" style="width: 500px; float:left; margin:10px"></div>
+
+<h6>3>2 marking throughout the family:</h6>
+<div id="tree5" style="width: 500px; float:left; margin:10px"></div>
+
 <% tree1 = u.get_morpheme_tree(
 	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
 	"1>2",
@@ -84,6 +94,24 @@ Even more interestingly, these two languages are at the periphery of the family,
 tree2 = u.get_morpheme_tree(
 	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
 	"2>1",
+	"gildea_norm",
+	True,
+)
+tree3 = u.get_morpheme_tree(
+	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
+	"1>3",
+	"gildea_norm",
+	True,
+)
+tree4 = u.get_morpheme_tree(
+	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
+	"3>1",
+	"gildea_norm",
+	True,
+)
+tree5 = u.get_morpheme_tree(
+	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
+	"3>2",
 	"gildea_norm",
 	True,
 )
@@ -102,6 +130,29 @@ tree2 = u.get_morpheme_tree(
 	    $('#tree2').tree({
 	        data: [
 	    ${ json.dumps(tree2) | n },
+	],
+			autoEscape: false,
+			autoOpen: true
+	    });
+	    $('#tree3').tree({
+	        data: [
+	    ${ json.dumps(tree3) | n },
+	],
+			autoEscape: false,
+			autoOpen: true
+	    });
+		
+	    $('#tree4').tree({
+	        data: [
+	    ${ json.dumps(tree3) | n },
+	],
+			autoEscape: false,
+			autoOpen: true
+	    });
+		
+	    $('#tree5').tree({
+	        data: [
+	    ${ json.dumps(tree3) | n },
 	],
 			autoEscape: false,
 			autoOpen: true

@@ -205,6 +205,8 @@ def generate_markup(non_f_str: str, html=True):
             return "<a href='/languages/%s'>%s</a>" % (shorthand, language.name)            
             
     def cogset_lk(cogset_id, text=""):
+        if cogset_id == "":
+            return ""
         cogset = DBSession.query(Cognateset).filter(Cognateset.id == cogset_id)[0]
         if text == "":
             return "<i><a href='/cognateset/%s'>%s</a></i>" % (cogset_id, cogset)
@@ -551,28 +553,36 @@ def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
         "1>2": [["k-"]],
         "2>1": [["k-"]],
         "1>3": [["w-"]],
-        "1+2>3": [["k(ɨt)-"]]
+        "1+2>3": [["k(ɨt)-"]],
+        "3>1": [["j-"],["Ø-"]],
+        "3>2": [["o(w)-"]]
     }
     lang_clauses["bak"] = {
         "3>1+2": [["k-"]],
         "1>2": [["ə-"]],
         "2>1": [["j-"]],
         "1>3": [["s-"]],
-        "1+2>3": [["kɨd-"]]
+        "1+2>3": [["kɨd-"]],
+        "3>1": [["ɨ-"],["j-"]],
+        "3>2": [["ə-"]]
     }
     lang_clauses["yuk"] = {
         "3>1+2": [["ɨp", "n-"]],
         "1>2": [["aw", "oj-"]],
         "2>1": [["am", "j-"]],
-        "1>3": [["Ø-"]],
-        "1+2>3": [["ɨp", "Ø-"]]
+        "1>3": [["aw", "Ø-"]],
+        "1+2>3": [["ɨp", "Ø-"]],
+        "3>1": [["aw", "j-"]],
+        "3>2": [["am", "oj-"]]
     }
     lang_clauses["aku"] = {
         "3>1+2": [["k-"]],
         "1>2": [["k-"]],
         "2>1": [["k-"]],
         "1>3": [["w-"]],
-        "1+2>3": [["kɨt-"]]
+        "1+2>3": [["kɨt-"]],
+        "3>1": [["jː-"],["Øː-"]],
+        "3>2": [["ə-"]]
     }
     lang_clauses["cum"] = {
         "1>2": [["kaj-"], ["kən-"], ["k-"]],
@@ -591,7 +601,9 @@ def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
         "1>2": [["k-"]],
         "2>1": [["k-"]],
         "1>3": [["i-"]],
-        "1+2>3": [["kɨt-"]]
+        "1+2>3": [["kɨt-"]],
+        "3>1": [["j-"], ["ji-"], ["voice"]],
+        "3>2": [["əj-"]]
     }
     lang_clauses["pem"] = {
         "1>3": "s-",
@@ -614,12 +626,12 @@ def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
                     this_morph = []
                     for morpheme in morpheme_combo:
                         if DBSession.query(Morpheme).filter(Morpheme.id == morpheme).count() >= 1:
-                            if not reconstructed or DBSession.query(Morpheme).filter(Morpheme.id == morpheme)[0].counterparts[0].valueset.parameter.id == "NA":
+                            if not reconstructed or DBSession.query(Morpheme).filter(Morpheme.id == morpheme)[0].counterparts[0].cognateset.id == "NA":
                                 this_morph.append("morph:" + morpheme)#data["Morpheme"][morpheme].name + " "
                             else:
                                 # print()
                                 for counterpart in DBSession.query(Morpheme).filter(Morpheme.id == morpheme)[0].counterparts:
-                                    this_morph.append("cogset:" + counterpart.valueset.parameter.id)
+                                    this_morph.append("cogset:" + counterpart.cognateset.id)
                         else:
                             this_morph.append("obj:" + morpheme)
                     all_morphs.append("£".join(this_morph))
