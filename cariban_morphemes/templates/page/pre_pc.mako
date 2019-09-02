@@ -89,31 +89,31 @@ Even more interestingly, these two languages are at the periphery of the family,
 	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
 	"1>2",
 	"gildea_norm",
-	True,
+	False,
 )
 tree2 = u.get_morpheme_tree(
 	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
 	"2>1",
 	"gildea_norm",
-	True,
+	False,
 )
 tree3 = u.get_morpheme_tree(
 	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
 	"1>3",
 	"gildea_norm",
-	True,
+	False,
 )
 tree4 = u.get_morpheme_tree(
 	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
 	"3>1",
 	"gildea_norm",
-	True,
+	False,
 )
 tree5 = u.get_morpheme_tree(
 	["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old"],
 	"3>2",
 	"gildea_norm",
-	True,
+	False,
 )
  %>
 
@@ -144,7 +144,7 @@ tree5 = u.get_morpheme_tree(
 		
 	    $('#tree4').tree({
 	        data: [
-	    ${ json.dumps(tree3) | n },
+	    ${ json.dumps(tree4) | n },
 	],
 			autoEscape: false,
 			autoOpen: true
@@ -152,7 +152,7 @@ tree5 = u.get_morpheme_tree(
 		
 	    $('#tree5').tree({
 	        data: [
-	    ${ json.dumps(tree3) | n },
+	    ${ json.dumps(tree5) | n },
 	],
 			autoEscape: false,
 			autoOpen: true

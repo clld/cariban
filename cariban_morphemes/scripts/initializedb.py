@@ -277,20 +277,28 @@ def main(args):
         name="main clause verb"
     )
     
+    data.add(
+        models.MainClauseVerb,
+        "n",
+        id="n",
+        name="subordinate clause verb"
+    )
+    
     cons_cnt = 0
     for row in construction_data["FormTable"]:
         cons_cnt += 1
     for i, row in enumerate(construction_data["FormTable"]):
         print("%s/%s" % (i+1, cons_cnt), end="\r")
-        data.add(
+        new_construction = data.add(
             models.Construction,
             row["ID"],
             id=row["ID"],
             language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
             name=row["Description"],
-            declarativetype=data["DeclarativeType"][row["DeclarativeType"]],
-            mainclauseverb=data["MainClauseVerb"][row["MainClauseVerb"]]
+            mainclauseverb=data["MainClauseVerb"][row["MainClauseVerb"]],
         )
+        if row["DeclarativeType"] != None:
+            new_construction.declarativetype = data["DeclarativeType"][row["DeclarativeType"]]
     print("")
     
     print("Adding morpheme functions…")
@@ -464,8 +472,9 @@ def main(args):
     newick_files = {}
     tree_reader = csv.DictReader(open("../cariban_trees.csv"))
     tree_cnt = 0
+    own_trees = ["matter", "auto_tree", "lingpy_tree"]
     for row in tree_reader:
-        if row["ID"] == "matter": continue
+        if row["ID"] in own_trees: continue
         tree_cnt += 1
         newick_files[row["ID"]] = {
             "orig": row["ID"]+"_orig.newick",
@@ -475,18 +484,19 @@ def main(args):
             "o_comment": row["Orig_Comment"]
         }
     #adding my own tree separately.
-    tree_cnt += 1
-    my_tree = Phylo.read(tree_path+"/"+"matter.newick", "newick")
-    edited_tree = io.StringIO()
-    Phylo.write(my_tree, edited_tree, "newick")
-    tree = edited_tree.getvalue().replace(":0.00000","")
-    my_phylo = Phylogeny(
-            "matter",
-            id="matter",
-            name="Matter (2019)",
-            newick=tree
-    )
-    DBSession.add(my_phylo)
+    for my_tree_count, tree_id in enumerate(own_trees):
+        tree_cnt += 1
+        my_tree = Phylo.read(tree_path+"/"+"%s.newick" % tree_id, "newick")
+        edited_tree = io.StringIO()
+        Phylo.write(my_tree, edited_tree, "newick")
+        tree = edited_tree.getvalue().replace(":0.00000","")
+        my_phylo = Phylogeny(
+                tree_id,
+                id=tree_id,
+                name="Matter (2019), Tree %s" % str(my_tree_count+1),
+                newick=tree
+        )
+        DBSession.add(my_phylo)
     c = 1
     for tree_id, values in newick_files.items():
         print("%s/%s" % (c, tree_cnt), end="\r")
@@ -572,7 +582,7 @@ def main(args):
     
     
     print("Creating Set I LaTeX and csv tables…")
-    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old", "bak_main", "yuk_imm"]
+    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old", "bak_main", "yuk_imm", "mac_new_imp", "pem_old"]
     main_clause_markers = [["Language_ID", "Feature_ID", "Value"]]
     
     for morpheme_function in FUNCTION_PARADIGMS:
