@@ -38,7 +38,7 @@ class FunctionCol(LinkCol):
     
     def get_attrs(self, item):
         return dict(label = item)
-    
+        
     def format(self, item):
         obj = self.get_obj(item).unitvalues
         my_link = []
@@ -52,7 +52,7 @@ class FunctionCol(LinkCol):
 class Meanings(Unitparameters):
     def col_defs(self):
         return [
-            LinkCol(self, 'Gloss'),
+            LinkCol(self, 'Gloss', model_col=UnitParameter.name),
         ]
 
 class Morphemes(Units):
@@ -72,7 +72,7 @@ class Morphemes(Units):
         
     def col_defs(self):
         base = [
-            LinkCol(self, 'form'),
+            LinkCol(self, 'form', model_col=Morpheme.name),
             FunctionCol(self, 'function'),
         ]
            
@@ -87,7 +87,7 @@ class Morphemes(Units):
 class Cognatesets(DataTable):
     def col_defs(self):
         return [
-            LinkCol(self, 'reconstructed'),
+            LinkCol(self, 'reconstructed', model_col=Cognateset.name),
             Col(self, 'description'),
             RefsCol(self, 'references')
         ]
@@ -142,8 +142,8 @@ class Constructions(DataTable):
             LinkCol(self, 'name'),
         ]
         if not self.language:
-            base.append(LinkCol(self, 'language', get_obj=lambda i: i.language))
-        
+            base.append(LinkCol(self, 'language', get_obj=lambda i: i.language, model_col=Language.name))
+
         if not self.declarativetype:
             base.append(LinkCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype))
             
