@@ -41,7 +41,8 @@ class Construction(Base, PolymorphicBaseMixin, IdNameDescriptionMixin, HasSource
     mainclauseverb_pk = Column(Integer, ForeignKey("mainclauseverb.pk"))
     
 @implementer(interfaces.IUnit)
-class Morpheme(CustomModelMixin, Unit, HasSourceMixin, PolymorphicBaseMixin):
+class Morpheme(CustomModelMixin, Unit, HasSourceMixin):
+    morpheme_type = Column(String)
     pk = Column(Integer, ForeignKey('unit.pk'), primary_key=True)
     construction_pk = Column(Integer, ForeignKey("construction.pk"))
         

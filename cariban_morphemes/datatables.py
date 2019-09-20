@@ -13,6 +13,9 @@ from clld.interfaces import IMenuItems
 from clld.web.util.helpers import (
     link, button, icon, JS_CLLD, external_link, linked_references, JSDataTable,
 )
+from sqlalchemy.orm import joinedload
+
+
 class CognatesetCol(Col):
     def __init__(self, dt, name, **kw):
         kw['sTitle'] = "Cognate set(s)"
@@ -56,6 +59,17 @@ class Morphemes(Units):
     
     __constraints__ = [MorphemeFunction, Language]
     
+    def base_query(self, query):
+        query = query.join(Language).options(
+            joinedload(
+                Morpheme.language
+            )
+            )
+
+        if self.language:
+            return query.filter(Unit.language == self.language)
+        return query
+        
     def col_defs(self):
         base = [
             LinkCol(self, 'form'),
@@ -109,8 +123,10 @@ class Constructions(DataTable):
     
     def base_query(self, query):
         
+        query = query.join(Language).options(joinedload(Construction.language))
+        
         if self.language:
-            return query.filter(Construction.language_pk == self.language.pk)
+            return query.filter(Construction.language == self.language)
         
         if self.declarativetype:
             return query.filter(Construction.declarativetype_pk == self.declarativetype.pk)
