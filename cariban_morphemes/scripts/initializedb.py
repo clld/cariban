@@ -678,7 +678,10 @@ def main(args):
         lang_id = LANG_DIC[row["Language_ID"]]["ID"]
         morph_id = lang_id+"_"+cognate_ID
         if morph_id in data["Morpheme"].keys():
-            morph_id += "_2"
+            if morph_id + "_2" in data["Morpheme"].keys():
+                morph_id += "_3"
+            else:
+                morph_id += "_2"
         t_verb = data.add(models.Morpheme,
             morph_id,
             id=morph_id,
