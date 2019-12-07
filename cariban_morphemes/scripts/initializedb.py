@@ -4,7 +4,7 @@ import sys
 from clld.scripts.util import initializedb, Data, add_language_codes
 from clld.db.meta import DBSession
 from clld.db.models import common
-from pynterlinear import pynterlinear
+import pynterlinear
 from pycldf import Wordlist, Generic
 from clld.lib.bibtex import EntryType, unescape
 from nameparser import HumanName
