@@ -233,6 +233,7 @@ def main(args):
         print("%s/%s" % (i+1, morph_cnt), end="\r")
         new_morph = data.add(models.Morpheme,
             row["ID"],
+            morpheme_type="grammatical",
             language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
             name="/".join(row["Form"]),
             id=row["ID"],
@@ -661,7 +662,40 @@ def main(args):
                     key=source.id,
                     description=pages)
                     )
-
+    
+    print("Adding swadesh lists…")
+    swadesh_reader = csv.DictReader(open("../../trees/phylo_tree/cariban_swadesh_list.csv"))
+    first_found = []
+    for row in swadesh_reader:
+        if row["Language_ID"] not in data["Language"].keys(): continue
+        function = row["Feature_ID"].replace(".","_")
+        morph_id = row["Language_ID"] + "_" + function
+        if morph_id in first_found: continue
+        first_found.append(morph_id)
+        if function not in data["Meaning"].keys():
+            data.add(models.Meaning,
+                function,
+                id=function,
+                name=function
+            )
+        morpheme = data.add(models.Morpheme,
+                    morph_id,
+                    id=morph_id,
+                    morpheme_type="lexical",
+                    name=row["Value"],
+                    language=data["Language"][row["Language_ID"]],
+                )
+        print(morph_id)
+        print(function)
+        data.add(models.MorphemeFunction,
+            "%s:%s" % (morph_id, function),
+            id="%s:%s" % (morph_id, function),
+            name="MorphemeFunction %s:%s"% (morph_id, function),
+            unit=data["Morpheme"][morph_id],
+            unitparameter=data["Meaning"][function],
+            construction=None
+        )
+    
     print("Adding t-adding verbs…")
     t_langs = {}
     t_verbs = {}
@@ -685,6 +719,7 @@ def main(args):
         t_verb = data.add(models.Morpheme,
             morph_id,
             id=morph_id,
+            morpheme_type="t_adding",
             name=row["Form"],
             language=data["Language"][lang_id],
         )

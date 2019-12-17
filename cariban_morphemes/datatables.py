@@ -14,7 +14,7 @@ from clld.web.util.helpers import (
     link, button, icon, JS_CLLD, external_link, linked_references, JSDataTable,
 )
 from sqlalchemy.orm import joinedload
-
+from clldutils.misc import dict_merged
 
 class CognatesetCol(Col):
     def __init__(self, dt, name, **kw):
@@ -59,6 +59,16 @@ class Morphemes(Units):
     
     __constraints__ = [MorphemeFunction, Language]
     
+    def __init__(self, req, model, **kw):
+        self.morpheme_type = kw.pop('morpheme_type', req.params.get('morpheme_type', None))
+        print("initializing morpheme datatable with type %s" % self.morpheme_type)
+        if self.morpheme_type:
+            kw['eid'] = 'Morphemes-' + self.morpheme_type
+        super(Morphemes, self).__init__(req, model, **kw)
+    
+    def xhr_query(self):
+        return dict_merged(super(Morphemes, self).xhr_query(), morpheme_type=self.morpheme_type)
+                
     def base_query(self, query):
         query = query.join(Language).options(
             joinedload(
@@ -67,7 +77,11 @@ class Morphemes(Units):
             )
 
         if self.language:
-            return query.filter(Unit.language == self.language)
+            query = query.filter(Morpheme.language == self.language)
+        
+        if self.morpheme_type:
+            query = query.filter(Morpheme.morpheme_type == self.morpheme_type)
+        
         return query
         
     def col_defs(self):
