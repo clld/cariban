@@ -48,7 +48,17 @@ class FunctionCol(LinkCol):
                 my_link.append(link(self.dt.req, i.unitparameter, **self.get_attrs(i.unitparameter)))
             found_functions.append(i.unitparameter)
         return my_link
-    
+        
+class DeclarativeTypeCol(Col):
+    def format(self, item):
+        return item.declarativetype.name
+
+    def order(self):
+        return DeclarativeType.name
+
+    def search(self, qs):
+        return DeclarativeType.name.contains(qs)
+        
 class Meanings(Unitparameters):
     def col_defs(self):
         return [
@@ -159,10 +169,10 @@ class Constructions(DataTable):
             base.append(LinkCol(self, 'language', get_obj=lambda i: i.language, model_col=Language.name))
 
         if not self.declarativetype:
-            base.append(LinkCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype))
+            base.append(DeclarativeTypeCol(self, 'declarativetype', sTitle="Declarative?"))
             
         if not self.mainclauseverb:
-            base.append(LinkCol(self, 'mainclauseverb', sTitle="Main clause verb?", get_obj=lambda i: i.mainclauseverb))
+            base.append(LinkCol(self, 'mainclauseverb', sTitle="Main clause verb?", get_obj=lambda i: i.mainclauseverb, model_col=MainClauseVerb.name))
             
         return base
             
@@ -195,7 +205,7 @@ class MorphemeFunctions(Unitvalues):
             RefsCol(self, 'references', get_obj=lambda i: i.unit)
         ]
         
-class Languages (Languages):
+class Languages(Languages):
     def col_defs(self):
         return [
             LinkCol(self, 'name'),
