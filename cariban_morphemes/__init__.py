@@ -17,6 +17,8 @@ _('Unitparameters')
 _('Sentence')
 _('Sentences')
 _('Phylogenys')
+_('Unit')
+_('Units')
 
 def notfound(request):
     raise HTTPFound(location='/')

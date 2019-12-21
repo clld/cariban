@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: cariban_morphemes 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-04 08:47+0200\n"
+"POT-Creation-Date: 2019-12-17 17:32+0100\n"
 "PO-Revision-Date: 2019-04-02 11:00+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -38,6 +38,14 @@ msgstr "Examples"
 #: cariban_morphemes/__init__.py:19
 msgid "Phylogenys"
 msgstr "Phylogenies"
+
+#: cariban_morphemes/__init__.py:20
+msgid "Unit"
+msgstr "Morpheme"
+
+#: cariban_morphemes/__init__.py:21
+msgid "Units"
+msgstr "Morphemes"
 
 #~ msgid "Parameter"
 #~ msgstr "Cognate set"

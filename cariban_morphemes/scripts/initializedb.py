@@ -19,6 +19,8 @@ import json
 #to edit tree labels
 from Bio import Phylo
 import io
+from ipapy.ipastring import IPAString
+
 
 #This contains lists of:
 # morphemes
@@ -56,7 +58,16 @@ f = open("lang_code_dic.json","w")
 f.write(json_file)
 f.close()
 from cariban_morphemes import util
-    
+
+#To figure out whether a given t-adding verb would have the prefix tɨ- or t-
+def t_prefix_form(string):
+    print(string)
+    initial = IPAString(unicode_string=string, ignore=True)
+    if len(initial.consonants) > 0 and initial.consonants[0].is_equivalent(initial[0]):
+        return "tɨ"
+    else:
+        return "t"
+        
 #This returns a author-year style reference from the bibtex file.
 def get_source_name(source):
     year = source.get('year', 'nd')
@@ -140,7 +151,7 @@ def main(args):
                 latitude=float(row["Latitude"]) if row["Latitude"] is not None else None,
                 longitude=float(row["Longitude"]) if row["Longitude"] is not None else None,
             )
-            add_language_codes(data, language, isocode="", glottocode = row["Glottocode"])
+            add_language_codes(data, language, isocode=row["ISO"], glottocode = row["Glottocode"])
     print("")
        
     print("Adding sources…")
@@ -642,10 +653,11 @@ def main(args):
     t_reader = csv.DictReader(open("../cariban_t_cognates.csv"))
     for row in t_reader:
         cognate_ID = "t"+row["ID"]
+        rec_t_form = "*[%s]%s" % (t_prefix_form(row["Form"]), row["Form"])
         t_cogset = data.add(models.Cognateset,
             cognate_ID,
             id=cognate_ID,
-            name="*"+"[t-]"+row["Form"],
+            name=rec_t_form,
             description="t-adding verb: ‘%s’" % row["Meaning"]
         )
         if row["Source"]:
@@ -685,8 +697,6 @@ def main(args):
                     name=row["Value"],
                     language=data["Language"][row["Language_ID"]],
                 )
-        print(morph_id)
-        print(function)
         data.add(models.MorphemeFunction,
             "%s:%s" % (morph_id, function),
             id="%s:%s" % (morph_id, function),
@@ -729,7 +739,7 @@ def main(args):
             )
         )
         if row["t?"] == "y":
-            t_verb.name = "[t-]"+t_verb.name
+            t_verb.name = "[%s]%s" % (t_prefix_form(t_verb.name), t_verb.name)
             t_verb.markup_description = util.generate_markup("Shows cogset:t")
         if row["t?"] == "?" and lang_id not in non_t_adding_lgs:
             t_verb.name = "[t-?]"+t_verb.name

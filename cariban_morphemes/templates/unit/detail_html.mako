@@ -3,13 +3,22 @@
 <%namespace name="cmutil" file="../cmutil.mako"/>
 <%! active_menu_item = "units" %>
 
-
+<%
+mtypes ={"t_adding": "potentially t-adding verb",
+"lexical": "Swadesh list entry)",
+"grammatical": "grammatical morpheme"
+}
+%>
 <h3>${_('Morpheme')} ${ctx.name}</h3>
 <table class="table table-nonfluid">
     <tbody>
 	<tr>
 	<td>Form:</td>
 	<td>${ctx.name}</td>
+	</tr>
+	<tr>
+	<td>Type:</td>
+	<td>${mtypes[ctx.morpheme_type]}</td>
 	</tr>
 	<tr>
 	<td>Language:</td>
