@@ -225,7 +225,12 @@ def generate_markup(non_f_str: str, html=True):
     def morph_lk(morph_id, form=""):
         if morph_id == "":
             return ""
-        morph = DBSession.query(Morpheme).filter(Morpheme.id == morph_id)[0]
+        morph_list = DBSession.query(Morpheme).filter(Morpheme.id == morph_id)
+        if len(list(morph_list)) == 0:
+            print(f"Morpheme {morph_id} not found in database!")
+            return f"MISSING MORPHEME {morph_id}"
+        else:
+            morph = morph_list[0]
         if html:
             if form == "": form = morph.name#.split("/")[0]
             return "<i><a href='/morpheme/%s'>%s</a></i>" % (morph_id, form)
@@ -348,7 +353,7 @@ def intransitive_construction_paradigm(construction, html=True):
     entries = []
     for entry in FUNCTION_PARADIGMS:
         new_entry = entry
-        if re.match("\d(\+\d)?S", entry["Function"]):
+        if re.match("\d(\+\d)?\w", entry["Function"]) and "." not in entry["Function"]:
             new_entry["S"] = entry["Function"]#.replace("S","")
         else:
             continue

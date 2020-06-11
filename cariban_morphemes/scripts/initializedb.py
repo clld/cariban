@@ -42,11 +42,11 @@ LANG_ABBREV_DIC = {}
 #and this is used to look up language names based on the code. used for trees
 LANG_CODE_DIC = {}
 for row in cariban_data["LanguageTable"]:
-    if row["Sampled"] == "y":
-        LANG_DIC[row["Glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
-        LANG_ABBREV_DIC[row["Shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
+    LANG_DIC[row["Glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
+    LANG_ABBREV_DIC[row["Shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
     # if row["Dialect_Of"] is None:
     LANG_CODE_DIC[row["ID"]] = {"shorthand": row["Shorthand"], "name": row["Name"]}
+    
 #Save to json to make the dics available to util.py
 json_file = json.dumps(LANG_ABBREV_DIC)
 f = open("lang_code_dic.json","w")
@@ -61,7 +61,6 @@ from cariban_morphemes import util
 
 #To figure out whether a given t-adding verb would have the prefix tɨ- or t-
 def t_prefix_form(string):
-    print(string)
     initial = IPAString(unicode_string=string, ignore=True)
     if len(initial.consonants) > 0 and initial.consonants[0].is_equivalent(initial[0]):
         return "tɨ"
@@ -175,7 +174,7 @@ def main(args):
     print("Adding language sources…")
     mapreader = csv.DictReader(open("../../raw examples/lit_lang_mappings.csv"))
     for row in mapreader:
-        if row["Language_ID"] not in data["Language"].keys(): continue
+        if row["Language_ID"] not in data["Language"]: continue
         DBSession.add(
             common.LanguageSource(
                 language_pk=data["Language"][row["Language_ID"]].pk,
@@ -209,6 +208,9 @@ def main(args):
     for i, row in enumerate(cariban_data["ExampleTable"]):
         if row["Language_ID"] not in LANG_DIC.keys(): continue
         print("%s/%s" % (i+1, ex_cnt), end="\r")
+        lang_id = LANG_DIC[row["Language_ID"]]["ID"]
+        if lang_id in dialect_mapping:
+            lang_id = dialect_mapping[lang_id]
         new_ex = data.add(common.Sentence,
         row["ID"],
         id=row["ID"],
@@ -216,7 +218,7 @@ def main(args):
         description=row["Translated_Text"],
         analyzed="\t".join(row["Analyzed_Word"]),
         gloss=clldify_glosses("\t".join(row["Gloss"])),
-        language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+        language=data["Language"][lang_id],
         comment=row["Comment"],
         markup_gloss="\t".join(row["Morpheme_IDs"])
         )
@@ -241,11 +243,14 @@ def main(args):
     for row in cariban_data["FormTable"]:
         morph_cnt+=1
     for i, row in enumerate(cariban_data["FormTable"]):
-        print("%s/%s" % (i+1, morph_cnt), end="\r")
+        lang_id = LANG_DIC[row["Language_ID"]]["ID"]
+        if lang_id in dialect_mapping:
+            lang_id = dialect_mapping[lang_id]
+        # print("%s/%s" % (i+1, morph_cnt), end="\r")
         new_morph = data.add(models.Morpheme,
             row["ID"],
             morpheme_type="grammatical",
-            language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+            language=data["Language"][lang_id],
             name="/".join(row["Form"]),
             id=row["ID"],
         )
@@ -301,11 +306,14 @@ def main(args):
         cons_cnt += 1
     for i, row in enumerate(construction_data["FormTable"]):
         print("%s/%s" % (i+1, cons_cnt), end="\r")
+        lang_id = LANG_DIC[row["Language_ID"]]["ID"]
+        if lang_id in dialect_mapping:
+            lang_id = dialect_mapping[lang_id]
         new_construction = data.add(
             models.Construction,
             row["ID"],
             id=row["ID"],
-            language=data["Language"][LANG_DIC[row["Language_ID"]]["ID"]],
+            language=data["Language"][lang_id],
             name=row["Description"],
             mainclauseverb=data["MainClauseVerb"][row["MainClauseVerb"]],
         )
@@ -347,6 +355,7 @@ def main(args):
                                 )
                                 )
                             morpheme_function_key = "%s:%s:%s" % (morpheme, function, construction)
+                            morpheme_function_key = morpheme_function_key.replace(".","_")
                             data.add(models.MorphemeFunction,
                                 "%s:%s" % (morpheme, function),
                                 id=morpheme_function_key,
@@ -498,6 +507,7 @@ def main(args):
     #adding my own tree separately.
     for my_tree_count, tree_id in enumerate(own_trees):
         tree_cnt += 1
+        print(tree_id)
         my_tree = Phylo.read(tree_path+"/"+"%s.newick" % tree_id, "newick")
         edited_tree = io.StringIO()
         Phylo.write(my_tree, edited_tree, "newick")
@@ -594,7 +604,7 @@ def main(args):
     
     
     print("Creating Set I LaTeX and csv tables…")
-    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old", "bak_main", "yuk_imm", "mac_new_imp", "pem_old"]
+    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old", "bak_main", "yuk_imm", "mac_new_imp", "pem_old", "kax_main"]
     main_clause_markers = [["Language_ID", "Feature_ID", "Value"]]
     
     for morpheme_function in FUNCTION_PARADIGMS:
@@ -676,12 +686,31 @@ def main(args):
                     )
     
     print("Adding swadesh lists…")
+    proto_forms = {}
+    proto_reader = csv.DictReader(open("../../trees/phylo_tree/cariban_reconstructions.csv"))
+    for row in proto_reader:
+        proto_forms[row["ID"]] = row["Form"]
     swadesh_reader = csv.DictReader(open("../../trees/phylo_tree/cariban_swadesh_list.csv"))
+    for row in swadesh_reader:
+        cognate_ID = row["Feature_ID"]+"-"+row["Cognate_ID"]
+        if cognate_ID in proto_forms:
+            form = proto_forms[cognate_ID]
+        else:
+            form = ""
+        if cognate_ID not in data["Cognateset"]:
+            swadesh_cogset = data.add(models.Cognateset,
+                cognate_ID,
+                id=cognate_ID,
+                name=form,
+            )
+                    
     first_found = []
+    swadesh_reader = csv.DictReader(open("../../trees/phylo_tree/cariban_swadesh_list.csv"))
     for row in swadesh_reader:
         if row["Language_ID"] not in data["Language"].keys(): continue
         function = row["Feature_ID"].replace(".","_")
         morph_id = row["Language_ID"] + "_" + function
+        cognate_ID = row["Feature_ID"]+"-"+row["Cognate_ID"]
         if morph_id in first_found: continue
         first_found.append(morph_id)
         if function not in data["Meaning"].keys():
@@ -705,6 +734,11 @@ def main(args):
             unitparameter=data["Meaning"][function],
             construction=None
         )
+        DBSession.add(models.Cognate(
+                cognateset=data["Cognateset"][cognate_ID],
+                counterpart=morpheme
+            )
+        )
     
     print("Adding t-adding verbs…")
     t_langs = {}
@@ -720,6 +754,8 @@ def main(args):
         if row["Language_ID"] == "cari1283": continue
         cognate_ID = "t"+row["Cognateset_ID"]
         lang_id = LANG_DIC[row["Language_ID"]]["ID"]
+        if lang_id in dialect_mapping:
+            lang_id = dialect_mapping[lang_id]
         morph_id = lang_id+"_"+cognate_ID
         if morph_id in data["Morpheme"].keys():
             if morph_id + "_2" in data["Morpheme"].keys():
