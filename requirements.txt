@@ -13,4 +13,3 @@ clld-phylogeny-plugin
 markdown
 biopython
 ipapy
-python-3.7.7
