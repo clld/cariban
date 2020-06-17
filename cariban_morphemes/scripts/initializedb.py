@@ -168,6 +168,14 @@ def main(args):
             description=src.get("title", src.get("booktitle")).replace("{","").replace("}",""),
             bibtex_type=getattr(EntryType, src.genre, EntryType.misc),
     **src)
+    data.add(
+        common.Source,
+        "pc",
+        id="pc",
+        name="Personal communication",
+        description="Placeholder for data obtained from personal communication.",
+        bibtex_type=EntryType.misc
+    )
     print("")
 
     DBSession.flush()
@@ -238,6 +246,27 @@ def main(args):
                     )
     print("")
     
+    def add_morpheme_reference(morpheme, source_string):
+        if len(source_string.split("[")) > 1:
+            bib_key = source_string.split("[")[0]
+            pages = source_string.split("[")[1].split("]")[0]
+        else:
+            bib_key = source_string
+            pages = ""
+        if bib_key in data["Source"]:
+            source = data["Source"][bib_key]
+            DBSession.add(models.MorphemeReference(
+                morpheme=morpheme,
+                source=source,
+                key=source.id,
+                description=pages.replace("--","–")
+                )
+            )
+        elif bib_key == "pc":
+            print(type(morpheme.references))
+            morpheme.references.append("%s, p.c." % pages)
+            # morpheme.source = "%s, p.c." % pages
+            
     print("Adding morphemes…")
     morph_cnt=0
     for row in cariban_data["FormTable"]:
@@ -255,20 +284,21 @@ def main(args):
             id=row["ID"],
         )
         if row["Source"]:
-            bib_key = row["Source"][0].split("[")[0]
-            if len(row["Source"][0].split("[")) > 1:
-                pages = row["Source"][0].split("[")[1].split("]")[0]
-            else:
-                pages = " "    
-            if bib_key in data["Source"]:
-                source = data["Source"][bib_key]
-                DBSession.add(models.MorphemeReference(
-                    morpheme=new_morph,
-                    source=source,
-                    key=source.id,
-                    description=pages.replace("--","–")
-                    )
-                )
+            add_morpheme_reference(new_morph, row["Source"][0])
+            # bib_key = row["Source"][0].split("[")[0]
+            # if len(row["Source"][0].split("[")) > 1:
+            #     pages = row["Source"][0].split("[")[1].split("]")[0]
+            # else:
+            #     pages = " "
+            # if bib_key in data["Source"]:
+            #     source = data["Source"][bib_key]
+            #     DBSession.add(models.MorphemeReference(
+            #         morpheme=new_morph,
+            #         source=source,
+            #         key=source.id,
+            #         description=pages.replace("--","–")
+            #         )
+            #     )
     print("")
     
     print("Adding constructions…")
@@ -483,7 +513,7 @@ def main(args):
         if row["ID"] == "13pro":
             data["Cognateset"][row["ID"]].markup_description += util.generate_markup(
                 util.comparative_function_paradigm(
-                    ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_old"],
+                    ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_old", "kax_main"],
                     "1+3 scenarios",
                     ["1+3S", "1+3>3", "3>1+3", "2>1+3", "1+3>2"]))
     print("")
@@ -604,12 +634,12 @@ def main(args):
     
     
     print("Creating Set I LaTeX and csv tables…")
-    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old", "bak_main", "yuk_imm", "mac_new_imp", "pem_old", "kax_main"]
+    main_clauses = ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_pstpfv", "ing_old", "bak_main", "yuk_imm", "mac_new_imp", "pem_old", "kax_main", "aku_main"]
     main_clause_markers = [["Language_ID", "Feature_ID", "Value"]]
     
     for morpheme_function in FUNCTION_PARADIGMS:
         # if ("1+3" in morpheme_function["Function"] and "2" in morpheme_function["Function"]) or morpheme_function["Construction"] not in main_clauses:
-        if morpheme_function["Construction"] not in main_clauses or morpheme_function["Morpheme"][0] == "?":
+        if morpheme_function["Construction"] not in main_clauses or morpheme_function["Morpheme"][0] == "?" or "1+3" in morpheme_function["Function"]:
             continue
         cognate_sets = []
         for morph in morpheme_function["Morpheme"]:
@@ -624,7 +654,7 @@ def main(args):
             ":".join(cognate_sets)
         ])
         
-    with open("/Users/florianm/Dropbox/Uni/Research/LiMiTS/trees/phylo_tree/main_clause_markers.csv", "w") as f:
+    with open("/Users/florianm/Dropbox/Uni/Research/LiMiTS/trees/phylo_tree/feature_files/setone.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerows(main_clause_markers)
         
@@ -734,6 +764,9 @@ def main(args):
             unitparameter=data["Meaning"][function],
             construction=None
         )
+        if row["Source"]:
+            add_morpheme_reference(morpheme, row["Source"])
+            
         DBSession.add(models.Cognate(
                 cognateset=data["Cognateset"][cognate_ID],
                 counterpart=morpheme
@@ -798,20 +831,8 @@ def main(args):
         if lang_id not in non_t_adding_lgs:
             t_verbs[cognate_ID][row["t?"]] += 1
         if row["Source"]:
-            bib_key = row["Source"].split("[")[0]
-            if len(row["Source"].split("[")) > 1:
-                pages = row["Source"].split("[")[1].split("]")[0]
-            else:
-                pages = " "
-            if bib_key in data["Source"]:
-                source = data["Source"][bib_key]
-                DBSession.add(models.MorphemeReference(
-                    morpheme=t_verb,
-                    source=source,
-                    key=source.id,
-                    description=pages.replace("--","–")
-                    )
-                )
+            add_morpheme_reference(t_verb, row["Source"])
+            
         data.add(models.MorphemeFunction,
             "t_"+row["ID"],
             id="t_"+row["ID"],
