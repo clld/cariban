@@ -21,6 +21,11 @@ from Bio import Phylo
 import io
 from ipapy.ipastring import IPAString
 
+import importlib.util
+spec = importlib.util.spec_from_file_location("morph_merge", "/Users/florianm/Dropbox/Stuff/development/morph_merge/__init__.py")
+mm = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mm)
+
 
 #This contains lists of:
 # morphemes
@@ -276,11 +281,12 @@ def main(args):
         if lang_id in dialect_mapping:
             lang_id = dialect_mapping[lang_id]
         # print("%s/%s" % (i+1, morph_cnt), end="\r")
+        form = mm.merge_allomorphs("; ".join(row["Form"])).split("; ")
         new_morph = data.add(models.Morpheme,
             row["ID"],
             morpheme_type="grammatical",
             language=data["Language"][lang_id],
-            name="/".join(row["Form"]),
+            name="/".join(form),
             id=row["ID"],
         )
         if row["Source"]:
@@ -724,7 +730,7 @@ def main(args):
     for row in swadesh_reader:
         cognate_ID = row["Feature_ID"]+"-"+row["Cognate_ID"]
         if cognate_ID in proto_forms:
-            form = proto_forms[cognate_ID]
+            form = "*" + proto_forms[cognate_ID]
         else:
             form = ""
         if cognate_ID not in data["Cognateset"]:

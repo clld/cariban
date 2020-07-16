@@ -235,8 +235,15 @@ def generate_markup(non_f_str: str, html=True):
             if form == "": form = morph.name#.split("/")[0]
             return "<i><a href='/morpheme/%s'>%s</a></i>" % (morph_id, form)
         else:
-            if form == "": form = morph.name#.split("/")[0]
-            return "\\obj{%s}" % form
+            if form == "":
+                allomorphs = morph.name.split("/")
+                form = []
+                for allomorph in allomorphs:
+                    form.append("\\obj{%s}" % allomorph)
+                form = "/".join(form)
+            else:
+                form = "\\obj{%s}" % form
+            return form
         
     def render_ex(ex_id):
         nonlocal ex_cnt
@@ -341,7 +348,7 @@ def build_table(table, label):
                 if output[0][col_count+1] == y_key:
                     if type(y) is list:
                         # print(y)
-                        y = "; ".join(y)
+                        y = ", ".join(y)
                     output[row_count][col_count+1] = y
                 col_count += 1
     if label == "": del output[0]
