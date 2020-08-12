@@ -2,6 +2,7 @@ MANIFEST.in
 README.md
 development.ini
 requirements.txt
+runtime.txt
 setup.cfg
 setup.py
 tox.ini
