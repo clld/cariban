@@ -268,7 +268,6 @@ def main(args):
                 )
             )
         elif bib_key == "pc":
-            print(type(morpheme.references))
             morpheme.references.append("%s, p.c." % pages)
             # morpheme.source = "%s, p.c." % pages
             
@@ -543,7 +542,7 @@ def main(args):
     #adding my own tree separately.
     for my_tree_count, tree_id in enumerate(own_trees):
         tree_cnt += 1
-        print(tree_id)
+        # print(tree_id)
         my_tree = Phylo.read(tree_path+"/"+"%s.newick" % tree_id, "newick")
         edited_tree = io.StringIO()
         Phylo.write(my_tree, edited_tree, "newick")

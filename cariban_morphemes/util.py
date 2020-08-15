@@ -356,12 +356,14 @@ def build_table(table, label):
 
 
 def intransitive_construction_paradigm(construction, html=True):
+    print("constructing intransitive paradigm for %s" % construction)
     table = {}
     entries = []
     for entry in FUNCTION_PARADIGMS:
         new_entry = entry
-        if re.match("\d(\+\d)?\w", entry["Function"]) and "." not in entry["Function"]:
-            new_entry["S"] = entry["Function"]#.replace("S","")
+        # if re.match("\d(\+\d)?\w", entry["Function"]) and "." not in entry["Function"]:
+        if re.match("\d(\+\d)?S", entry["Function"]) and "." not in entry["Function"]:
+            new_entry["S"] = entry["Function"].replace("S","")
         else:
             continue
         entries.append(new_entry)
