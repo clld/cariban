@@ -742,7 +742,10 @@ def main(args):
     first_found = []
     swadesh_reader = csv.DictReader(open("../../trees/phylo_tree/cariban_swadesh_list.csv"))
     for row in swadesh_reader:
-        if row["Language_ID"] not in data["Language"].keys(): continue
+        lang_id = row["Language_ID"]
+        if lang_id in dialect_mapping:
+            lang_id = dialect_mapping[lang_id]
+        if lang_id not in data["Language"].keys(): continue
         function = row["Feature_ID"].replace(".","_")
         morph_id = row["Language_ID"] + "_" + function
         cognate_ID = row["Feature_ID"]+"-"+row["Cognate_ID"]
@@ -759,7 +762,7 @@ def main(args):
                     id=morph_id,
                     morpheme_type="lexical",
                     name=row["Value"],
-                    language=data["Language"][row["Language_ID"]],
+                    language=data["Language"][lang_id],
                 )
         data.add(models.MorphemeFunction,
             "%s:%s" % (morph_id, function),
