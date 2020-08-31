@@ -2,11 +2,19 @@
 <%namespace name="util" file="../util.mako"/>
 <%! active_menu_item = "units" %>
 
+<%block name="head">
+    <script>
+	var target = location.hash.substr(1)
+	$(document).ready(function(){
+		$('.nav-tabs a[href="#' + target + '"]').tab('show');
+	});
+    </script>
+</%block>
 
 <h2>${_('Morphemes')}</h2>
 
 <div class="tabbable">
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs" id="all_morphemes" role="tablist">
         <li class="active"><a href="#morphemes" data-toggle="tab">Grammatical morphemes</a></li>
         <li><a href="#tadding" data-toggle="tab">t-adding verbs</a></li>
 		<li><a href="#swadesh" data-toggle="tab">Lexical morphemes</a></li>

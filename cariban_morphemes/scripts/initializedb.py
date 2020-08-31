@@ -413,7 +413,7 @@ def main(args):
         for word in row["Morpheme_IDs"]:
             morph_ids = util.split_word(word)
             for unit_value in morph_ids:
-                if unit_value in ["X","-","="]:
+                if unit_value in ["X","-","=", "~"]:
                     continue
                 unitvaluesentence_key = "{0}-{1}".format(unit_value.replace(".","-"),row["ID"])
                 if unitvaluesentence_key in data["UnitValueSentence"].keys():
@@ -430,6 +430,8 @@ def main(args):
                         data["Morpheme"][morph_id]
                     )
                     )
+                if ":" not in unit_value:
+                    print("%s in %s contains no defined function!" % (unit_value, row["ID"]))
                 function = unit_value.split(":")[1]
                 morph_function_id = "%s:%s" % (morph_id, function)
                 if morph_function_id not in data["MorphemeFunction"].keys():
@@ -659,7 +661,7 @@ def main(args):
             ":".join(cognate_sets)
         ])
         
-    with open("/Users/florianm/Dropbox/Uni/Research/LiMiTS/trees/phylo_tree/feature_files/setone.csv", "w") as f:
+    with open("/Users/florianm/Dropbox/Uni/Research/LiMiTS/trees/cariban_phylo/feature_files/setone.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerows(main_clause_markers)
         
@@ -722,10 +724,10 @@ def main(args):
     
     print("Adding swadesh lists…")
     proto_forms = {}
-    proto_reader = csv.DictReader(open("../../trees/phylo_tree/cariban_reconstructions.csv"))
+    proto_reader = csv.DictReader(open("../../trees/cariban_phylo/cariban_reconstructions.csv"))
     for row in proto_reader:
         proto_forms[row["ID"]] = row["Form"]
-    swadesh_reader = csv.DictReader(open("../../trees/phylo_tree/cariban_swadesh_list.csv"))
+    swadesh_reader = csv.DictReader(open("../../trees/cariban_phylo/cariban_swadesh_list.csv"))
     for row in swadesh_reader:
         cognate_ID = row["Feature_ID"]+"-"+row["Cognate_ID"]
         if cognate_ID in proto_forms:
@@ -740,7 +742,7 @@ def main(args):
             )
                     
     first_found = []
-    swadesh_reader = csv.DictReader(open("../../trees/phylo_tree/cariban_swadesh_list.csv"))
+    swadesh_reader = csv.DictReader(open("../../trees/cariban_phylo/cariban_swadesh_list.csv"))
     for row in swadesh_reader:
         lang_id = row["Language_ID"]
         if lang_id in dialect_mapping:
