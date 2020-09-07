@@ -36,7 +36,6 @@
         </div>
         <div id="sources" class="tab-pane">
 			${request.get_datatable('sources', h.models.Source, language=ctx).render()}
-			${ctx.pk}
         </div>
     </div>	
 </div>

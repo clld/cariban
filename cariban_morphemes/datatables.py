@@ -48,13 +48,15 @@ class FunctionCol(LinkCol):
                 my_link.append(link(self.dt.req, i.unitparameter, **self.get_attrs(i.unitparameter)))
             found_functions.append(i.unitparameter)
         return my_link
+    
+    def search(self, qs):
+        return Morpheme.unitvalues.any(UnitValue.name.contains(qs))
+        # return UnitParameter.name.contains(qs)
         
-class DeclarativeTypeCol(Col):
-    def format(self, item):
-        return item.declarativetype.name
+class DeclarativeTypeCol(LinkCol):
 
     def order(self):
-        return DeclarativeType.name
+        return DeclarativeType.id
 
     def search(self, qs):
         return DeclarativeType.name.contains(qs)
@@ -71,7 +73,6 @@ class Morphemes(Units):
     
     def __init__(self, req, model, **kw):
         self.morpheme_type = kw.pop('morpheme_type', req.params.get('morpheme_type', None))
-        print("initializing morpheme datatable with type %s" % self.morpheme_type)
         if self.morpheme_type:
             kw['eid'] = 'Morphemes-' + self.morpheme_type
         super(Morphemes, self).__init__(req, model, **kw)
@@ -142,12 +143,13 @@ class Cognates(DataTable):
 #             RefsCol(self, 'references', get_obj=lambda i: i.morpheme)
 #         ]
 
+
 class Constructions(DataTable):
     __constraints__ = [Language, DeclarativeType, MainClauseVerb]
-    
+
     def base_query(self, query):
         
-        query = query.join(Language).options(joinedload(Construction.language))
+        query = query.join(Language).join(DeclarativeType).join(MainClauseVerb).options(joinedload(Construction.language))
         
         if self.language:
             return query.filter(Construction.language == self.language)
@@ -169,7 +171,7 @@ class Constructions(DataTable):
             base.append(LinkCol(self, 'language', get_obj=lambda i: i.language, model_col=Language.name))
 
         if not self.declarativetype:
-            base.append(LinkCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype, model_col=DeclarativeType.name))
+            base.append(DeclarativeTypeCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype))
             
         if not self.mainclauseverb:
             base.append(LinkCol(self, 'mainclauseverb', sTitle="Main clause verb?", get_obj=lambda i: i.mainclauseverb, model_col=MainClauseVerb.name))
@@ -212,10 +214,15 @@ class Languages(Languages):
             LinkToMapCol(self, 'm', sTitle="Show on map"),
             Col(self,
                 'latitude',
-                sDescription='<small>The geographic latitude</small>'),
+                sDescription='<small>The geographic latitude</small>',
+                bSearchable=False
+                ),
+                
             Col(self,
                 'longitude',
-                sDescription='<small>The geographic longitude</small>'),
+                sDescription='<small>The geographic longitude</small>',
+                bSearchable=False
+                ),
         ]
    
 class TsvCol(Col):

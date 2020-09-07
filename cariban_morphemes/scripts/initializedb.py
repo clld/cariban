@@ -323,6 +323,13 @@ def main(args):
     )
     
     data.add(
+        models.DeclarativeType,
+        "nonapp",
+        id="nonapp",
+        name="not applicable"
+    )
+    
+    data.add(
         models.MainClauseVerb,
         "y",
         id="y",
@@ -354,6 +361,9 @@ def main(args):
         )
         if row["DeclarativeType"] != None:
             new_construction.declarativetype = data["DeclarativeType"][row["DeclarativeType"]]
+        else:
+            new_construction.declarativetype = data["DeclarativeType"]["nonapp"]
+            
     print("")
     
     print("Adding morpheme functions…")
@@ -530,7 +540,8 @@ def main(args):
     newick_files = {}
     tree_reader = csv.DictReader(open("../cariban_trees.csv"))
     tree_cnt = 0
-    own_trees = ["matter", "auto_tree", "lingpy_tree"]
+    # own_trees = ["matter", "auto_tree", "lingpy_tree"]
+    own_trees = ["matter"]
     for row in tree_reader:
         if row["ID"] in own_trees: continue
         tree_cnt += 1

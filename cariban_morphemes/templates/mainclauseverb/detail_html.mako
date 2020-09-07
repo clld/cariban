@@ -2,6 +2,6 @@
 <%namespace name="util" file="../util.mako"/>
 <%! active_menu_item = "constructions" %>
 <%block name="title">${_('Construction')} ${ctx.name}</%block>
-
 <h2>${ctx.name} constructions</h2>
+${ctx}
 ${request.get_datatable('constructions', u.cariban_models.Construction, mainclauseverb=ctx).render()}
