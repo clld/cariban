@@ -185,7 +185,7 @@ class MorphemeFunctions(Unitvalues):
     __constraints__ = Unitvalues.__constraints__ + [Construction, Language]
     
     def base_query(self, query):
-
+        
         query = query\
             .join(Morpheme)\
             .join(Language)\
