@@ -30,6 +30,7 @@ class CognatesetCol(Col):
         for i in obj:
             my_link.append(link(self.dt.req, i.cognateset, **self.get_attrs(i.cognateset)))
         return my_link
+        
 
 class FunctionCol(LinkCol):
     def __init__(self, dt, name, **kw):
@@ -51,15 +52,6 @@ class FunctionCol(LinkCol):
     
     def search(self, qs):
         return Morpheme.unitvalues.any(UnitValue.name.contains(qs))
-        # return UnitParameter.name.contains(qs)
-        
-class DeclarativeTypeCol(LinkCol):
-
-    def order(self):
-        return DeclarativeType.id
-
-    def search(self, qs):
-        return DeclarativeType.name.contains(qs)
         
 class Meanings(Unitparameters):
     def col_defs(self):
@@ -69,7 +61,7 @@ class Meanings(Unitparameters):
 
 class Morphemes(Units):
     
-    __constraints__ = [MorphemeFunction, Language]
+    __constraints__ = [MorphemeFunction, Language, Cognateset]
     
     def __init__(self, req, model, **kw):
         self.morpheme_type = kw.pop('morpheme_type', req.params.get('morpheme_type', None))
@@ -81,7 +73,7 @@ class Morphemes(Units):
         return dict_merged(super(Morphemes, self).xhr_query(), morpheme_type=self.morpheme_type)
                 
     def base_query(self, query):
-        query = query.join(Language).options(
+        query = query.join(Language).join(Cognate).options(
             joinedload(
                 Morpheme.language
             )
@@ -98,14 +90,14 @@ class Morphemes(Units):
     def col_defs(self):
         base = [
             LinkCol(self, 'form', model_col=Morpheme.name),
-            FunctionCol(self, 'function'),
+            FunctionCol(self, 'function', bSortable=False),
         ]
            
         if not self.language:
             base.append(LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.language)
             )  
         return base + [
-            CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.counterparts),
+            CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.counterparts, bSearchable=False ),
             RefsCol(self, 'references'),
         ]
     
@@ -171,7 +163,7 @@ class Constructions(DataTable):
             base.append(LinkCol(self, 'language', get_obj=lambda i: i.language, model_col=Language.name))
 
         if not self.declarativetype:
-            base.append(DeclarativeTypeCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype))
+            base.append(LinkCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype, model_col=DeclarativeType.name))
             
         if not self.mainclauseverb:
             base.append(LinkCol(self, 'mainclauseverb', sTitle="Main clause verb?", get_obj=lambda i: i.mainclauseverb, model_col=MainClauseVerb.name))
