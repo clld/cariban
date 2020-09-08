@@ -370,11 +370,16 @@ def main(args):
     for row in construction_data["ValueTable"]:
         for function in row["Function"]:
             my_key = function.replace(".","_")
+            if ">" in function or function == "LK" or bool(re.search(r"\d[SP]$", function) or function == "3"):
+                meaning_type="inflectional"
+            else:
+                meaning_type="derivational"
             if function not in data["Meaning"].keys():
                 data.add(models.Meaning,
                     function,
                     id=my_key,
-                    name=function
+                    name=function,
+                    meaning_type=meaning_type
                 )
             if len(row["Construction"]) == 0:
                 if len(row["Morpheme"]) == 1:
@@ -768,7 +773,8 @@ def main(args):
             data.add(models.Meaning,
                 function,
                 id=function,
-                name=function
+                name=function,
+                meaning_type="lexical"
             )
         morpheme = data.add(models.Morpheme,
                     morph_id,
@@ -801,7 +807,7 @@ def main(args):
     data.add(models.Meaning,
         "t_verb",
         id="t-verb",
-        name="t-adding verb"
+        name="t-adding verb",
     )
     t_reader = csv.DictReader(open("../cariban_t_verbs.csv"))
     for row in t_reader:

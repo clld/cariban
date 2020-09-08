@@ -54,6 +54,21 @@ class FunctionCol(LinkCol):
         return Morpheme.unitvalues.any(UnitValue.name.contains(qs))
         
 class Meanings(Unitparameters):
+    
+    def __init__(self, req, model, **kw):
+        self.meaning_type = kw.pop('meaning_type', req.params.get('meaning_type', None))
+        if self.meaning_type:
+            kw['eid'] = 'Meanings-' + self.meaning_type
+        super(Meanings, self).__init__(req, model, **kw)
+    
+    def xhr_query(self):
+        return dict_merged(super(Meanings, self).xhr_query(), meaning_type=self.meaning_type)
+        
+    def base_query(self, query):
+        if self.meaning_type:
+            query = query.filter(Meaning.meaning_type == self.meaning_type)
+        return query
+        
     def col_defs(self):
         return [
             LinkCol(self, 'Gloss', model_col=UnitParameter.name),

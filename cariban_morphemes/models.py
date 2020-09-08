@@ -21,7 +21,8 @@ from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, Unit
 class Meaning(CustomModelMixin, UnitParameter):
     pk = Column(Integer, ForeignKey('unitparameter.pk'), primary_key=True)
     form = Column(String)
-
+    meaning_type = Column(String)
+    
 @implementer(IDeclarativeType)
 class DeclarativeType(Base, IdNameDescriptionMixin):
     pk = Column(Integer, primary_key=True)

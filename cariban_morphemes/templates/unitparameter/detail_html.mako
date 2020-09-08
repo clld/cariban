@@ -2,7 +2,12 @@
 <%namespace name="util" file="../util.mako"/>
 <%! active_menu_item = "unitparameters" %>
 
-<h2>${_('Function')} ${ctx.name}</h2>
+% if ctx.meaning_type == "lexical":
+	<h2>${_('Meaning')} ‘${ctx.name}’ </h2>
+% else:
+	<h2>${_('Function')} ${ctx.name} </h2>
+% endif 
+
 
 <div>
     <% dt = request.registry.getUtility(h.interfaces.IDataTable, 'unitvalues'); dt = dt(request, h.models.UnitValue, unitparameter=ctx) %>
