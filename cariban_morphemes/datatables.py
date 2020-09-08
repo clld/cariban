@@ -126,16 +126,6 @@ class Cognates(DataTable):
             RefsCol(self, 'references', get_obj=lambda i: i.counterpart)
         ]
 
-# class Counterparts(Values):
-#     def col_defs(self):
-#         return [
-#             LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.morpheme.language),
-#             LinkCol(self, 'form', get_obj=lambda i: i.morpheme),
-#             FunctionCol(self, 'function', get_obj=lambda i: i.morpheme),
-#             RefsCol(self, 'references', get_obj=lambda i: i.morpheme)
-#         ]
-
-
 class Constructions(DataTable):
     __constraints__ = [Language, DeclarativeType, MainClauseVerb]
 
@@ -175,7 +165,12 @@ class MorphemeFunctions(Unitvalues):
     __constraints__ = Unitvalues.__constraints__ + [Construction, Language]
     
     def base_query(self, query):
-        
+
+        query = query\
+            .join(Morpheme)\
+            .join(Language)\
+            .join(Construction)
+
         if self.unitparameter:
             query = query.filter(MorphemeFunction.unitparameter_pk == self.unitparameter.pk)
             
@@ -186,7 +181,7 @@ class MorphemeFunctions(Unitvalues):
     
     def col_defs(self):
         base = [
-            LinkCol(self, 'form', get_obj=lambda i: i.unit),
+            LinkCol(self, 'form', get_obj=lambda i: i.unit, model_col=Morpheme.name),
         ]
         if not self.unitparameter:
             base.append(LinkCol(self, 'function', get_obj=lambda i: i.unitparameter))
@@ -195,7 +190,7 @@ class MorphemeFunctions(Unitvalues):
         if not self.language and not self.construction:
             base.append(LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.unit.language))
         return base + [
-            CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.unit.counterparts),
+            CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.unit.counterparts, bSearchable=False),
             RefsCol(self, 'references', get_obj=lambda i: i.unit)
         ]
         
