@@ -115,13 +115,18 @@ class Cognates(DataTable):
     
     def base_query(self, query):
         
+        query = query\
+        .join(Morpheme)\
+        .join(Language)
+        
+        
         if self.cognateset:
             return query.filter(Cognate.cognateset_pk == self.cognateset.pk)
             
     def col_defs(self):
         return [
-            LinkCol(self, 'language', get_obj=lambda i: i.counterpart.language),
-            LinkCol(self, 'form', get_obj=lambda i: i.counterpart),
+            LinkCol(self, 'language', get_obj=lambda i: i.counterpart.language, model_col=Language.name),
+            LinkCol(self, 'form', get_obj=lambda i: i.counterpart, model_col=Morpheme.name),
             FunctionCol(self, 'function', get_obj=lambda i: i.counterpart),
             RefsCol(self, 'references', get_obj=lambda i: i.counterpart)
         ]
@@ -185,7 +190,7 @@ class MorphemeFunctions(Unitvalues):
             LinkCol(self, 'form', get_obj=lambda i: i.unit, model_col=Morpheme.name),
         ]
         if not self.unitparameter:
-            base.append(FunctionCol(self, 'function', get_obj=lambda i: i.unitparameter))
+            base.append(FunctionCol(self, 'function', get_obj=lambda i: i.unit))
         if not self.construction:
             base.append(LinkCol(self, 'construction', get_obj=lambda i: i.construction, model_col=Construction.name))
         if not self.language and not self.construction:
