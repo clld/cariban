@@ -131,7 +131,7 @@ class Constructions(DataTable):
 
     def base_query(self, query):
         
-        query = query.join(Language).join(DeclarativeType).join(MainClauseVerb).options(joinedload(Construction.language))
+        query = query.join(Language).outerjoin(DeclarativeType).join(MainClauseVerb).options(joinedload(Construction.language))
         
         if self.language:
             return query.filter(Construction.language == self.language)
@@ -169,7 +169,8 @@ class MorphemeFunctions(Unitvalues):
         query = query\
             .join(Morpheme)\
             .join(Language)\
-            .join(Construction)
+            .join(Construction)\
+            .join(UnitParameter)
 
         if self.unitparameter:
             query = query.filter(MorphemeFunction.unitparameter_pk == self.unitparameter.pk)
@@ -184,7 +185,7 @@ class MorphemeFunctions(Unitvalues):
             LinkCol(self, 'form', get_obj=lambda i: i.unit, model_col=Morpheme.name),
         ]
         if not self.unitparameter:
-            base.append(LinkCol(self, 'function', get_obj=lambda i: i.unitparameter))
+            base.append(FunctionCol(self, 'function', get_obj=lambda i: i.unitparameter))
         if not self.construction:
             base.append(LinkCol(self, 'construction', get_obj=lambda i: i.construction, model_col=Construction.name))
         if not self.language and not self.construction:

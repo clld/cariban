@@ -361,8 +361,8 @@ def main(args):
         )
         if row["DeclarativeType"] != None:
             new_construction.declarativetype = data["DeclarativeType"][row["DeclarativeType"]]
-        else:
-            new_construction.declarativetype = data["DeclarativeType"]["nonapp"]
+        # else:
+            # new_construction.declarativetype = data["DeclarativeType"]["nonapp"]
             
     print("")
     
