@@ -39,29 +39,29 @@ ${(map_ or request.map).render()}
 
 ${request.get_datatable('cognates', u.cariban_models.Cognate, cognateset=ctx).render()}
 
-<div id="my_tree"></div>
-
-<% cogset_values = {} %>
-% for cognate in ctx.cognates:
-	% if cognate.counterpart.language.id not in cogset_values.keys():
-		<!-- print("adding %s" % cognate.counterpart.language.id) -->
-		<% cogset_values[cognate.counterpart.language.id] = [] %>
-	% endif
-	<% cogset_values[cognate.counterpart.language.id].append(cognate.counterpart) %>
-% endfor
-<% my_tree = u.get_tree(
-	request,
-	cogset_values,
-	"my_tree")
-%>
-<script>
-	$(function() {
-	    $('#my_tree').tree({
-	        data: [
-	    ${ json.dumps(my_tree) | n },
-	],
-			autoEscape: false,
-			autoOpen: true
-	    });
-	});
-</script>
+##<div id="my_tree"></div>
+##
+##<% cogset_values = {} %>
+##% for cognate in ctx.cognates:
+##	% if cognate.counterpart.language.id not in cogset_values.keys():
+##		<!-- print("adding %s" % cognate.counterpart.language.id) -->
+##		<% cogset_values[cognate.counterpart.language.id] = [] %>
+##	% endif
+##	<% cogset_values[cognate.counterpart.language.id].append(cognate.counterpart) %>
+##% endfor
+##<% my_tree = u.get_tree(
+##	request,
+##	cogset_values,
+##	"my_tree")
+##%>
+##<script>
+##	$(function() {
+##	    $('#my_tree').tree({
+##	        data: [
+##	    ${ json.dumps(my_tree) | n },
+##	],
+##			autoEscape: false,
+##			autoOpen: true
+##	    });
+##	});
+##</script>
