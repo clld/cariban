@@ -7,8 +7,8 @@ from pyramid.httpexceptions import HTTPFound
 # we must make sure custom models are known at database initialization!
 # from cariban_morphemes.models import Morpheme
 # from cariban_morphemes.interfaces import IMorpheme
-from cariban_morphemes import models
-from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ITVerb, ICognateset, ICognate
+from cariban import models
+from cariban.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ITVerb, ICognateset, ICognate
 from clld.interfaces import IUnit
 
 _ = lambda s: s

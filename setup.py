@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name='cariban_morphemes',
+    name='cariban',
     version='0.0',
-    description='cariban_morphemes',
+    description='cariban',
     classifiers=[
         "Programming Language :: Python",
         "Framework :: Pyramid",
@@ -25,7 +25,7 @@ setup(
         'dev': ['flake8', 'waitress'],
         'test': [
             'mock',
-            'pytest>=3.1',
+            'pytest>=5',
             'pytest-clld',
             'pytest-mock',
             'pytest-cov',
@@ -35,8 +35,8 @@ setup(
             'zope.component>=3.11.0',
         ],
     },
-    test_suite="cariban_morphemes",
+    test_suite="tests",
     entry_points="""\
     [paste.app_factory]
-    main = cariban_morphemes:main
+    main = cariban:main
 """)

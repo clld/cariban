@@ -1,2 +1,2 @@
 include *.txt *.ini *.cfg *.rst
-recursive-include cariban_morphemes *.ico *.png *.css *.gif *.jpg *.pt *.txt *.mak *.mako *.js *.html *.xml
+recursive-include cariban *.ico *.png *.css *.gif *.jpg *.pt *.txt *.mak *.mako *.js *.html *.xml

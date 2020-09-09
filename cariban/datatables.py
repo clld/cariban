@@ -8,7 +8,7 @@ from clld.web.datatables.base import (
 )
 from clld.web.datatables.value import (ValueNameCol)
 from clld.web.datatables.unit import (DescriptionLinkCol)
-from cariban_morphemes.models import Cognate, Cognateset, Morpheme, Construction, Meaning, MorphemeFunction, DeclarativeType, MainClauseVerb
+from cariban.models import Cognate, Cognateset, Morpheme, Construction, Meaning, MorphemeFunction, DeclarativeType, MainClauseVerb
 from clld.interfaces import IMenuItems
 from clld.web.util.helpers import (
     link, button, icon, JS_CLLD, external_link, linked_references, JSDataTable,

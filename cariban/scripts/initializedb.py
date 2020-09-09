@@ -1,16 +1,14 @@
-from __future__ import unicode_literals
 import sys
 
 from clld.cliutil import Data, bibtex2source, add_language_codes
 from clld.db.meta import DBSession
 from clld.db.models import common
-import pynterlinear
 from pycldf import Wordlist, Generic
 from clld.lib import bibtex
 from clld.lib.bibtex import EntryType, unescape
 from nameparser import HumanName
-import cariban_morphemes
-from cariban_morphemes import models, util
+import cariban
+from cariban import models, util
 import re
 from clld.web.util import helpers as h
 from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
@@ -85,7 +83,7 @@ def main(args):
     data = Data()
 
     print("Setting up dataset…")
-    dataset = common.Dataset(id=cariban_morphemes.__name__,
+    dataset = common.Dataset(id=cariban.__name__,
         domain="cariban-morphology.herokuapp.com/",
         name="Cariban Morphology Database",
         description="Cariban Morphology Database",
@@ -446,7 +444,7 @@ def main(args):
         
     print("Adding trees…")
     own_trees = ["matter"]
-    tree_path = "../../trees"
+    tree_path = str(args.cldf.tablegroup._fname.parent / '..' / 'raw')
     newick_files = {}
     for tree in args.cldf["cariban_trees.csv"]:
         if tree["ID"] in own_trees: continue

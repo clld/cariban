@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from clld import interfaces
-from cariban_morphemes.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ICognateset, ICognate
+from cariban.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ICognateset, ICognate
 from clld.db.meta import Base, CustomModelMixin, PolymorphicBaseMixin
 from clld.db.models import UnitParameter, Unit, Value, Parameter, ValueSet, UnitValue, Sentence, IdNameDescriptionMixin, HasSourceMixin, common, Language, Source
 

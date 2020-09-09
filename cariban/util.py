@@ -20,12 +20,12 @@ from clld.web.util import helpers as h
 from clld.lib.coins import ContextObject
 from clld.lib import bibtex
 from clld.lib import rdf
-from cariban_morphemes.models import Morpheme, Construction, Cognateset
+from cariban.models import Morpheme, Construction, Cognateset
 from clld.db.models import Language, Source, Sentence
-import cariban_morphemes.models as cariban_models
+import cariban.models as cariban_models
 from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
 
-from cariban_morphemes.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS, LANG_CODE_DIC
+from cariban.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS, LANG_CODE_DIC
 language_names = {}
 for key, values in LANG_CODE_DIC.items():
     language_names[values["shorthand"]] = values["name"]
@@ -315,8 +315,8 @@ def generate_markup(non_f_str: str, html=True):
             return ""
         morph_list = DBSession.query(Morpheme).filter(Morpheme.id == morph_id)
         if len(list(morph_list)) == 0:
-            print(f"Morpheme {morph_id} not found in database!")
-            return f"MISSING MORPHEME {morph_id}"
+            #print(f"Morpheme {morph_id} not found in database!")
+            return '' #f"MISSING MORPHEME {morph_id}"
         else:
             morph = morph_list[0]
         if html:
@@ -347,7 +347,7 @@ def generate_markup(non_f_str: str, html=True):
                             rendered_sentence(example)
                         )
     
-    result = eval(f'f"""{non_f_str}"""')
+    result = '' #eval(f'f"""{non_f_str}"""')
     return result.replace("-</a></i>£", "-</a></i>").replace("-}£", "-}").replace("£", " ").replace("\n\n","PARAGRAPHBREAK").replace("\n"," ").replace("PARAGRAPHBREAK","\n\n")
     
 def html_table(lol, caption):
