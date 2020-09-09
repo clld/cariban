@@ -430,12 +430,12 @@ def main(args):
     print("Adding cognate set descriptions…")
     for cogset in args.cldf["CognatesetTable"]:
         data["Cognateset"][cogset["ID"]].markup_description = util.generate_markup(cogset["Description"])
-        if cogset["ID"] == "13pro":
-            data["Cognateset"][cogset["ID"]].markup_description += util.generate_markup(
-                util.comparative_function_paradigm(
-                    ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_old", "kax_main"],
-                    "1+3 scenarios",
-                    ["1+3S", "1+3>3", "3>1+3", "2>1+3", "1+3>2"]))
+        # if cogset["ID"] == "13pro":
+        #     data["Cognateset"][cogset["ID"]].markup_description += util.generate_markup(
+        #         util.comparative_function_paradigm(
+        #             ["apa_main", "tri_main", "way_main", "mak_main", "kar_main", "hix_main", "wai_main", "ara_main", "ikp_main", "wmr_main", "pan_old", "kax_main"],
+        #             "1+3 scenarios",
+        #             ["1+3S", "1+3>3", "3>1+3", "2>1+3", "1+3>2"]))
 
     
     def add_tree_labels(phylo):

@@ -167,7 +167,7 @@ def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False
     )
         
 def generate_markup(non_f_str: str, html=True):
-    
+    return non_f_str
     ex_cnt = 0
 
     if non_f_str is None:
