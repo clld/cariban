@@ -356,7 +356,7 @@ def build_table(table, label):
 
 
 def intransitive_construction_paradigm(construction, html=True):
-    print("constructing intransitive paradigm for %s" % construction)
+    # print("constructing intransitive paradigm for %s" % construction)
     table = {}
     entries = []
     for entry in FUNCTION_PARADIGMS:
