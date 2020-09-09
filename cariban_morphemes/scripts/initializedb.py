@@ -22,12 +22,6 @@ from Bio import Phylo
 import io
 from ipapy.ipastring import IPAString
 
-import importlib.util
-spec = importlib.util.spec_from_file_location("morph_merge", "/Users/florianm/Dropbox/Stuff/development/morph_merge/__init__.py")
-mm = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mm)
-
-
 # print("Generating language information for markdown…")
 # #This will contain a dict to look up the language IDs (and names) based on glottocodes -- the CLLD app uses custom language IDs, but the CLDF files use glottocodes.
 # LANG_DIC = {}
@@ -257,7 +251,7 @@ def main(args):
     print("Adding morphemes…")
     for morph in args.cldf["FormTable"]:
         lang_id = get_lang_id(morph["Language_ID"])
-        form = mm.merge_allomorphs("; ".join(morph["Form"])).split("; ")
+        form = util.merge_allomorphs("; ".join(morph["Form"])).split("; ")
         new_morph = data.add(models.Morpheme,
             morph["ID"],
             morpheme_type="grammatical",

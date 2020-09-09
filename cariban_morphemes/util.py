@@ -41,6 +41,94 @@ import csv
 import io
 # from pynterlinear import pynterlinear
 
+
+separators = ["-", "=", "<", ">"]
+def extract_allomorphs(full_string):
+    portions = full_string.split("/")
+    found_allomorphs = []
+    def iter_parens(string):
+        lose = re.sub("\((.*?)\)", r"\1", string, 1)
+        keep = re.sub("\((.*?)\)", "", string, 1)
+        if "(" in lose:
+            iter_parens(lose)
+        else:
+            found_allomorphs.append(lose)
+        if "(" in keep:
+            iter_parens(keep)
+        else:
+            found_allomorphs.append(keep)
+    for string in portions:
+        iter_parens(string)
+    return list(dict.fromkeys(found_allomorphs))
+
+def merge_allomorphs(form):
+    allomorphs = form.split("; ")
+    if allomorphs[0][-1] in separators:
+        prefix = True
+        suffix = False
+    elif allomorphs[0][0] in separators:
+        prefix = False
+        suffix = True
+    else:
+        prefix = False
+        suffix = False
+    allomorphs.sort(key=len)
+    #We take the shortest allomorph as the base
+    new_allomorphs = [allomorphs[0]]
+    #Then we iterate the longer allomorphs
+    for allomorph in allomorphs[1:]:
+        #If there is an affricate, let's just add it straight away, we don't want to split these up
+        if "͡" in allomorph:
+            new_allomorphs.append(allomorph)
+            continue
+        found_hit = False
+        #We iterate the allomorphs we already added to the new form
+        for i, existing_allomorph in enumerate(new_allomorphs):
+            # if found_hit:
+            #     print("Aborting…")
+            if not found_hit:
+                # print("Looking at candidate %s, comparing it with %s" % (allomorph, existing_allomorph))
+                if prefix:
+                    right_border = len(allomorph)-2
+                else:
+                    right_border = len(allomorph)-1
+                if suffix:
+                    left_border = 1
+                else:
+                    left_border = 0
+                for right_edge in range(right_border, -1, -1):
+                    for left_edge in range(left_border, right_edge+1):
+                        if left_edge == right_edge:
+                            allo_slice = allomorph[left_edge]
+                        else:
+                            allo_slice = allomorph[left_edge:right_edge+1]
+                        if suffix:
+                            preserve = existing_allomorph[1::]
+                        elif prefix:
+                            preserve = existing_allomorph[0:-1]
+                        else:
+                            preserve = existing_allomorph
+                        comp = preserve.replace("(","").replace(")","")
+                        # print(f"Comparing {allo_slice} with {comp} [{left_edge}:{right_edge}]")
+                        if allo_slice == comp:
+                            # print(f"Got a hit! {allo_slice} in position {left_edge}:{right_edge} of {allomorph} is identical to {comp} ({existing_allomorph})")
+                            new_allomorph = "(" + allomorph[:left_edge] + ")" + preserve + "(" + allomorph[right_edge+1:] + ")"
+                            new_allomorph = new_allomorph.replace("-)", ")-")
+                            new_allomorph = new_allomorph.replace("()","")
+                            new_allomorphs[i] = new_allomorph
+                            # print(new_allomorphs)
+                            found_hit = True
+        if not found_hit:
+            # print("No match found between %s and %s" % (allomorph, existing_allomorph))
+            new_allomorphs.append(allomorph)
+    for i, new_allomorph in enumerate(new_allomorphs):
+        for j, other_allomorph in enumerate(new_allomorphs):
+            if i != j:
+                if new_allomorph in extract_allomorphs(other_allomorph):
+                    # print(f"removing {new_allomorph}, as it is an allomorph of {other_allomorph}")
+                    new_allomorphs.remove(new_allomorph)
+    return "; ".join(new_allomorphs)
+    
 def xify(text):
     ids = []
     for word in text.split(" "):
