@@ -4,8 +4,8 @@
 <%! active_menu_item = "cognatesets" %>
 <%block name="title">${_('Cognate set')} ${ctx.name}</%block>
 <%block name="head">
-    <script src="${request.static_url('cariban_morphemes:static/scripts/tree.jquery.js')}"></script>
-    <link rel="stylesheet" href="${request.static_url('cariban_morphemes:static/css/jqtree.style.css')}">
+    <script src="${request.static_url('cariban:static/scripts/tree.jquery.js')}"></script>
+    <link rel="stylesheet" href="${request.static_url('cariban:static/css/jqtree.style.css')}">
 </%block>
 		
 <table class="table table-nonfluid">

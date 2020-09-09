@@ -1,23 +1,16 @@
-import sys
+import io
 
 from clld.cliutil import Data, bibtex2source, add_language_codes
 from clld.db.meta import DBSession
 from clld.db.models import common
-from pycldf import Wordlist, Generic
 from clld.lib import bibtex
-from clld.lib.bibtex import EntryType, unescape
-from nameparser import HumanName
+from clld.lib.bibtex import EntryType
 import cariban
 from cariban import models, util
 import re
-from clld.web.util import helpers as h
 from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
-import os
-import csv
-import json
 #to edit tree labels
 from Bio import Phylo
-import io
 from ipapy.ipastring import IPAString
 
 # print("Generating language information for markdown…")
@@ -43,7 +36,7 @@ from ipapy.ipastring import IPAString
 # f = open("lang_code_dic.json","w")
 # f.write(json_file)
 # f.close()
-# from cariban_morphemes import util
+# from cariban import util
 
 #This returns a author-year style reference from the bibtex file.
 # def get_source_name(source):
@@ -77,29 +70,29 @@ def t_prefix_form(string):
         return "tɨ"
     else:
         return "t"
-        
+
+
 def main(args):
-    
     data = Data()
 
     print("Setting up dataset…")
     dataset = common.Dataset(id=cariban.__name__,
-        domain="cariban-morphology.herokuapp.com/",
+        domain="cariban.clld.org",
         name="Cariban Morphology Database",
         description="Cariban Morphology Database",
-        publisher_name="Florian Matter",
-        publisher_url="http://www.isw.unibe.ch/ueber_uns/personen/ma_matter_florian/index_ger.html",
-        publisher_place="University of Bern",
-        license="http://creativecommons.org/licenses/by/4.0/",
+        publisher_name="Max Planck Institute for Evolutionary Anthropology",
+        publisher_url="https://www.eva.mpg.de",
+        publisher_place="Leipzig",
+        license="https://creativecommons.org/licenses/by/4.0/",
         contact="florian.matter@isw.unibe.ch"
-        )
+    )
 
     DBSession.add(dataset)
 
     print("Adding contributors (me)…")
     c = common.Contributor(id="fm",name="Florian Matter")
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
-    
+
     print("Adding languages…")
     dialect_mapping = {}
     lang_shorthands = {}
@@ -121,7 +114,7 @@ def main(args):
         lang_shorthands[lang["Shorthand"]] = {"ID": lang["ID"], "Name": lang["Name"]}
         glottocodes[lang["Glottocode"]] = {"ID": lang["ID"], "Name": lang["Name"], "Shorthand": lang["Shorthand"]}
         lang_ids[lang["ID"]] = {"Glottocode": lang["Glottocode"], "Name": lang["Name"], "Shorthand": lang["Shorthand"]}
-    
+
     def get_lang_id(key):
         if key in lang_shorthands:
             lang_id = lang_shorthands[key]["ID"]
@@ -135,8 +128,7 @@ def main(args):
         if lang_id in dialect_mapping:
             lang_id = dialect_mapping[lang_id]
         return lang_id
-    
-    
+
     def get_key_and_page(source_string):
         if len(source_string.split("[")) > 1:
             bib_key = source_string.split("[")[0]
@@ -277,8 +269,7 @@ def main(args):
             mainclauseverb=data["MainClauseVerb"][cons["MainClauseVerb"]],
         )
         if cons["DeclarativeType"]: new_construction.declarativetype = data["DeclarativeType"][cons["DeclarativeType"]]
-    
-    
+
     def add_morph_func(morpheme, func_key, construction):
         data.add(models.MorphemeFunction,
             "%s:%s" % (morpheme, function),
@@ -288,7 +279,7 @@ def main(args):
             unitparameter=data["Meaning"][function],
             construction=construction
         )
-        
+
     print("Adding morpheme functions…")
     for morph_func in args.cldf["ValueTable"]:
         for function in morph_func["Function"]:
@@ -698,7 +689,3 @@ def prime_cache(args):
     This procedure should be separate from the db initialization, because
     it will have to be run periodiucally whenever data has been updated.
     """
-
-if __name__ == "__main__":  # pragma: no cover
-    initializedb(create=main, prime_cache=prime_cache)
-    sys.exit(0)

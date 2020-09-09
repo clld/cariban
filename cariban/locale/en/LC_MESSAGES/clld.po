@@ -1,12 +1,12 @@
-# English translations for cariban_morphemes.
+# English translations for cariban.
 # Copyright (C) 2019 ORGANIZATION
-# This file is distributed under the same license as the cariban_morphemes
+# This file is distributed under the same license as the cariban
 # project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: cariban_morphemes 0.0\n"
+"Project-Id-Version: cariban 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-12-17 17:32+0100\n"
 "PO-Revision-Date: 2019-04-02 11:00+0200\n"
@@ -19,31 +19,31 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.7.0\n"
 
-#: cariban_morphemes/__init__.py:15
+#: cariban/__init__.py:15
 msgid "Unitparameter"
 msgstr "Function"
 
-#: cariban_morphemes/__init__.py:16
+#: cariban/__init__.py:16
 msgid "Unitparameters"
 msgstr "Functions"
 
-#: cariban_morphemes/__init__.py:17
+#: cariban/__init__.py:17
 msgid "Sentence"
 msgstr "Example"
 
-#: cariban_morphemes/__init__.py:18
+#: cariban/__init__.py:18
 msgid "Sentences"
 msgstr "Examples"
 
-#: cariban_morphemes/__init__.py:19
+#: cariban/__init__.py:19
 msgid "Phylogenys"
 msgstr "Phylogenies"
 
-#: cariban_morphemes/__init__.py:20
+#: cariban/__init__.py:20
 msgid "Unit"
 msgstr "Morpheme"
 
-#: cariban_morphemes/__init__.py:21
+#: cariban/__init__.py:21
 msgid "Units"
 msgstr "Morphemes"
 

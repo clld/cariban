@@ -1,31 +1,23 @@
-# coding: utf8
-from __future__ import unicode_literals
+import io
 import re
+from collections import OrderedDict
 
 from sqlalchemy import or_
-from sqlalchemy.orm import joinedload
 from markupsafe import Markup
 
-from clld.lib.bibtex import EntryType, unescape
-from nameparser import HumanName
-import clld
-from clld import interfaces
-from clld import RESOURCES
 from clld.web.util.htmllib import HTML, literal
-from clld.web.util.downloadwidget import DownloadWidget
 from clld.db.meta import DBSession
 from clld.db.models import common as models
-from clld.web.adapters import get_adapter, get_adapters
 from clld.web.util import helpers as h
-from clld.lib.coins import ContextObject
-from clld.lib import bibtex
-from clld.lib import rdf
 from cariban.models import Morpheme, Construction, Cognateset
 from clld.db.models import Language, Source, Sentence
-import cariban.models as cariban_models
-from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
+from clld_phylogeny_plugin.models import Phylogeny
+from clld.web.util.multiselect import CombinationMultiSelect
+from Bio import Phylo
 
 from cariban.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS, LANG_CODE_DIC
+
+
 language_names = {}
 for key, values in LANG_CODE_DIC.items():
     language_names[values["shorthand"]] = values["name"]
@@ -33,16 +25,9 @@ sampled_languages = {}
 for key, values in LANG_ABBREV_DIC.items():
     sampled_languages[values["ID"]] = values["name"]
 
-from collections import OrderedDict
-from clld.web.util.multiselect import CombinationMultiSelect
-import json
-from Bio import Phylo
-import csv
-import io
-# from pynterlinear import pynterlinear
-
-
 separators = ["-", "=", "<", ">"]
+
+
 def extract_allomorphs(full_string):
     portions = full_string.split("/")
     found_allomorphs = []
@@ -60,6 +45,7 @@ def extract_allomorphs(full_string):
     for string in portions:
         iter_parens(string)
     return list(dict.fromkeys(found_allomorphs))
+
 
 def merge_allomorphs(form):
     allomorphs = form.split("; ")
@@ -128,7 +114,8 @@ def merge_allomorphs(form):
                     # print(f"removing {new_allomorph}, as it is an allomorph of {other_allomorph}")
                     new_allomorphs.remove(new_allomorph)
     return "; ".join(new_allomorphs)
-    
+
+
 def xify(text):
     ids = []
     for word in text.split(" "):
@@ -253,7 +240,8 @@ def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False
         ),
         class_="sentence-wrapper",
     )
-        
+
+
 def generate_markup(non_f_str: str, html=True):
     return non_f_str
     ex_cnt = 0

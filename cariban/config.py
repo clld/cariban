@@ -4,7 +4,6 @@ import json
 with open('lang_abbrev_dic.json') as json_file:
     LANG_ABBREV_DIC = json.load(json_file)
 
-FUNCTION_PARADIGMS = []
 with open('function_paradigms.json') as json_file:
     FUNCTION_PARADIGMS = json.load(json_file)
 

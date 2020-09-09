@@ -1,6 +1,6 @@
 <%! from itertools import chain %>
 <%def name="sentences(obj=None, fmt='long')">
-	<%import cariban_morphemes.util as cmutil%>
+	<%import cariban.util as cmutil%>
     <% obj = obj or ctx %>
     <ul id="sentences-${obj.pk}" class="unstyled">
         % for a in obj.sentence_assocs:

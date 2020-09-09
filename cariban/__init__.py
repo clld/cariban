@@ -1,15 +1,9 @@
 from pyramid.config import Configurator
-from pyramid.response import Response
-from clld.web.app import menu_item
-from functools import partial
 from pyramid.httpexceptions import HTTPFound
 
-# we must make sure custom models are known at database initialization!
-# from cariban_morphemes.models import Morpheme
-# from cariban_morphemes.interfaces import IMorpheme
 from cariban import models
+from cariban import views
 from cariban.interfaces import IConstruction, IDeclarativeType, IMainClauseVerb, IPage, ITVerb, ICognateset, ICognate
-from clld.interfaces import IUnit
 
 _ = lambda s: s
 _('Unitparameter')
@@ -39,7 +33,7 @@ def main(global_config, **settings):
         'phylogeny': '/phylogeny/{id:[^/\.]+}',
     }
     
-    settings["clld.github_repos"] = "florianmatter/cariban_morphemes"
+    settings["clld.github_repos"] = "clld/cariban"
 
     config = Configurator(settings=settings)
     config.include('clld.web.app')

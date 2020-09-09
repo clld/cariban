@@ -1,20 +1,13 @@
-from clld.web.datatables import Unitparameters, Units, Values, Parameters, Unitvalues, Languages, Sentences
-from clld.db.models.common import (
-    Language, UnitParameter, UnitValue
-)
-from clld.db.models import common
+from clld.web.datatables import Unitparameters, Units, Unitvalues, Languages, Sentences
+from clld.db.models.common import Language, UnitParameter, UnitValue
 from clld.web.datatables.base import (
-    Col, LinkCol, PercentCol, IntegerIdCol, LinkToMapCol, DataTable, DetailsRowLinkCol, RefsCol
+    Col, LinkCol, LinkToMapCol, DataTable, DetailsRowLinkCol, RefsCol
 )
-from clld.web.datatables.value import (ValueNameCol)
-from clld.web.datatables.unit import (DescriptionLinkCol)
 from cariban.models import Cognate, Cognateset, Morpheme, Construction, Meaning, MorphemeFunction, DeclarativeType, MainClauseVerb
-from clld.interfaces import IMenuItems
-from clld.web.util.helpers import (
-    link, button, icon, JS_CLLD, external_link, linked_references, JSDataTable,
-)
+from clld.web.util.helpers import link
 from sqlalchemy.orm import joinedload
 from clldutils.misc import dict_merged
+
 
 class CognatesetCol(Col):
     def __init__(self, dt, name, **kw):
@@ -52,7 +45,8 @@ class FunctionCol(LinkCol):
     
     def search(self, qs):
         return Morpheme.unitvalues.any(UnitValue.name.contains(qs))
-        
+
+
 class Meanings(Unitparameters):
     
     def __init__(self, req, model, **kw):
@@ -73,6 +67,7 @@ class Meanings(Unitparameters):
         return [
             LinkCol(self, 'Gloss', model_col=UnitParameter.name),
         ]
+
 
 class Morphemes(Units):
     
@@ -115,7 +110,8 @@ class Morphemes(Units):
             CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.counterparts, bSearchable=False ),
             RefsCol(self, 'references'),
         ]
-    
+
+
 class Cognatesets(DataTable):
     def col_defs(self):
         return [
@@ -123,20 +119,20 @@ class Cognatesets(DataTable):
             Col(self, 'description'),
             RefsCol(self, 'references')
         ]
-        
+
+
 class Cognates(DataTable):
     
     __constraints__ = [Cognateset, Language]
     
     def base_query(self, query):
-        
         query = query\
         .join(Morpheme)\
         .join(Language)
-        
-        
+
         if self.cognateset:
             return query.filter(Cognate.cognateset_pk == self.cognateset.pk)
+        return query
             
     def col_defs(self):
         return [
@@ -145,6 +141,7 @@ class Cognates(DataTable):
             FunctionCol(self, 'function', get_obj=lambda i: i.counterpart),
             RefsCol(self, 'references', get_obj=lambda i: i.counterpart)
         ]
+
 
 class Constructions(DataTable):
     __constraints__ = [Language, DeclarativeType, MainClauseVerb]
@@ -214,7 +211,8 @@ class MorphemeFunctions(Unitvalues):
             CognatesetCol(self, 'cognatesets', get_obj=lambda i: i.unit.counterparts, bSearchable=False),
             RefsCol(self, 'references', get_obj=lambda i: i.unit)
         ]
-        
+
+
 class Languages(Languages):
     def col_defs(self):
         return [
@@ -233,10 +231,12 @@ class Languages(Languages):
                 ),
         ]
    
+
 class TsvCol(Col):
     def search(self, qs):
         return super(TsvCol, self).search('\t'.join(qs.split()))
-             
+
+
 class Sentences(Sentences):
 
     def col_defs(self):

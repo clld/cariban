@@ -3,7 +3,7 @@ from xmljson import badgerfish as bf
 import sys
 import os
 import csv
-from cariban_morphemes import util
+from cariban import util
 from pycldf import Wordlist             
 import re
 import pyperclip
