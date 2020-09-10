@@ -1,25 +1,27 @@
 import io
 import re
+import itertools
 from collections import OrderedDict
 
 from sqlalchemy import or_
 from markupsafe import Markup
-
-from clld.web.util.htmllib import HTML, literal
-from clld.db.meta import DBSession
-from clld.db.models import common as models
-from clld.web.util import helpers as h
-from cariban.models import Morpheme, Construction, Cognateset
-from clld.db.models import Language, Source, Sentence
-from clld_phylogeny_plugin.models import Phylogeny
-from clld.web.util.multiselect import CombinationMultiSelect
 from Bio import Phylo
 
+from clld.db.meta import DBSession
+from clld.db.models import common as models
+from clld.db.models import Language, Source, Sentence
+from clld.web.util import helpers as h
+from clld.web.util.htmllib import HTML, literal
+from clld.web.util.multiselect import CombinationMultiSelect
+from clld_phylogeny_plugin.models import Phylogeny
+
+from cariban.models import Morpheme, Construction, Cognateset
 from cariban import models as cariban_models
 assert cariban_models
 
 
 separators = ["-", "=", "<", ">"]
+PERSON_SPECS = ["1", "2", "1+2", "1+3", "3"]
 
 
 def function_paradigms():
@@ -62,18 +64,10 @@ def merge_allomorphs(form):
         found_hit = False
         #We iterate the allomorphs we already added to the new form
         for i, existing_allomorph in enumerate(new_allomorphs):
-            # if found_hit:
-            #     print("Aborting…")
             if not found_hit:
                 # print("Looking at candidate %s, comparing it with %s" % (allomorph, existing_allomorph))
-                if prefix:
-                    right_border = len(allomorph)-2
-                else:
-                    right_border = len(allomorph)-1
-                if suffix:
-                    left_border = 1
-                else:
-                    left_border = 0
+                right_border = len(allomorph) - (2 if prefix else 1)
+                left_border = 1 if suffix else 0
                 for right_edge in range(right_border, -1, -1):
                     for left_edge in range(left_border, right_edge+1):
                         if left_edge == right_edge:
@@ -99,12 +93,9 @@ def merge_allomorphs(form):
         if not found_hit:
             # print("No match found between %s and %s" % (allomorph, existing_allomorph))
             new_allomorphs.append(allomorph)
-    for i, new_allomorph in enumerate(new_allomorphs):
-        for j, other_allomorph in enumerate(new_allomorphs):
-            if i != j:
-                if new_allomorph in extract_allomorphs(other_allomorph):
-                    # print(f"removing {new_allomorph}, as it is an allomorph of {other_allomorph}")
-                    new_allomorphs.remove(new_allomorph)
+    for new_allomorph, other_allomorph in itertools.permutations(new_allomorphs, 2):
+        if new_allomorph in extract_allomorphs(other_allomorph):
+            new_allomorphs.remove(new_allomorph)
     return "; ".join(new_allomorphs)
 
 
@@ -245,8 +236,8 @@ def generate_markup(non_f_str: str, html=True):
         return ""
 
     def cons_lk(shorthand):
-        cons = DBSession.query(Construction).filter(Construction.id == shorthand)[0]
-        return "<a href='/construction/%s'>%s</a>" % (shorthand, cons.language.name + " " + cons.name + " clause")
+        c = Construction.get(shorthand)
+        return "<a href='/construction/{}'>{} {} clause</a>".format(c.id, c.language.name, c.name)
 
     def lang_lk(shorthand):
         lang = languages[shorthand]
@@ -255,11 +246,8 @@ def generate_markup(non_f_str: str, html=True):
     def cogset_lk(cogset_id, text=""):
         if cogset_id == "":
             return ""
-        cogset = DBSession.query(Cognateset).filter(Cognateset.id == cogset_id)[0]
-        if text == "":
-            return "<i><a href='/cognateset/%s'>%s</a></i>" % (cogset_id, cogset)
-        else:
-            return "<i><a href='/cognateset/%s'>%s</a></i>" % (cogset_id, text)
+        cogset = Cognateset.get(cogset_id)
+        return "<i><a href='/cognateset/%s'>%s</a></i>" % (cogset_id, text or cogset)
 
     def src_lk(source_str):
         bib_key = source_str.split("[")[0]
@@ -275,37 +263,34 @@ def generate_markup(non_f_str: str, html=True):
             return ""
         morph_list = DBSession.query(Morpheme).filter(Morpheme.id == morph_id)
         if len(list(morph_list)) == 0:
-            #print(f"Morpheme {morph_id} not found in database!")
             return '' #f"MISSING MORPHEME {morph_id}"
-        else:
-            morph = morph_list[0]
+        morph = morph_list[0]
         if html:
-            if form == "": form = morph.name#.split("/")[0]
-            return "<i><a href='/morpheme/%s'>%s</a></i>" % (morph_id, form)
+            return "<i><a href='/morpheme/%s'>%s</a></i>" % (morph_id, form or morph.name)
+        if form == "":
+            allomorphs = morph.name.split("/")
+            form = []
+            for allomorph in allomorphs:
+                form.append("\\obj{%s}" % allomorph)
+            form = "/".join(form)
         else:
-            if form == "":
-                allomorphs = morph.name.split("/")
-                form = []
-                for allomorph in allomorphs:
-                    form.append("\\obj{%s}" % allomorph)
-                form = "/".join(form)
-            else:
-                form = "\\obj{%s}" % form
-            return form
+            form = "\\obj{%s}" % form
+        return form
 
     def render_ex(ex_id):
         nonlocal ex_cnt
         ex_cnt += 1
         example = DBSession.query(Sentence).filter(Sentence.id == ex_id)[0]
         return """
-            <blockquote style='margin-top: 5px; margin-bottom: 5px'>
-            (<a href='/example/%s'>%s</a>) %s (%s)
-                %s
-            </blockquote>""" % (example.id,ex_cnt,
-                                lang_lk(example.language.id),
-                                src_lk("%s[%s]" % (example.references[0].source.id, example.references[0].description)),
-                                rendered_sentence(example)
-                                )
+<blockquote style='margin-top: 5px; margin-bottom: 5px'>
+    (<a href='/example/%s'>%s</a>) %s (%s)
+    %s
+</blockquote>""" % (
+            example.id,ex_cnt,
+            lang_lk(example.language.id),
+            src_lk("%s[%s]" % (example.references[0].source.id, example.references[0].description)),
+            rendered_sentence(example)
+        )
 
     substitutions = [
         ("'(.*?)'", r"‘\1’"),
@@ -322,95 +307,57 @@ def generate_markup(non_f_str: str, html=True):
     for orig, sub in substitutions:
         non_f_str = re.sub(orig, sub, non_f_str)
 
-    return non_f_str.replace("-</a></i>£", "-</a></i>").replace("-}£", "-}").replace("£", " ").replace("\n\n","PARAGRAPHBREAK").replace("\n"," ").replace("PARAGRAPHBREAK","\n\n")
+    return non_f_str\
+        .replace("-</a></i>£", "-</a></i>")\
+        .replace("-}£", "-}")\
+        .replace("£", " ")\
+        .replace("\n\n","PARAGRAPHBREAK")\
+        .replace("\n"," ")\
+        .replace("PARAGRAPHBREAK","\n\n")
 
 
 def html_table(lol, caption):
-    output = ""
-    output += '<table class="table paradigm-table"> <caption>%s</caption>' % caption
-    for sublist in lol:
-        output += '  <tr><td class="td paradigm-td">'
-        output += '    </td><td class="td paradigm-td">'.join(sublist)
-        output += '  </td></tr>'
-    output += '</table>'
-    return output
+    return str(HTML.table(
+        HTML.caption(caption),
+        *[HTML.tr(*[HTML.td(col, class_='td paradigm-td') for col in row]) for row in lol],
+        **{'class': 'table paradigm-table'},
+    ))
 
-
-def render_latex_code(input):
-    # if "morph:" not in input:
-    #     return pynterlinear.get_expex_code(input)
-    # else:
-        return generate_markup(input, html=False)
-    
-def latex_table(lol):
-    output = """\\begin{tabular}{@{}"""
-    col_cnt = len(lol[1])
-    for i in range(0,col_cnt):
-        output += "l"
-    output += "@{}}\n\\mytoprule"
-    for i, sublist in enumerate(lol):
-        sublist = [render_latex_code(x) for x in sublist]
-        output += "\n"
-        output += " & ".join(sublist)
-        output += "\\\\"
-        if i == 0: output += "\n\\mymidrule"
-    output += """\n\\mybottomrule
-\\end{tabular}"""
-    return output
 
 def keyify(list, hash):
-    return re.sub(r"(\d):", r"\1", ":".join(get_args(list, hash))).strip(":")
-
-#This takes a list of keys (in this case, of parameter names) and a hash (in this case, of an entry), and returns a list of values from the hash. Used to combine different parameters
-def get_args(list, hash): 
-    output = []
-    for item in list:
-        output.append(hash[item])
-    return(output)
+    return re.sub(r"(\d):", r"\1", ":".join([hash[item] for item in list])).strip(":")
 
 
 def person_sort(s):
-    return ["", "1", "2", "1+2", "1+3", "3"].index(re.sub("[A,SP]", "", s))
+    return ([""] + PERSON_SPECS).index(re.sub("[A,SP]", "", s))
 
 
 def build_table(table, label):
-    output = []
     x_values = []
     y_values = []
-    output.append([])
     for y_key, y in table.items():
         if y_key not in y_values:
             y_values.append(y_key)
         for x_key, x in y.items():
             if x_key not in x_values:
                 x_values.append(x_key)
-    sort_me = True
-    for x_value in x_values:
-        if re.sub("[A,S,P]", "", x_value) not in ["1", "2", "3", "1+2", "1+3"]: sort_me = False
-    if sort_me:
+
+    if all(re.sub("[A,SP]", "", x_value) in PERSON_SPECS for x_value in x_values):
         x_values = sorted(x_values, key=person_sort)
-    row_count = 0
-    output[0].append(label)
-    for x in x_values:
-        output[row_count].append(x)
-    
+    rows = [[label] + x_values]
+
     for x_key in table.keys():
-        output.append([])
-        row_count += 1
-        output[row_count].append(x_key)
-        for i in x_values:
-            output[row_count].append("")
+        row = [x_key] + ["" for _ in x_values]
         for y_key, y in table[x_key].items():
             col_count = 0
             while col_count < len(x_values):
-                if output[0][col_count+1] == y_key:
-                    if type(y) is list:
-                        # print(y)
-                        y = ", ".join(y)
-                    output[row_count][col_count+1] = y
+                if rows[0][col_count + 1] == y_key:
+                    row[col_count + 1] = ", ".join(y) if type(y) is list else y
                 col_count += 1
-    if label == "": del output[0]
-    return output
+        rows.append(row)
+    if label == "":
+        del rows[0]
+    return rows
 
 
 def intransitive_construction_paradigm(construction, html=True):
@@ -437,15 +384,15 @@ def intransitive_construction_paradigm(construction, html=True):
         for morpheme in entry["Morpheme"]:
             string += "morph:" + morpheme + "£"
         table[entry["S"]][""].append(string)
-            
-    table = dict((k, v) for k, v in table.items() if "morph:" in str(v))
-    
+
+    table = OrderedDict((k, v) for k, v in table.items() if "morph:" in str(v))
+
     if "morph:" not in str(table):
         return ""
     if html:
         return html_table(build_table(table, " "), "Intransitive person marking")
-    else:
-        return build_table(table, " ")
+    return build_table(table, " ")
+
 
 def comparative_function_paradigm(constructions, label, values):
     entries = []
@@ -472,28 +419,20 @@ def comparative_function_paradigm(constructions, label, values):
             continue
         y_key = "cons:"+keyify(y_dim, entry)
         my_y = table[y_key]
-        good = True
         x_key = keyify(x_dim, entry)
         if x_key not in my_y.keys(): my_y[x_key] = []
-        # for col, val in filtered_parameters.items():
-            # if entry[col] != val:
-                # good = False
-        if good:
-            #Find the appropriate column
-            string = ""
-            for morpheme in entry["Morpheme"]:
-                string += "morph:" + morpheme + "£"
-            my_y[x_key].append(string)
+        #Find the appropriate column
+        string = ""
+        for morpheme in entry["Morpheme"]:
+            string += "morph:" + morpheme + "£"
+        my_y[x_key].append(string)
     return html_table(build_table(table, " "), label)
 
 
 def transitive_construction_paradigm(construction, html=True):
     x_dim = ["P"]
     y_dim = ["A"]
-    
-    filtered_parameters = {
-        "Construction": construction
-    }
+    filtered_parameters = {"Construction": construction}
 
     entries = []
     for entry in function_paradigms():
@@ -529,13 +468,11 @@ def transitive_construction_paradigm(construction, html=True):
             continue
         y_key = keyify(y_dim, entry)
         my_y = table[y_key]
-        good = True
         x_key = keyify(x_dim, entry)
-        if x_key not in my_y.keys(): my_y[x_key] = []
-        for col, val in filtered_parameters.items():
-            if entry[col] != val:
-                good = False
-        if good:
+        if x_key not in my_y.keys():
+            my_y[x_key] = []
+
+        if all(entry[col] == val for col, val in filtered_parameters.items()):
             #Find the appropriate column
             string = ""
             for morpheme in entry["Morpheme"]:
@@ -545,45 +482,40 @@ def transitive_construction_paradigm(construction, html=True):
         return html_table(build_table(table, " "), "Transitive person marking")
     else:
         return build_table(table, " ")
-    
+
+
 def phylogeny_detail_html(request=None, context=None, **kw):
-    return {
-        'ms': CombinationMultiSelect,
-}
+    return {'ms': CombinationMultiSelect}
+
 
 def parameter_detail_html(request=None, context=None, **kw):
-    return {
-        'ms': CombinationMultiSelect,
-}
+    return {'ms': CombinationMultiSelect}
+
 
 def default_tree(request=None, ctx=None, **kw):
-    tree = DBSession.query(Phylogeny).filter(Phylogeny.id == "gildea_norm")[0]
-    return tree
+    return DBSession.query(Phylogeny).filter(Phylogeny.id == "gildea_norm")[0]
+
 
 def t_adding_pct():
     result = {}
     for l in DBSession.query(Language):
         if l.id == "pc": continue
         result[l.id] = "%s/%s" % (
-                                    l.jsondata["t_values"]["y"],
-                                    (l.jsondata["t_values"]["y"]+l.jsondata["t_values"]["n"]+l.jsondata["t_values"]["?"])
-                                )
+            l.jsondata["t_values"]["y"],
+            (l.jsondata["t_values"]["y"]+l.jsondata["t_values"]["n"]+l.jsondata["t_values"]["?"])
+        )
     return result
-    
+
+
 def get_clade_as_json(clade):
-    json_clade = {}
-    if clade.name is None:
-        json_clade["name"] = "Clade"
-    else:
-        json_clade["name"] = clade.name
+    json_clade = {"name": clade.name or "Clade"}
     if not clade.is_terminal():
-        json_clade["children"] = []
-        for node in clade:
-            json_clade["children"].append(get_clade_as_json(node))
+        json_clade["children"] = [get_clade_as_json(node) for node in clade]
     return json_clade
 
+
 def get_tree(request, values, tree_name):
-    my_tree = Phylo.read(io.StringIO(DBSession.query(Phylogeny).filter(Phylogeny.id == "matter")[0].newick), "newick")
+    my_tree = Phylo.read(io.StringIO(Phylogeny.get("matter").newick), "newick")
     for node in my_tree.find_clades():
         if node.name == None:
             continue
@@ -605,7 +537,8 @@ def get_tree(request, values, tree_name):
         node.name = new_name
         node.name = generate_markup(node.name)
     return get_clade_as_json(my_tree.clade)
-    
+
+
 def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
     set_1 = {}
     for i in clauses:
@@ -682,7 +615,7 @@ def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
         "1>2": ["?"],
         "2>1": ["?"],
     }
-    my_tree = Phylo.read(io.StringIO(DBSession.query(Phylogeny).filter(Phylogeny.id == "matter")[0].newick), "newick")
+    my_tree = Phylo.read(io.StringIO(Phylogeny.get("matter").newick), "newick")
     for node in my_tree.find_clades():
         if node.name == None:
             continue
