@@ -48,21 +48,14 @@ def extract_allomorphs(full_string):
 
 def merge_allomorphs(form):
     allomorphs = form.split("; ")
-    if allomorphs[0][-1] in separators:
-        prefix = True
-        suffix = False
-    elif allomorphs[0][0] in separators:
-        prefix = False
-        suffix = True
-    else:
-        prefix = False
-        suffix = False
+    prefix = allomorphs[0][-1] in separators
+    suffix = False if prefix else allomorphs[0][0] in separators
     allomorphs.sort(key=len)
-    #We take the shortest allomorph as the base
+    # We take the shortest allomorph as the base
     new_allomorphs = [allomorphs[0]]
-    #Then we iterate the longer allomorphs
+    # Then we iterate the longer allomorphs
     for allomorph in allomorphs[1:]:
-        #If there is an affricate, let's just add it straight away, we don't want to split these up
+        # If there is an affricate, let's just add it straight away, we don't want to split these up
         if "͡" in allomorph:
             new_allomorphs.append(allomorph)
             continue
@@ -141,7 +134,7 @@ def split_word(word):
 # #
 # # TODO: enumerate exceptions: 1SG, 2SG, 3SG, ?PL, ?DU
 # #
-def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False):
+def rendered_sentence(sentence, abbrs=None, **kw):
     """Format a sentence as HTML."""
     if sentence.xhtml:
         return HTML.div(
@@ -375,17 +368,11 @@ def get_args(list, hash):
         output.append(hash[item])
     return(output)
 
+
 def person_sort(s):
-    sortation = {
-        "1": 1,
-        "2": 2,
-        "3": 5,
-        "1+2": 3,
-        "1+3": 4,
-        "": 0
-    }
-    return sortation[re.sub("[A,S,P]", "", s)]
-    
+    return ["", "1", "2", "1+2", "1+3", "3"].index(re.sub("[A,SP]", "", s))
+
+
 def build_table(table, label):
     output = []
     x_values = []

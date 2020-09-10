@@ -14,38 +14,12 @@ import cariban
 from cariban import models, util
 
 
-#This returns a author-year style reference from the bibtex file.
-# def get_source_name(source):
-#     year = source.get('year', 'nd')
-#     fields = {}
-#     jsondata = {}
-#     eds = ''
-#     authors = source.get('author')
-#     if not authors:
-#         authors = source.get('editor', '')
-#         if authors:
-#             eds = ' (eds.)'
-#     if authors:
-#         authors = unescape(authors).split(' and ')
-#         etal_string = ""
-#         if len(authors) > 2:
-#             authors = authors[:1]
-#             etal_string = " et al."
-#
-#         authors = [HumanName(a) for a in authors]
-#         authors = [n.last or n.first for n in authors]
-#         authors = '%s%s' % (' and '.join(authors), eds)
-#         authors += etal_string
-#
-#         return ('%s %s' % (authors, year)).strip()
-
 # #To figure out whether a given t-adding verb would have the prefix tɨ- or t-
 def t_prefix_form(string):
     initial = IPAString(unicode_string=string, ignore=True)
     if len(initial.consonants) > 0 and initial.consonants[0].is_equivalent(initial[0]):
         return "tɨ"
-    else:
-        return "t"
+    return "t"
 
 
 def main(args):
@@ -127,24 +101,7 @@ def main(args):
             bib_key = source_string
             pages = ""
         return bib_key, pages
-#
-#     #Create shorthand lists for the paradigm generator function
-#     FUNCTION_PARADIGMS = []
-#     for entry in construction_data["ValueTable"]:
-#         for function in entry["Function"]:
-#             for construction in entry["Construction"]:
-#                 function_entry = {
-#                     "Function": function,
-#                     "Construction": construction,
-#                     "Morpheme": entry["Morpheme"]
-#                 }
-#                 FUNCTION_PARADIGMS.append(function_entry)
-#
-#     #Save to json to make the function paradigms available to util.py
-#     with open('function_paradigms.json', 'w') as fout:
-#         json.dump(FUNCTION_PARADIGMS, fout)
-#
-#
+
     print("Adding sources…")
     for rec in bibtex.Database.from_file(args.cldf.bibpath):
         data.add(common.Source, rec.id, _obj=bibtex2source(rec))
@@ -586,17 +543,9 @@ def main(args):
         if t_verb_entry["t"] == "n":
             t_verb.markup_description = util.generate_markup("Does not show cogset:t")
         if lang_id not in t_langs.keys():
-            t_langs[lang_id] = {
-                "y": 0,
-                "n": 0,
-                "?": 0
-            }
+            t_langs[lang_id] = {"y": 0, "n": 0, "?": 0}
         if cognate_ID not in t_verbs.keys():
-            t_verbs[cognate_ID] = {
-                "y": 0,
-                "n": 0,
-                "?": 0
-            }
+            t_verbs[cognate_ID] = {"y": 0, "n": 0, "?": 0}
         t_langs[lang_id][t_verb_entry["t"]] += 1
         if lang_id not in non_t_adding_lgs:
             t_verbs[cognate_ID][t_verb_entry["t"]] += 1
@@ -616,7 +565,6 @@ def main(args):
     for verb, values in t_verbs.items():
         data["Cognateset"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
         data["Cognateset"][verb].markup_description = util.generate_markup("This verb occurs with obj:t- in %s of %s languages which show reflexes of cogset:t." % (str(values["y"]), str(values["n"]+values["y"]+values["?"])))
-        
 
     print("Adding reconstructed lexemes…")
     proto_forms = {}
@@ -631,7 +579,7 @@ def main(args):
                 form = "*" + proto_forms[cognateset_ID]
             else:
                 form = ""
-            swadesh_cogset = data.add(models.Cognateset,
+            data.add(models.Cognateset,
                 cognateset_ID,
                 id=cognateset_ID,
                 name=form,
