@@ -13,30 +13,6 @@ from ipapy.ipastring import IPAString
 import cariban
 from cariban import models, util
 
-# print("Generating language information for markdown…")
-# #This will contain a dict to look up the language IDs (and names) based on glottocodes -- the CLLD app uses custom language IDs, but the CLDF files use glottocodes.
-# LANG_DIC = {}
-# #This will contain a dict to look up full language names based on shorthand forms (e.g. maqui). This is only used to render markdown.
-# LANG_ABBREV_DIC = {}
-# #and this is used to look up language names based on the code. used for trees
-# LANG_CODE_DIC = {}
-# for row in args.cldf["LanguageTable"]:
-#     LANG_DIC[row["Glottocode"]] = {"ID": row["ID"], "name": row["Name"]}
-#     LANG_ABBREV_DIC[row["Shorthand"]] = {"ID": row["ID"], "name": row["Name"]}
-#     # if row["Dialect_Of"] is None:
-#     LANG_CODE_DIC[row["ID"]] = {"shorthand": row["Shorthand"], "name": row["Name"]}
-#
-# #Save to json to make the dics available to util.py
-# json_file = json.dumps(LANG_ABBREV_DIC)
-# f = open("lang_code_dic.json","w")
-# f.write(json_file)
-# f.close()
-#
-# json_file = json.dumps(LANG_CODE_DIC)
-# f = open("lang_code_dic.json","w")
-# f.write(json_file)
-# f.close()
-# from cariban import util
 
 #This returns a author-year style reference from the bibtex file.
 # def get_source_name(source):
@@ -76,7 +52,8 @@ def main(args):
     data = Data()
 
     print("Setting up dataset…")
-    dataset = common.Dataset(id=cariban.__name__,
+    dataset = common.Dataset(
+        id=cariban.__name__,
         domain="cariban.clld.org",
         name="Cariban Morphology Database",
         description="Cariban Morphology Database",
@@ -84,10 +61,22 @@ def main(args):
         publisher_url="https://www.eva.mpg.de",
         publisher_place="Leipzig",
         license="https://creativecommons.org/licenses/by/4.0/",
-        contact="florian.matter@isw.unibe.ch"
+        contact="florian.matter@isw.unibe.ch",
+        jsondata={'function_paradigms': []},
     )
 
+    fps = []
+    for morph_func in args.cldf["ValueTable"]:
+        for function in morph_func["Function"]:
+            for cons in morph_func["Construction"]:
+                fps.append({
+                    'Function': function,
+                    'Construction': cons,
+                    'Morpheme': morph_func['Morpheme']})
+    dataset.update_jsondata(function_paradigms=fps)
+
     DBSession.add(dataset)
+    DBSession.flush()
 
     print("Adding contributors (me)…")
     c = common.Contributor(id="fm",name="Florian Matter")

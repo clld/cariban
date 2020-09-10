@@ -15,17 +15,16 @@ from clld_phylogeny_plugin.models import Phylogeny
 from clld.web.util.multiselect import CombinationMultiSelect
 from Bio import Phylo
 
-from cariban.config import LANG_ABBREV_DIC, FUNCTION_PARADIGMS, LANG_CODE_DIC
+from cariban import models as cariban_models
+assert cariban_models
 
-
-language_names = {}
-for key, values in LANG_CODE_DIC.items():
-    language_names[values["shorthand"]] = values["name"]
-sampled_languages = {}
-for key, values in LANG_ABBREV_DIC.items():
-    sampled_languages[values["ID"]] = values["name"]
 
 separators = ["-", "=", "<", ">"]
+
+
+def function_paradigms():
+    res = models.Dataset.first().jsondata['function_paradigms']
+    return res
 
 
 def extract_allomorphs(full_string):
@@ -245,26 +244,21 @@ def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False
 def generate_markup(non_f_str: str, html=True):
     ex_cnt = 0
 
+    languages = {}
+    for lang in DBSession.query(Language):
+        languages[lang.id] = languages[lang.jsondata["Shorthand"]] = lang
+
     if non_f_str is None:
         return ""
 
     def cons_lk(shorthand):
         cons = DBSession.query(Construction).filter(Construction.id == shorthand)[0]
         return "<a href='/construction/%s'>%s</a>" % (shorthand, cons.language.name + " " + cons.name + " clause")
-                
+
     def lang_lk(shorthand):
-        if shorthand in LANG_ABBREV_DIC.keys():
-            return "<a href='/languages/%s'>%s</a>" % (LANG_ABBREV_DIC[shorthand]["ID"], LANG_ABBREV_DIC[shorthand]["name"])
-        elif shorthand in sampled_languages.keys():
-            return "<a href='/languages/%s'>%s</a>" % (shorthand, sampled_languages[shorthand])
-        elif shorthand in language_names.keys():
-            return language_names[shorthand]
-        elif shorthand in LANG_CODE_DIC.keys():
-            return LANG_CODE_DIC[shorthand]["name"]
-        else:
-            language = DBSession.query(Language).filter(Language.id == shorthand)[0]
-            return "<a href='/languages/%s'>%s</a>" % (shorthand, language.name)            
-            
+        lang = languages[shorthand]
+        return "<a href='/languages/%s'>%s</a>" % (lang.id, lang.name)
+
     def cogset_lk(cogset_id, text=""):
         if cogset_id == "":
             return ""
@@ -347,6 +341,7 @@ def html_table(lol, caption):
         output += '  </td></tr>'
     output += '</table>'
     return output
+
 
 def render_latex_code(input):
     # if "morph:" not in input:
@@ -435,7 +430,7 @@ def intransitive_construction_paradigm(construction, html=True):
     # print("constructing intransitive paradigm for %s" % construction)
     table = {}
     entries = []
-    for entry in FUNCTION_PARADIGMS:
+    for entry in function_paradigms():
         new_entry = entry
         # if re.match("\d(\+\d)?\w", entry["Function"]) and "." not in entry["Function"]:
         if re.match("\d(\+\d)?S", entry["Function"]) and "." not in entry["Function"]:
@@ -448,8 +443,7 @@ def intransitive_construction_paradigm(construction, html=True):
         if entry["S"] not in table.keys() and entry["Construction"] == construction:
             table[entry["S"]] = {"":[]}
     
-    table = dict(sorted(table.items(), key=lambda kv: person_sort(kv[0])))
-    table = OrderedDict(table.items())
+    table = OrderedDict(sorted(table.items(), key=lambda kv: person_sort(kv[0])))
     for entry in entries:
         if entry["Construction"] != construction: continue
         string = ""
@@ -468,7 +462,7 @@ def intransitive_construction_paradigm(construction, html=True):
 
 def comparative_function_paradigm(constructions, label, values):
     entries = []
-    for entry in FUNCTION_PARADIGMS:
+    for entry in function_paradigms():
         for value in values:
             if value == entry["Function"]:
                 entries.append(entry)
@@ -504,7 +498,8 @@ def comparative_function_paradigm(constructions, label, values):
                 string += "morph:" + morpheme + "£"
             my_y[x_key].append(string)
     return html_table(build_table(table, " "), label)
-     
+
+
 def transitive_construction_paradigm(construction, html=True):
     x_dim = ["P"]
     y_dim = ["A"]
@@ -512,10 +507,10 @@ def transitive_construction_paradigm(construction, html=True):
     filtered_parameters = {
         "Construction": construction
     }
-    
+
     entries = []
-    for entry in FUNCTION_PARADIGMS:
-        new_entry = entry
+    for entry in function_paradigms():
+        new_entry = {k: v for k, v in entry.items()}
         if re.match("\d(\+\d)?P", entry["Function"]):
             new_entry["P"] = entry["Function"]#.replace("P","")
             new_entry["S"] = ""
@@ -540,11 +535,11 @@ def transitive_construction_paradigm(construction, html=True):
         if y_key not in table.keys():
             table[y_key] = {}
             
-    table = dict(sorted(table.items(), key=lambda kv: person_sort(kv[0])))
-    table = OrderedDict(table.items())
+    table = OrderedDict(sorted(table.items(), key=lambda kv: person_sort(kv[0])))
     #Iterate through all entries and put the form into the appropriate place
     for entry in entries:
-        if entry["Construction"] != construction: continue
+        if entry["Construction"] != construction:
+            continue
         y_key = keyify(y_dim, entry)
         my_y = table[y_key]
         good = True
@@ -628,7 +623,7 @@ def get_morpheme_tree(clauses, scenario, tree_name, reconstructed=False):
     set_1 = {}
     for i in clauses:
         set_1[i] = {}
-    for entry in FUNCTION_PARADIGMS:
+    for entry in function_paradigms():
         if entry["Construction"] in set_1:
             if entry["Function"] not in set_1[entry["Construction"]].keys():
                 set_1[entry["Construction"]][entry["Function"]] = [entry["Morpheme"]]
