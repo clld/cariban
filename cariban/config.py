@@ -1,11 +1,11 @@
-import json
+import pathlib
 
-#This will contain a dict to look up full language names based on shorthand forms (e.g. maqui). This is only used to render markdown.
-with open('lang_abbrev_dic.json') as json_file:
-    LANG_ABBREV_DIC = json.load(json_file)
+from clldutils.jsonlib import load
 
-with open('function_paradigms.json') as json_file:
-    FUNCTION_PARADIGMS = json.load(json_file)
+import cariban
 
-with open('lang_code_dic.json') as json_file:
-    LANG_CODE_DIC = json.load(json_file)
+REPOS_DIR = pathlib.Path(cariban.__file__).parent.parent
+
+LANG_ABBREV_DIC = load(REPOS_DIR / 'lang_abbrev_dic.json')
+FUNCTION_PARADIGMS = load(REPOS_DIR / 'function_paradigms.json')
+LANG_CODE_DIC = load(REPOS_DIR / 'lang_code_dic.json')

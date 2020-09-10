@@ -1,17 +1,17 @@
 import io
+import re
 
 from clld.cliutil import Data, bibtex2source, add_language_codes
 from clld.db.meta import DBSession
 from clld.db.models import common
 from clld.lib import bibtex
-from clld.lib.bibtex import EntryType
-import cariban
-from cariban import models, util
-import re
 from clld_phylogeny_plugin.models import Phylogeny, LanguageTreeLabel, TreeLabel
 #to edit tree labels
 from Bio import Phylo
 from ipapy.ipastring import IPAString
+
+import cariban
+from cariban import models, util
 
 # print("Generating language information for markdown…")
 # #This will contain a dict to look up the language IDs (and names) based on glottocodes -- the CLLD app uses custom language IDs, but the CLDF files use glottocodes.
@@ -179,7 +179,7 @@ def main(args):
         id="pc",
         name="Personal communication",
         description="Placeholder for data obtained from personal communication.",
-        bibtex_type=EntryType.misc
+        bibtex_type=bibtex.EntryType.misc
     )
 
 #     print("Adding glossing abbreviations…")
