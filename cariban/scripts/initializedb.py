@@ -107,6 +107,7 @@ def main(args):
                 name=lang["Name"],
                 latitude=float(lang["Latitude"]) if lang["Latitude"] is not None else None,
                 longitude=float(lang["Longitude"]) if lang["Longitude"] is not None else None,
+                jsondata={'Shorthand': lang['Shorthand'], 'Glottocode': lang['Glottocode']},
             )
             add_language_codes(data, language, isocode=lang["ISO"], glottocode = lang["Glottocode"])
         if lang["Dialect_Of"] not in [None, "y"]:

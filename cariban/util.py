@@ -243,26 +243,11 @@ def rendered_sentence(sentence, abbrs=None, fmt='long', lg_name=False, src=False
 
 
 def generate_markup(non_f_str: str, html=True):
-    return non_f_str
     ex_cnt = 0
 
     if non_f_str is None:
         return ""
-        
-    substitutions = {
-        "'(.*?)'": r"‘\1’",
-        "morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)": r"{morph_lk('\1','\2')}",
-        "lg:([a-z]*)": r"{lang_lk('\1')}",
-        "cons:([a-z\_]*)": r"{cons_lk('\1')}",
-        "cogset:([a-z\_0-9]*)": r"{cogset_lk('\1')}",
-        "src:([a-z\_0-9\[\]\-]*)": r"{src_lk('\1')}",
-        "ex:([a-z\_0-9\-]*)": r"{render_ex('\1')}",
-        "obj:([\w\-\(\)]*)": r"<i>\1</i>",
-        "rc:([\w\-\(\)]*)": r"<i>*\1</i>",
-    }
-    for orig, sub in substitutions.items():
-        non_f_str = re.sub(orig, sub, non_f_str)
-    
+
     def cons_lk(shorthand):
         cons = DBSession.query(Construction).filter(Construction.id == shorthand)[0]
         return "<a href='/construction/%s'>%s</a>" % (shorthand, cons.language.name + " " + cons.name + " clause")
@@ -320,7 +305,7 @@ def generate_markup(non_f_str: str, html=True):
             else:
                 form = "\\obj{%s}" % form
             return form
-        
+
     def render_ex(ex_id):
         nonlocal ex_cnt
         ex_cnt += 1
@@ -330,14 +315,29 @@ def generate_markup(non_f_str: str, html=True):
             (<a href='/example/%s'>%s</a>) %s (%s)
                 %s
             </blockquote>""" % (example.id,ex_cnt,
-                            lang_lk(example.language.id),
-                            src_lk("%s[%s]" % (example.references[0].source.id, example.references[0].description)),
-                            rendered_sentence(example)
-                        )
-    
-    result = '' #eval(f'f"""{non_f_str}"""')
-    return result.replace("-</a></i>£", "-</a></i>").replace("-}£", "-}").replace("£", " ").replace("\n\n","PARAGRAPHBREAK").replace("\n"," ").replace("PARAGRAPHBREAK","\n\n")
-    
+                                lang_lk(example.language.id),
+                                src_lk("%s[%s]" % (example.references[0].source.id, example.references[0].description)),
+                                rendered_sentence(example)
+                                )
+
+    substitutions = [
+        ("'(.*?)'", r"‘\1’"),
+        ("morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)",
+            lambda m: morph_lk(m.groups()[0], m.groups()[1])),
+        ("lg:([a-z]*)", lambda m: lang_lk(m.groups()[0])),
+        ("cons:([a-z\_]*)", lambda m: cons_lk(m.groups()[0])),
+        ("cogset:([a-z\_0-9]*)", lambda m: cogset_lk(m.groups()[0])),
+        ("src:([a-z\_0-9\[\]\-]*)", lambda m: src_lk(m.groups()[0])),
+        ("ex:([a-z\_0-9\-]*)", lambda m: render_ex(m.groups()[0])),
+        ("obj:([\w\-\(\)]*)", lambda m: '<i>{}</i>'.format(m.groups()[0])),
+        ("rc:([\w\-\(\)]*)", lambda m: '<i>*{}</i>'.format(m.groups()[0])),
+    ]
+    for orig, sub in substitutions:
+        non_f_str = re.sub(orig, sub, non_f_str)
+
+    return non_f_str.replace("-</a></i>£", "-</a></i>").replace("-}£", "-}").replace("£", " ").replace("\n\n","PARAGRAPHBREAK").replace("\n"," ").replace("PARAGRAPHBREAK","\n\n")
+
+
 def html_table(lol, caption):
     output = ""
     output += '<table class="table paradigm-table"> <caption>%s</caption>' % caption
