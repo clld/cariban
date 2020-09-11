@@ -25,27 +25,23 @@ PERSON_SPECS = ["1", "2", "1+2", "1+3", "3"]
 
 
 def function_paradigms():
-    res = models.Dataset.first().jsondata['function_paradigms']
-    return res
+    return models.Dataset.first().jsondata['function_paradigms']
 
 
 def extract_allomorphs(full_string):
-    portions = full_string.split("/")
-    found_allomorphs = []
-    def iter_parens(string):
-        lose = re.sub("\((.*?)\)", r"\1", string, 1)
-        keep = re.sub("\((.*?)\)", "", string, 1)
-        if "(" in lose:
-            iter_parens(lose)
-        else:
-            found_allomorphs.append(lose)
-        if "(" in keep:
-            iter_parens(keep)
-        else:
-            found_allomorphs.append(keep)
-    for string in portions:
-        iter_parens(string)
-    return list(dict.fromkeys(found_allomorphs))
+    def iterate(string):
+        for repl in [r"\1", ""]:  # Keep content in braces of drop it.
+            variant = re.sub(r"\((.*?)\)", repl, string, 1)
+            if "(" in variant:
+                for i in iterate(variant):
+                    yield i
+            else:
+                yield variant
+
+    found_allomorphs = list(itertools.chain(*[iterate(s) for s in full_string.split("/")]))
+    # Deduplicate while keeping the order:
+    seen = set()
+    return [x for x in found_allomorphs if not (x in seen or seen.add(x))]
 
 
 def merge_allomorphs(form):
@@ -62,18 +58,17 @@ def merge_allomorphs(form):
             new_allomorphs.append(allomorph)
             continue
         found_hit = False
-        #We iterate the allomorphs we already added to the new form
+        # We iterate the allomorphs we already added to the new form
         for i, existing_allomorph in enumerate(new_allomorphs):
             if not found_hit:
-                # print("Looking at candidate %s, comparing it with %s" % (allomorph, existing_allomorph))
                 right_border = len(allomorph) - (2 if prefix else 1)
                 left_border = 1 if suffix else 0
                 for right_edge in range(right_border, -1, -1):
-                    for left_edge in range(left_border, right_edge+1):
+                    for left_edge in range(left_border, right_edge + 1):
                         if left_edge == right_edge:
                             allo_slice = allomorph[left_edge]
                         else:
-                            allo_slice = allomorph[left_edge:right_edge+1]
+                            allo_slice = allomorph[left_edge:right_edge + 1]
                         if suffix:
                             preserve = existing_allomorph[1::]
                         elif prefix:
@@ -81,17 +76,14 @@ def merge_allomorphs(form):
                         else:
                             preserve = existing_allomorph
                         comp = preserve.replace("(","").replace(")","")
-                        # print(f"Comparing {allo_slice} with {comp} [{left_edge}:{right_edge}]")
                         if allo_slice == comp:
-                            # print(f"Got a hit! {allo_slice} in position {left_edge}:{right_edge} of {allomorph} is identical to {comp} ({existing_allomorph})")
-                            new_allomorph = "(" + allomorph[:left_edge] + ")" + preserve + "(" + allomorph[right_edge+1:] + ")"
+                            new_allomorph = "({}){}({})".format(
+                                allomorph[:left_edge], preserve, allomorph[right_edge+1:])
                             new_allomorph = new_allomorph.replace("-)", ")-")
                             new_allomorph = new_allomorph.replace("()","")
                             new_allomorphs[i] = new_allomorph
-                            # print(new_allomorphs)
                             found_hit = True
         if not found_hit:
-            # print("No match found between %s and %s" % (allomorph, existing_allomorph))
             new_allomorphs.append(allomorph)
     for new_allomorph, other_allomorph in itertools.permutations(new_allomorphs, 2):
         if new_allomorph in extract_allomorphs(other_allomorph):
@@ -104,7 +96,8 @@ def xify(text):
     for word in text.split(" "):
         ids.append(re.sub(r'([X])\1+', r'\1', re.sub("[^(\-|\=|\~)|]", "X", word)))
     return " ".join(ids)
-    
+
+
 # # regex to match standard abbreviations in gloss units:
 # # We look for sequences of uppercase letters which are not followed by a lowercase letter.
 GLOSS_ABBR_PATTERN = re.compile(
@@ -225,14 +218,14 @@ def rendered_sentence(sentence, abbrs=None, **kw):
     )
 
 
-def generate_markup(non_f_str: str, html=True):
+def generate_markup(string: str, html=True):
     ex_cnt = 0
 
     languages = {}
     for lang in DBSession.query(Language):
         languages[lang.id] = languages[lang.jsondata["Shorthand"]] = lang
 
-    if non_f_str is None:
+    if string is None:
         return ""
 
     def cons_lk(shorthand):
@@ -280,19 +273,20 @@ def generate_markup(non_f_str: str, html=True):
     def render_ex(ex_id):
         nonlocal ex_cnt
         ex_cnt += 1
-        example = DBSession.query(Sentence).filter(Sentence.id == ex_id)[0]
+        example = Sentence.get(ex_id)
         return """
 <blockquote style='margin-top: 5px; margin-bottom: 5px'>
     (<a href='/example/%s'>%s</a>) %s (%s)
     %s
 </blockquote>""" % (
-            example.id,ex_cnt,
+            example.id,
+            ex_cnt,
             lang_lk(example.language.id),
             src_lk("%s[%s]" % (example.references[0].source.id, example.references[0].description)),
             rendered_sentence(example)
         )
 
-    substitutions = [
+    for pattern, repl in [
         ("'(.*?)'", r"‘\1’"),
         ("morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)",
             lambda m: morph_lk(m.groups()[0], m.groups()[1])),
@@ -303,11 +297,10 @@ def generate_markup(non_f_str: str, html=True):
         ("ex:([a-z\_0-9\-]*)", lambda m: render_ex(m.groups()[0])),
         ("obj:([\w\-\(\)]*)", lambda m: '<i>{}</i>'.format(m.groups()[0])),
         ("rc:([\w\-\(\)]*)", lambda m: '<i>*{}</i>'.format(m.groups()[0])),
-    ]
-    for orig, sub in substitutions:
-        non_f_str = re.sub(orig, sub, non_f_str)
+    ]:
+        string = re.sub(pattern, repl, string)
 
-    return non_f_str\
+    return string\
         .replace("-</a></i>£", "-</a></i>")\
         .replace("-}£", "-}")\
         .replace("£", " ")\

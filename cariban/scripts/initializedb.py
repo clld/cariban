@@ -22,7 +22,7 @@ def t_prefix_form(string):
     return "t"
 
 
-def main(args):
+def main(args):  # pragma: no cover
     data = Data()
 
     print("Setting up dataset…")

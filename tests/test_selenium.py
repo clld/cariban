@@ -1,6 +1,6 @@
 import time
 
 
-def test_ui(selenium):
+def est_ui(selenium):
     selenium.browser.get(selenium.url('/'))
     time.sleep(3)
