@@ -3,7 +3,7 @@
 
 <%block name="brand">
     <a class="brand" style="padding-top: 7px; padding-bottom: 5px;" href="${request.route_url('dataset')}" title="${request.dataset.name}">
-        Cariban Morphology
+	Comparative Cariban Database
     </a>
 </%block>
 

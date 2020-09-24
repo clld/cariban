@@ -52,8 +52,8 @@ def main(args):  # pragma: no cover
     DBSession.add(dataset)
     DBSession.flush()
 
-    print("Adding contributors (me)…")
-    c = common.Contributor(id="fm",name="Florian Matter")
+    print("Adding contributors…")
+    c = common.Contributor(id="fm",name="Florian Matter", email="florianmatter@gmail.com", url="https://florianmatter.gitlab.io/")
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
 
     print("Adding languages…")
