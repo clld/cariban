@@ -149,7 +149,6 @@ def main(args):  # pragma: no cover
 
     for ex in args.cldf["ExampleTable"]:
         lang_id = get_lang_id(ex["Language_ID"])
-        
         new_ex = data.add(common.Sentence,
             ex["ID"],
             id=ex["ID"],
