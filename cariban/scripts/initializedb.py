@@ -52,8 +52,8 @@ def main(args):  # pragma: no cover
     DBSession.add(dataset)
     DBSession.flush()
 
-    print("Adding contributors (me)…")
-    c = common.Contributor(id="fm",name="Florian Matter")
+    print("Adding contributors…")
+    c = common.Contributor(id="fm",name="Florian Matter", email="florianmatter@gmail.com", url="https://florianmatter.gitlab.io/")
     dataset.editors.append(common.Editor(contributor=c, ord=1, primary=True))
 
     print("Adding languages…")
@@ -149,7 +149,6 @@ def main(args):  # pragma: no cover
 
     for ex in args.cldf["ExampleTable"]:
         lang_id = get_lang_id(ex["Language_ID"])
-        
         new_ex = data.add(common.Sentence,
             ex["ID"],
             id=ex["ID"],
