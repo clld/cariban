@@ -110,9 +110,9 @@ def main(args):  # pragma: no cover
     DBSession.flush()
     for rec in bibtex.Database.from_file(args.cldf.bibpath):
         if "keywords" in rec:
-            for keyword in rec["keywords"].split(", "):
+            for keyword in rec["keywords"].split(","):
                 if keyword in lang_shorthands:
-                    lang_id = get_lang_id(keyword)
+                    lang_id = get_lang_id(keyword.strip(" "))
                     if lang_id in data["Language"]:
                         data.add(common.LanguageSource,
                         rec.id+lang_id,
