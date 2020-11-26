@@ -404,8 +404,9 @@ def main(args):  # pragma: no cover
         my_phylo = Phylogeny(
                 tree_id,
                 id=tree_id,
-                name="Matter (2020), Tree %s" % str(my_tree_count+1),
-                newick=tree
+                name="Matter (2020)",# % str(my_tree_count+1),
+                newick=tree,
+                markup_description="My own, conservative, classification."
         )
         
         for l in DBSession.query(common.Language):
@@ -485,7 +486,7 @@ def main(args):  # pragma: no cover
             cognate_ID,
             id=cognate_ID,
             name=rec_t_form,
-            description="t-adding verb: ‘%s’" % t_verb_set["Parameter_ID"]
+            description="‘%s’ (*t-adding verb)" % t_verb_set["Parameter_ID"]
         )
         if t_verb_set["Source"]:
             bib_key = t_verb_set["Source"].split("[")[0]
@@ -562,7 +563,7 @@ def main(args):  # pragma: no cover
     for lang, values in t_langs.items():
         data["Language"][lang].update_jsondata(t_values=values)
     for verb, values in t_verbs.items():
-        data["Cognateset"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
+        # data["Cognateset"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
         data["Cognateset"][verb].markup_description = util.generate_markup("This verb occurs with obj:t- in %s of %s languages which show reflexes of cogset:t." % (str(values["y"]), str(values["n"]+values["y"]+values["?"])))
 
     print("Adding reconstructed lexemes…")
