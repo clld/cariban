@@ -242,14 +242,20 @@ def generate_markup(string: str, html=True):
         cogset = Cognateset.get(cogset_id)
         return "<i><a href='/cognateset/%s'>%s</a></i>" % (cogset_id, text or cogset)
 
-    def src_lk(source_str):
+    def src_lk(source_str, parens=False):
         bib_key = source_str.split("[")[0]
         source = DBSession.query(Source).filter(Source.id == bib_key)[0]
         if len(source_str.split("[")) > 1:
             pages = source_str.split("[")[1].split("]")[0]
-            return "<a href='/sources/%s'>%s</a>: %s" % (bib_key, source, pages.replace("--", "–"))
+            if not parens:
+                return "<a href='/sources/%s'>%s</a>: %s" % (bib_key, source, pages.replace("--", "–"))
+            else:
+                return "(<a href='/sources/%s'>%s</a>: %s)" % (bib_key, source, pages.replace("--", "–"))
         else:
-            return "<a href='/sources/%s'>%s</a>" % (bib_key, source)
+            if not parens:
+                return "<a href='/sources/%s'>%s</a>" % (bib_key, source)
+            else:
+                return "(<a href='/sources/%s'>%s</a>)" % (bib_key, source)
 
     def morph_lk(morph_id, form=""):
         if morph_id == "":
@@ -293,6 +299,7 @@ def generate_markup(string: str, html=True):
         ("lg:([a-z]*)", lambda m: lang_lk(m.groups()[0])),
         ("cons:([a-z\_]*)", lambda m: cons_lk(m.groups()[0])),
         ("cogset:([a-z\_0-9]*)", lambda m: cogset_lk(m.groups()[0])),
+        ("psrc:([a-z\_0-9\[\]\-]*)", lambda m: src_lk(m.groups()[0], parens=True)),
         ("src:([a-z\_0-9\[\]\-]*)", lambda m: src_lk(m.groups()[0])),
         ("ex:([a-z\_0-9\-]*)", lambda m: render_ex(m.groups()[0])),
         ("obj:([\w\-\(\)]*)", lambda m: '<i>{}</i>'.format(m.groups()[0])),
