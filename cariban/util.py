@@ -297,7 +297,7 @@ def generate_markup(string: str, html=True):
         ("morph:([a-z\_0-9]*)\|?([\u00BF-\u1FFF\u2C00-\uD7FF\(\)\w]*[\-\=]?)",
             lambda m: morph_lk(m.groups()[0], m.groups()[1])),
         ("lg:([a-z]*)", lambda m: lang_lk(m.groups()[0])),
-        ("cons:([a-z\_]*)", lambda m: cons_lk(m.groups()[0])),
+        ("cons:([a-z\_0-9]*)", lambda m: cons_lk(m.groups()[0])),
         ("cogset:([a-z\_0-9]*)", lambda m: cogset_lk(m.groups()[0])),
         ("psrc:([a-z\_0-9\[\]\-]*)", lambda m: src_lk(m.groups()[0], parens=True)),
         ("src:([a-z\_0-9\[\]\-]*)", lambda m: src_lk(m.groups()[0])),

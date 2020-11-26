@@ -173,7 +173,7 @@ class Constructions(DataTable):
             base.append(LinkCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype, model_col=DeclarativeType.name))
             
         if not self.mainclauseverb:
-            base.append(LinkCol(self, 'mainclauseverb', sTitle="Main clause verb?", get_obj=lambda i: i.mainclauseverb, model_col=MainClauseVerb.name))
+            base.append(LinkCol(self, 'mainclauseverb', sTitle="Main clause construction?", get_obj=lambda i: i.mainclauseverb, model_col=MainClauseVerb.name))
             
         return base
             

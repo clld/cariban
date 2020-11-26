@@ -201,8 +201,8 @@ def main(args):  # pragma: no cover
     print("Adding constructions…")
     data.add(models.DeclarativeType, "imp", id="imp", name="imperative")
     data.add(models.DeclarativeType, "decl", id="decl", name="declarative")
-    data.add(models.MainClauseVerb, "y", id="y", name="main clause verb")
-    data.add(models.MainClauseVerb, "n", id="n", name="subordinate clause verb")
+    data.add(models.MainClauseVerb, "y", id="y", name="main clause construction")
+    data.add(models.MainClauseVerb, "n", id="n", name="subordinate clause construction")
 
     for cons in args.cldf["ParameterTable"]:
         lang_id = get_lang_id(cons["Language_ID"])
