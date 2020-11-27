@@ -113,6 +113,24 @@ class Morphemes(Units):
 
 
 class Cognatesets(DataTable):
+    
+    def __init__(self, req, model, **kw):
+        self.cogset_type = kw.pop('cogset_type', req.params.get('cogset_type', None))
+        if self.cogset_type:
+            kw['eid'] = 'Cognatesets-' + self.cogset_type
+        super(Cognatesets, self).__init__(req, model, **kw)
+    
+    def xhr_query(self):
+        return dict_merged(super(Cognatesets, self).xhr_query(), cogset_type=self.cogset_type)
+    
+    def base_query(self, query):
+        query = query
+        
+        if self.cogset_type:
+            query = query.filter(Cognateset.cogset_type == self.cogset_type)
+        
+        return query
+        
     def col_defs(self):
         return [
             LinkCol(self, 'reconstructed', model_col=Cognateset.name),

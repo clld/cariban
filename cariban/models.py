@@ -69,6 +69,7 @@ class Cognateset(Base,
                  IdNameDescriptionMixin,
                  ):
     pk = Column(Integer, primary_key=True)
+    cogset_type = Column(String)
 
 
 class CognatesetReference(Base, HasSourceMixin):

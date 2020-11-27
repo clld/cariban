@@ -17,7 +17,7 @@
     <ul class="nav nav-tabs" id="all_morphemes" role="tablist">
         <li class="active"><a href="#morphemes" data-toggle="tab">Grammatical morphemes</a></li>
         <li><a href="#tadding" data-toggle="tab">t-adding verbs</a></li>
-		<li><a href="#swadesh" data-toggle="tab">Lexical morphemes</a></li>
+		<li><a href="#swadesh" data-toggle="tab">Swadesh list</a></li>
     </ul>
     <div class="tab-content" style="overflow: visible;">
         <div id="morphemes" class="tab-pane active">

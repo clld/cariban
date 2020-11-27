@@ -319,6 +319,7 @@ def main(args):  # pragma: no cover
             id=cogset["ID"],
             name=cogset["Name"],
             description=cogset["Function"],
+            cogset_type="grammatical"
         )
         if cogset["Source"]:
             for source in cogset["Source"]:
@@ -486,7 +487,8 @@ def main(args):  # pragma: no cover
             cognate_ID,
             id=cognate_ID,
             name=rec_t_form,
-            description="‘%s’ (*t-adding verb)" % t_verb_set["Parameter_ID"]
+            description="‘%s’ (*t-adding verb)" % t_verb_set["Parameter_ID"],
+            cogset_type="t_adding"
         )
         if t_verb_set["Source"]:
             bib_key = t_verb_set["Source"].split("[")[0]
@@ -583,7 +585,8 @@ def main(args):  # pragma: no cover
                     cognateset_ID,
                     id=cognateset_ID,
                     name=form,
-                    description=cognateset_ID
+                    description=cognateset_ID,
+                    cogset_type="lexical"
                 )
         lang_id = get_lang_id(entry["Language_ID"])
         if lang_id not in data["Language"]: continue
