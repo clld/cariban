@@ -181,6 +181,15 @@ class Constructions(DataTable):
 class MorphemeFunctions(Unitvalues):
     __constraints__ = Unitvalues.__constraints__ + [Construction, Language]
     
+    def __init__(self, req, model, **kw):
+        self.meaning_type = kw.pop('meaning_type', req.params.get('meaning_type', None))
+        if self.meaning_type:
+            kw['eid'] = 'Meanings-' + self.meaning_type
+        super(MorphemeFunctions, self).__init__(req, model, **kw)
+    
+    def xhr_query(self):
+        return dict_merged(super(MorphemeFunctions, self).xhr_query(), meaning_type=self.meaning_type)
+            
     def base_query(self, query):
         
         query = query\
@@ -203,8 +212,9 @@ class MorphemeFunctions(Unitvalues):
         ]
         if not self.unitparameter:
             base.append(FunctionCol(self, 'function', get_obj=lambda i: i.unit))
-        if not self.construction:
-            base.append(LinkCol(self, 'construction', get_obj=lambda i: i.construction, model_col=Construction.name))
+        if not self.construction:# 
+            if self.meaning_type != "lexical":
+                base.append(LinkCol(self, 'construction', get_obj=lambda i: i.construction, model_col=Construction.name))
         if not self.language and not self.construction:
             base.append(LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.unit.language))
         return base + [
