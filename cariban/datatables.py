@@ -71,7 +71,7 @@ class Meanings(Unitparameters):
 
 class Morphemes(Units):
     
-    __constraints__ = [MorphemeFunction, Language, Cognateset]
+    __constraints__ = [MorphemeFunction, Language]
     
     def __init__(self, req, model, **kw):
         self.morpheme_type = kw.pop('morpheme_type', req.params.get('morpheme_type', None))
@@ -83,7 +83,7 @@ class Morphemes(Units):
         return dict_merged(super(Morphemes, self).xhr_query(), morpheme_type=self.morpheme_type)
                 
     def base_query(self, query):
-        query = query.join(Language).join(Cognate).options(
+        query = query.join(Language).options(
             joinedload(
                 Morpheme.language
             )

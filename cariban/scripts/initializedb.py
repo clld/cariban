@@ -577,14 +577,14 @@ def main(args):  # pragma: no cover
         if cognateset_ID not in data["Cognateset"]:
             if cognateset_ID in proto_forms:
                 form = "*" + proto_forms[cognateset_ID]
-            else:
-                form = ""
-            data.add(models.Cognateset,
-                cognateset_ID,
-                id=cognateset_ID,
-                name=form,
-                description=cognateset_ID
-            )
+            # else:
+            #     form = ""
+                data.add(models.Cognateset,
+                    cognateset_ID,
+                    id=cognateset_ID,
+                    name=form,
+                    description=cognateset_ID
+                )
         lang_id = get_lang_id(entry["Language_ID"])
         if lang_id not in data["Language"]: continue
         function = entry["Parameter_ID"].replace(".","_")
@@ -615,12 +615,13 @@ def main(args):  # pragma: no cover
         )
         if entry["Source"]:
             add_morpheme_reference(morpheme, entry["Source"])
-
-        DBSession.add(models.Cognate(
-                cognateset=data["Cognateset"][cognateset_ID],
-                counterpart=morpheme
+        
+        if cognateset_ID in proto_forms:
+            DBSession.add(models.Cognate(
+                    cognateset=data["Cognateset"][cognateset_ID],
+                    counterpart=morpheme
+                )
             )
-        )
     
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.
