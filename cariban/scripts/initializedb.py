@@ -576,7 +576,7 @@ def main(args):  # pragma: no cover
         cognateset_ID = entry["Parameter_ID"].replace("/","_")+"-"+entry["Cognateset_ID"]
         if cognateset_ID not in data["Cognateset"]:
             if cognateset_ID in proto_forms:
-                form = "*" + proto_forms[cognateset_ID]
+                form = "*" + proto_forms[cognateset_ID].replace("; ", " / ")
             # else:
             #     form = ""
                 data.add(models.Cognateset,
