@@ -292,7 +292,7 @@ def main(args):  # pragma: no cover
                 function = unit_value.split(":")[1]
                 morph_function_id = "%s:%s" % (morph_id, function)
                 if morph_function_id not in data["MorphemeFunction"].keys():
-                    # print("Warning: Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
+                    print("Warning: Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
                     continue
                 data.add(models.UnitValueSentence,
                 unitvaluesentence_key,
