@@ -222,7 +222,7 @@ class MorphemeFunctions(Unitvalues):
         if self.construction:
             query = query.filter(MorphemeFunction.construction_pk == self.construction.pk)
             
-        return query
+        return query.distinct()
     
     def col_defs(self):
         base = [
