@@ -8,7 +8,7 @@
 <div class="tabbable">
     <ul class="nav nav-tabs" id="all_meanings" role="tablist">
         <li class="active"><a href="#inflectional" data-toggle="tab">Inflectional</a></li>
-        <li><a href="#derivational" data-toggle="tab">Derivational</a></li>
+        <li><a href="#derivational" data-toggle="tab">Other</a></li>
         <li><a href="#lexical" data-toggle="tab">Lexical meanings</a></li>
     </ul>
     <div class="tab-content" style="overflow: visible;">

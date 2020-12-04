@@ -34,7 +34,7 @@ def search_lexicon(form, meaning, language):
             return(morph_id)
     return("X")
 print(lexicon["kui_3i"])
-print(search_lexicon("i-", "3S", "kuik1246"))
+print(search_lexicon("i-", "3S", "nucl1656"))
 out = ""
 for row in cariban_data["ExampleTable"]:
     x_out = []

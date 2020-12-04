@@ -10,6 +10,6 @@
 
 
 <div>
-    <% dt = request.registry.getUtility(h.interfaces.IDataTable, 'unitvalues'); dt = dt(request, h.models.UnitValue, unitparameter=ctx) %>
+    <% dt = request.registry.getUtility(h.interfaces.IDataTable, 'unitvalues'); dt = dt(request, h.models.UnitValue, unitparameter=ctx, meaning_type=ctx.meaning_type) %>
     ${dt.render()}
 </div>

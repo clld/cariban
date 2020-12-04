@@ -40,10 +40,6 @@
     </div>	
 </div>
 
-% if ctx.id == "kar":
-<!-- Hallo Eutere. -->
-% endif 
-
 <%def name="sidebar()">
     ${util.language_meta()}
 </%def>

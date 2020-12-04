@@ -1,10 +1,10 @@
 <%inherit file="../${context.get('request').registry.settings.get('clld.app_template', 'app.mako')}"/>
 <%namespace name="util" file="../util.mako"/>
 <%! active_menu_item = "constructions" %>
-<%block name="title">${_('Construction')} ${ctx.name}</%block>
+<%block name="title">${_('Construction')} ${ctx.name} from ${ctx.language}</%block>
 
 <h2>
-	The ${h.link(request, ctx.language)} ${ctx.name} clause
+	The ${h.link(request, ctx.language)} ${ctx.name} construction
 </h2>
 % if ctx.declarativetype or ctx.mainclauseverb:
 <p>(\

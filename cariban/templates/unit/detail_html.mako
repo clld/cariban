@@ -5,7 +5,7 @@
 
 <%
 mtypes ={"t_adding": "potentially t-adding verb",
-"lexical": "Swadesh list entry)",
+"lexical": "Swadesh list entry",
 "grammatical": "grammatical morpheme"
 }
 %>

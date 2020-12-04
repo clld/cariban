@@ -110,9 +110,9 @@ def main(args):  # pragma: no cover
     DBSession.flush()
     for rec in bibtex.Database.from_file(args.cldf.bibpath):
         if "keywords" in rec:
-            for keyword in rec["keywords"].split(", "):
+            for keyword in rec["keywords"].split(","):
                 if keyword in lang_shorthands:
-                    lang_id = get_lang_id(keyword)
+                    lang_id = get_lang_id(keyword.strip(" "))
                     if lang_id in data["Language"]:
                         data.add(common.LanguageSource,
                         rec.id+lang_id,
@@ -201,8 +201,8 @@ def main(args):  # pragma: no cover
     print("Adding constructions…")
     data.add(models.DeclarativeType, "imp", id="imp", name="imperative")
     data.add(models.DeclarativeType, "decl", id="decl", name="declarative")
-    data.add(models.MainClauseVerb, "y", id="y", name="main clause verb")
-    data.add(models.MainClauseVerb, "n", id="n", name="subordinate clause verb")
+    data.add(models.MainClauseVerb, "y", id="y", name="main clause construction")
+    data.add(models.MainClauseVerb, "n", id="n", name="subordinate clause construction")
 
     for cons in args.cldf["ParameterTable"]:
         lang_id = get_lang_id(cons["Language_ID"])
@@ -292,7 +292,7 @@ def main(args):  # pragma: no cover
                 function = unit_value.split(":")[1]
                 morph_function_id = "%s:%s" % (morph_id, function)
                 if morph_function_id not in data["MorphemeFunction"].keys():
-                    # print("Warning: Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
+                    print("Warning: Example %s tries to illustrate inexistent morpheme function %s!" % (row["ID"], unit_value.replace(".","-")))
                     continue
                 data.add(models.UnitValueSentence,
                 unitvaluesentence_key,
@@ -319,6 +319,7 @@ def main(args):  # pragma: no cover
             id=cogset["ID"],
             name=cogset["Name"],
             description=cogset["Function"],
+            cogset_type="grammatical"
         )
         if cogset["Source"]:
             for source in cogset["Source"]:
@@ -404,8 +405,9 @@ def main(args):  # pragma: no cover
         my_phylo = Phylogeny(
                 tree_id,
                 id=tree_id,
-                name="Matter (2020), Tree %s" % str(my_tree_count+1),
-                newick=tree
+                name="Matter (2020)",# % str(my_tree_count+1),
+                newick=tree,
+                markup_description="My own, conservative, classification."
         )
         
         for l in DBSession.query(common.Language):
@@ -485,7 +487,8 @@ def main(args):  # pragma: no cover
             cognate_ID,
             id=cognate_ID,
             name=rec_t_form,
-            description="t-adding verb: ‘%s’" % t_verb_set["Parameter_ID"]
+            description="‘%s’ (*t-adding verb)" % t_verb_set["Parameter_ID"],
+            cogset_type="t_adding"
         )
         if t_verb_set["Source"]:
             bib_key = t_verb_set["Source"].split("[")[0]
@@ -562,7 +565,7 @@ def main(args):  # pragma: no cover
     for lang, values in t_langs.items():
         data["Language"][lang].update_jsondata(t_values=values)
     for verb, values in t_verbs.items():
-        data["Cognateset"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
+        # data["Cognateset"][verb].description += " (%s/%s)" % (str(values["y"]), str(values["n"]+values["y"]+values["?"]))
         data["Cognateset"][verb].markup_description = util.generate_markup("This verb occurs with obj:t- in %s of %s languages which show reflexes of cogset:t." % (str(values["y"]), str(values["n"]+values["y"]+values["?"])))
 
     print("Adding reconstructed lexemes…")
@@ -575,15 +578,16 @@ def main(args):  # pragma: no cover
         cognateset_ID = entry["Parameter_ID"].replace("/","_")+"-"+entry["Cognateset_ID"]
         if cognateset_ID not in data["Cognateset"]:
             if cognateset_ID in proto_forms:
-                form = "*" + proto_forms[cognateset_ID]
-            else:
-                form = ""
-            data.add(models.Cognateset,
-                cognateset_ID,
-                id=cognateset_ID,
-                name=form,
-                description=cognateset_ID
-            )
+                form = "*" + proto_forms[cognateset_ID].replace("; ", " / ")
+            # else:
+            #     form = ""
+                data.add(models.Cognateset,
+                    cognateset_ID,
+                    id=cognateset_ID,
+                    name=form,
+                    description=cognateset_ID,
+                    cogset_type="lexical"
+                )
         lang_id = get_lang_id(entry["Language_ID"])
         if lang_id not in data["Language"]: continue
         function = entry["Parameter_ID"].replace(".","_")
@@ -614,12 +618,13 @@ def main(args):  # pragma: no cover
         )
         if entry["Source"]:
             add_morpheme_reference(morpheme, entry["Source"])
-
-        DBSession.add(models.Cognate(
-                cognateset=data["Cognateset"][cognateset_ID],
-                counterpart=morpheme
+        
+        if cognateset_ID in proto_forms:
+            DBSession.add(models.Cognate(
+                    cognateset=data["Cognateset"][cognateset_ID],
+                    counterpart=morpheme
+                )
             )
-        )
     
 def prime_cache(args):
     """If data needs to be denormalized for lookup, do that here.

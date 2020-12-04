@@ -4,6 +4,25 @@
 <%block name="title">${_('Cognate sets')}</%block>
 
 <h2>${title()}</h2>
-<div>
+<!-- <div>
     ${ctx.render()}
+</div> -->
+
+<div class="tabbable">
+    <ul class="nav nav-tabs" id="all_cogsets" role="tablist">
+        <li class="active"><a href="#morphemes" data-toggle="tab">Grammatical morphemes</a></li>
+        <li><a href="#tadding" data-toggle="tab">t-adding verbs</a></li>
+		<li><a href="#swadesh" data-toggle="tab">Swadesh list</a></li>
+    </ul>
+    <div class="tab-content" style="overflow: visible;">
+        <div id="morphemes" class="tab-pane active">
+			${request.get_datatable('cognatesets', u.cariban_models.Cognateset, cogset_type="grammatical").render()}
+        </div>
+        <div id="tadding" class="tab-pane">
+			${request.get_datatable('cognatesets', u.cariban_models.Cognateset, cogset_type="t_adding").render()}
+        </div>
+        <div id="swadesh" class="tab-pane">
+			${request.get_datatable('cognatesets', u.cariban_models.Cognateset, cogset_type="lexical").render()}
+        </div>
+    </div>
 </div>

@@ -71,7 +71,7 @@ class Meanings(Unitparameters):
 
 class Morphemes(Units):
     
-    __constraints__ = [MorphemeFunction, Language, Cognateset]
+    __constraints__ = [MorphemeFunction, Language]
     
     def __init__(self, req, model, **kw):
         self.morpheme_type = kw.pop('morpheme_type', req.params.get('morpheme_type', None))
@@ -83,7 +83,7 @@ class Morphemes(Units):
         return dict_merged(super(Morphemes, self).xhr_query(), morpheme_type=self.morpheme_type)
                 
     def base_query(self, query):
-        query = query.join(Language).join(Cognate).options(
+        query = query.join(Language).options(
             joinedload(
                 Morpheme.language
             )
@@ -113,6 +113,24 @@ class Morphemes(Units):
 
 
 class Cognatesets(DataTable):
+    
+    def __init__(self, req, model, **kw):
+        self.cogset_type = kw.pop('cogset_type', req.params.get('cogset_type', None))
+        if self.cogset_type:
+            kw['eid'] = 'Cognatesets-' + self.cogset_type
+        super(Cognatesets, self).__init__(req, model, **kw)
+    
+    def xhr_query(self):
+        return dict_merged(super(Cognatesets, self).xhr_query(), cogset_type=self.cogset_type)
+    
+    def base_query(self, query):
+        query = query
+        
+        if self.cogset_type:
+            query = query.filter(Cognateset.cogset_type == self.cogset_type)
+        
+        return query
+        
     def col_defs(self):
         return [
             LinkCol(self, 'reconstructed', model_col=Cognateset.name),
@@ -173,7 +191,7 @@ class Constructions(DataTable):
             base.append(LinkCol(self, 'declarativetype', sTitle="Declarative?", get_obj=lambda i: i.declarativetype, model_col=DeclarativeType.name))
             
         if not self.mainclauseverb:
-            base.append(LinkCol(self, 'mainclauseverb', sTitle="Main clause verb?", get_obj=lambda i: i.mainclauseverb, model_col=MainClauseVerb.name))
+            base.append(LinkCol(self, 'mainclauseverb', sTitle="Main clause construction?", get_obj=lambda i: i.mainclauseverb, model_col=MainClauseVerb.name))
             
         return base
             
@@ -181,6 +199,15 @@ class Constructions(DataTable):
 class MorphemeFunctions(Unitvalues):
     __constraints__ = Unitvalues.__constraints__ + [Construction, Language]
     
+    def __init__(self, req, model, **kw):
+        self.meaning_type = kw.pop('meaning_type', req.params.get('meaning_type', None))
+        if self.meaning_type:
+            kw['eid'] = 'Meanings-' + self.meaning_type
+        super(MorphemeFunctions, self).__init__(req, model, **kw)
+    
+    def xhr_query(self):
+        return dict_merged(super(MorphemeFunctions, self).xhr_query(), meaning_type=self.meaning_type)
+            
     def base_query(self, query):
         
         query = query\
@@ -203,8 +230,9 @@ class MorphemeFunctions(Unitvalues):
         ]
         if not self.unitparameter:
             base.append(FunctionCol(self, 'function', get_obj=lambda i: i.unit))
-        if not self.construction:
-            base.append(LinkCol(self, 'construction', get_obj=lambda i: i.construction, model_col=Construction.name))
+        if not self.construction:# 
+            if self.meaning_type != "lexical":
+                base.append(LinkCol(self, 'construction', get_obj=lambda i: i.construction, model_col=Construction.name))
         if not self.language and not self.construction:
             base.append(LinkCol(self, 'language', model_col=Language.name, get_obj=lambda i: i.unit.language))
         return base + [
