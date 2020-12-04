@@ -37,6 +37,9 @@ ${h.text2html(h.Markup(ctx.markup_description), mode='p')}
 ${(map_ or request.map).render()}
 % endif
 
+##This doesn't work but I don't know what the error message really means --FM
+${req.get_map('parameter').render()}
+
 ${request.get_datatable('cognates', u.cariban_models.Cognate, cognateset=ctx).render()}
 
 ##<div id="my_tree"></div>
