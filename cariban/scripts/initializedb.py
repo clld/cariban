@@ -29,8 +29,8 @@ def main(args):  # pragma: no cover
     dataset = common.Dataset(
         id=cariban.__name__,
         domain="cariban.clld.org",
-        name="Cariban Morphology Database",
-        description="Cariban Morphology Database",
+        name="Comparative Cariban Database",
+        description="Comparative Cariban Database",
         publisher_name="Max Planck Institute for Evolutionary Anthropology",
         publisher_url="https://www.eva.mpg.de",
         publisher_place="Leipzig",

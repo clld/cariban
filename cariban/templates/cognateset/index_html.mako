@@ -3,6 +3,10 @@
 <%! active_menu_item = "cognatesets" %>
 <%block name="title">${_('Cognate sets')}</%block>
 
+<%block name="head">
+    <script src="${request.static_url('cariban:static/scripts/tab_anchors.js')}"></script>
+</%block>
+
 <h2>${title()}</h2>
 <!-- <div>
     ${ctx.render()}
