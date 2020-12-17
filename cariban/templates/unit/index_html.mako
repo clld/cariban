@@ -3,12 +3,7 @@
 <%! active_menu_item = "units" %>
 
 <%block name="head">
-    <script>
-	var target = location.hash.substr(1)
-	$(document).ready(function(){
-		$('.nav-tabs a[href="#' + target + '"]').tab('show');
-	});
-    </script>
+    <script src="${request.static_url('cariban:static/scripts/tab_anchors.js')}"></script>
 </%block>
 
 <h2>${_('Morphemes')}</h2>
