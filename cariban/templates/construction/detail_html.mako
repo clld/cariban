@@ -26,7 +26,7 @@ ${h.link(request, ctx.mainclauseverb)}\
 % if ctx.description:
 <p>${ctx.description}</p>
 % elif ctx.markup_description:
-${h.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')}
+${u.text2html(h.Markup(ctx.markup_description) if ctx.markup_description else ctx.description, mode='p')|n}
 % endif
 
 ${request.get_datatable('unitvalues', h.models.UnitValue, construction=ctx).render()}

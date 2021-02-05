@@ -24,6 +24,12 @@ separators = ["-", "=", "<", ">"]
 PERSON_SPECS = ["1", "2", "1+2", "1+3", "3"]
 
 
+def text2html(*args, **kw):
+    res = str(h.text2html(*args, **kw))
+    res = res.replace(' class="table ', ' class="table table-nonfluid ')
+    return res
+
+
 def function_paradigms():
     return models.Dataset.first().jsondata['function_paradigms']
 
