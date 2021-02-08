@@ -83,13 +83,15 @@ for i, value in enumerate(ctx.unitvalues):
 				%if construction_specified:	
 				(in the \
 				% for i, construction in enumerate(function_construction_pair.values()):
-					${h.link(request, construction)}\
-					<%
-					if i < construction_l-2: comma = ","
-					elif i == construction_l-2: comma = "and"
-					else: comma = ""
-					%>\
-					${comma}
+                    % if construction is not None:
+                        ${h.link(request, construction)}\
+                        <%
+                            if i < construction_l-2: comma = ","
+                            elif i == construction_l-2: comma = "and"
+                            else: comma = ""
+                        %>\
+                        ${comma}
+                    % endif
 				%endfor
 				<%
 				if construction_l == 1: cons_text = "construction"
