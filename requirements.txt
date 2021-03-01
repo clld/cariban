@@ -1,15 +1,2 @@
-clld
-flake8
-waitress
-mock
-pytest>=3.1
-pytest-clld
-pytest-mock
-pytest-cov
-coverage>=4.2
-selenium
-zope.component>=3.11.0
-clld-phylogeny-plugin
-markdown
-biopython
-ipapy
+-e .[dev,test]
+
