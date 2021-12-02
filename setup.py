@@ -23,6 +23,7 @@ setup(
         'numpy',
         'biopython',
         'ipapy',
+        'clld-phylogeny-plugin',
     ],
     extras_require={
         'dev': ['flake8', 'waitress', 'psycopg2'],
