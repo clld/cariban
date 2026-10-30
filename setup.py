@@ -24,9 +24,10 @@ setup(
         'biopython',
         'ipapy',
         'clld-phylogeny-plugin',
+        'psycopg2',
     ],
     extras_require={
-        'dev': ['flake8', 'waitress', 'psycopg2'],
+        'dev': ['flake8', 'waitress'],
         'test': [
             'mock',
             'pytest>=5',
