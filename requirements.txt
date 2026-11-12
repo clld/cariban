@@ -8,7 +8,7 @@ biopython==1.88
 bs4==0.0.2
 -e git+https://github.com/clld/cariban@a95d8f977ac5e2a043e0de05730e8812a3485d8a#egg=cariban
 cdstarcat==1.6.0
-certifi==2026.7.22
+certifi==2026.10.18
 charset-normalizer==3.5.1
 cldfbench==2.0.1
 cldfcatalog==1.7.0
