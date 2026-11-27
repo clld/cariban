@@ -28,6 +28,7 @@ dependencies = [
     "clld>=13.1",
     "clldmpg>=4.5",
     "clld-phylogeny-plugin",
+    "biopython",
     "sqlalchemy",
     "psycopg",
 ]
